@@ -1,0 +1,163 @@
+# 方法论路由映射表 v1.0
+# 新增 Skill 时在此文件添加一条记录，method-router 自动识别
+# 无需修改 SKILL.md
+
+version: "1.0"
+last_updated: "2026-07-24"
+
+classification:
+  diagnose:
+    keywords: [为什么, 报错, 失败, 异常, 不对, bug, 排查, 定位, 原因, 根因]
+    examples: ["匹配率为什么这么低", "这个接口一直报错"]
+  decide:
+    keywords: [选哪个, 要不要, 优先级, 对比, 方案, 技术选型]
+    examples: ["用 Redis 还是 Kafka", "这三个方案哪个好"]
+  design:
+    keywords: [设计, 架构, 重构, 新功能, 怎么实现, 搭建]
+    examples: ["设计一个消息推送系统", "这个模块需要重构"]
+  improve:
+    keywords: [优化, 提升, 改进, 加速, 减少, 自动化, 太慢]
+    examples: ["这个接口太慢了", "能不能优化一下 CI 流程"]
+  risk:
+    keywords: [风险, 安全, 漏洞, 事故, 万一, 上线, 有问题吗]
+    examples: ["这个改动能上线吗", "有什么安全风险"]
+  report:
+    keywords: [总结, 汇报, 周报, 复盘, 文档, 记录, 写报告]
+    examples: ["帮我写个复盘报告", "本周工作总结"]
+
+urgency:
+  critical:
+    keywords: [线上故障, 挂了, 紧急, 用户投诉, 宕机, 马上, 立刻]
+    action: skip_confirmation
+  normal:
+    keywords: []
+    action: show_route_for_confirmation
+
+routes:
+  - type: diagnose
+    condition: { has_data: true }
+    chain:
+      - { skill: 5W2H, order: 1, mandatory: true, path: "code-review/deep-analysis/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式"
+
+  - type: diagnose
+    condition: { has_data: false }
+    chain:
+      - { skill: 5Whys, order: 1, mandatory: true, path: "method-router/5whys/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "无量化数据 → 5 Whys 层层追问 → SCQA 统一格式"
+
+  - type: diagnose
+    condition: { complexity: high }
+    chain:
+      - { skill: MECE, order: 1, mandatory: true, path: "method-router/mece/SKILL.md" }
+      - { skill: 5Whys, order: 2, mandatory: true, path: "method-router/5whys/SKILL.md" }
+      - { skill: SCQA, order: 3, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "多因素交织 → MECE 先穷举 → 5 Whys 逐维深入"
+
+  - type: diagnose
+    condition: { urgency: critical }
+    chain:
+      - { skill: OODA, order: 1, mandatory: true, path: "method-router/ooda/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+    rationale: "线上故障 → OODA 快速闭环 → 事后 SCQA 复盘"
+
+  - type: decide
+    condition: { sub_type: priority }
+    chain:
+      - { skill: Eisenhower, order: 1, mandatory: true, path: "method-router/eisenhower/SKILL.md" }
+      - { skill: STAR, order: 2, mandatory: false, path: "method-router/star/SKILL.md" }
+    rationale: "任务优先级 → Eisenhower 四象限 → STAR 结构化输出"
+
+  - type: decide
+    condition: { sub_type: comparison }
+    chain:
+      - { skill: PughMatrix, order: 1, mandatory: true, path: "method-router/pugh/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+    rationale: "多方案对比 → Pugh 量化矩阵 → ADR 记录决策"
+
+  - type: decide
+    condition: { sub_type: tech_selection }
+    chain:
+      - { skill: ADLMatrix, order: 1, mandatory: true, path: "method-router/adl/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+    rationale: "技术选型 → ADL 生命周期评估 → ADR 记录决策"
+
+  - type: design
+    condition: { scope: new_system }
+    chain:
+      - { skill: DesignThinking, order: 1, mandatory: true, path: "method-router/design-thinking/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+    rationale: "新系统 → Design Thinking 5 步法 → ADR 记录决策"
+
+  - type: design
+    condition: { scope: refactor }
+    chain:
+      - { skill: FirstPrinciples, order: 1, mandatory: true, path: "method-router/first-principles/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+    rationale: "重构 → First Principles 拆解 → ADR 记录决策"
+
+  - type: improve
+    condition: { domain: process }
+    chain:
+      - { skill: PDCA, order: 1, mandatory: true, path: "pdca-tuning/SKILL.md" }
+      - { skill: A3, order: 2, mandatory: false, path: "method-router/a3/SKILL.md" }
+    rationale: "流程优化 → PDCA 循环 → A3 一页纸报告"
+
+  - type: improve
+    condition: { domain: data }
+    chain:
+      - { skill: DMAIC, order: 1, mandatory: true, path: "method-router/dmaic/SKILL.md" }
+      - { skill: A3, order: 2, mandatory: false, path: "method-router/a3/SKILL.md" }
+    rationale: "数据驱动优化 → DMAIC 六西格玛 → A3 报告"
+
+  - type: risk
+    condition: { scope: code_change }
+    chain:
+      - { skill: PreMortem, order: 1, mandatory: true, path: "method-router/pre-mortem/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "代码变更 → Pre-mortem 假想失败 → SCQA 格式化"
+
+  - type: risk
+    condition: { scope: systematic }
+    chain:
+      - { skill: FMEA, order: 1, mandatory: true, path: "method-router/fmea/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "系统性评估 → FMEA 失效模式分析 → SCQA 格式化"
+
+  - type: report
+    condition: { sub_type: retrospective }
+    chain:
+      - { skill: STAR, order: 1, mandatory: true, path: "method-router/star/SKILL.md" }
+      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+    rationale: "复盘 → STAR 结构化 → SCQA 格式化"
+
+  - type: report
+    condition: {}
+    chain:
+      - { skill: SCQA, order: 1, mandatory: true, path: "method-router/scqa/SKILL.md" }
+    rationale: "通用汇报 → SCQA 叙事框架"
+
+skill_registry:
+  available:
+    - { name: 5W2H, path: "code-review/deep-analysis/SKILL.md", category: diagnose }
+    - { name: PDCA, path: "pdca-tuning/SKILL.md", category: improve }
+    - { name: method-router, path: "method-router/SKILL.md", category: meta }
+  planned:
+    - { name: SCQA, category: report, phase: 1 }
+    - { name: 5Whys, category: diagnose, phase: 1 }
+    - { name: PreMortem, category: risk, phase: 1 }
+    - { name: MECE, category: analysis, phase: 2 }
+    - { name: Eisenhower, category: decide, phase: 2 }
+    - { name: DMAIC, category: improve, phase: 2 }
+    - { name: OODA, category: decide, phase: 2 }
+    - { name: FMEA, category: risk, phase: 3 }
+    - { name: Cynefin, category: meta, phase: 3 }
+
+composition_rules:
+  - { rule: R_A, desc: "诊断类输出自动衔接 SCQA" }
+  - { rule: R_B, desc: "MECE 先于 5 Whys" }
+  - { rule: R_C, desc: "Pre-mortem 先于 FMEA" }
+  - { rule: R_D, desc: "用户显式指定 > 路由推荐" }
+  - { rule: R_E, desc: "同类型 Skill 不重复运行" }
