@@ -2,9 +2,9 @@
 # 新增 Skill 时在此文件添加一条记录，method-router 自动识别
 # 无需修改 SKILL.md
 
-version: "2.0"
+version: "3.0"
 last_updated: "2026-07-24"
-# Phase 2: +Cynefin +OODA +FirstPrinciples +Eisenhower
+# Phase 3: +MECE +DMAIC +FMEA +STAR
 
 classification:
   diagnose:
@@ -159,11 +159,11 @@ skill_registry:
     - { name: OODA, path: "method-router/ooda/SKILL.md", category: diagnose }
     - { name: FirstPrinciples, path: "method-router/first-principles/SKILL.md", category: design }
     - { name: Eisenhower, path: "method-router/eisenhower/SKILL.md", category: decide }
-  planned:
-    - { name: MECE, category: analysis, phase: 3 }
-    - { name: DMAIC, category: improve, phase: 3 }
-    - { name: FMEA, category: risk, phase: 3 }
-    - { name: Cynefin-Integration, category: meta, phase: 3, note: "将 Cynefin 深度集成到 method-router 分类逻辑" }
+    - { name: MECE, path: "method-router/mece/SKILL.md", category: analysis }
+    - { name: DMAIC, path: "method-router/dmaic/SKILL.md", category: improve }
+    - { name: FMEA, path: "method-router/fmea/SKILL.md", category: risk }
+    - { name: STAR, path: "method-router/star/SKILL.md", category: report }
+  planned: []
 
 composition_rules:
   - { rule: R_A, desc: "诊断类输出自动衔接 SCQA" }

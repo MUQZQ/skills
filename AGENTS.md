@@ -94,6 +94,10 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 | `pre-mortem` | 风险 | 事前验尸，反向推导失败原因 |
 | `first-principles` | 设计 | 第一性原理，从零重建方案 |
 | `eisenhower-matrix` | 决策 | 紧急×重要四象限优先级 |
+| `mece` | 分析 | 结构化穷举检查 |
+| `dmaic` | 改进 | 数据驱动的六西格玛改进 |
+| `fmea` | 风险 | 失效模式与影响分析 |
+| `star` | 报告 | 情境→任务→行动→结果叙事 |
 | `pdca-tuning` | 改进 | PDCA 循环流程优化 |
 
 ### 触发规则

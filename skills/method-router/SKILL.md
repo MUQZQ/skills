@@ -358,6 +358,10 @@ route_log:
 | `ooda/SKILL.md` | OODA 快速闭环 |
 | `first-principles/SKILL.md` | First Principles 第一性原理 |
 | `eisenhower/SKILL.md` | Eisenhower 优先级矩阵 |
+| `mece/SKILL.md` | MECE 结构化穷举检查 |
+| `dmaic/SKILL.md` | DMAIC 六西格玛改进 |
+| `fmea/SKILL.md` | FMEA 失效模式分析 |
+| `star/SKILL.md` | STAR 结构化叙事 |
 | `../pdca-tuning/SKILL.md` | PDCA 流程改进 |
 
 ---
