@@ -37,7 +37,7 @@ routes:
   - type: diagnose
     condition: { has_data: true }
     chain:
-      - { skill: 5W2H, order: 1, mandatory: true, path: "code-review/deep-analysis/SKILL.md" }
+      - { skill: 5W2H, order: 1, mandatory: true, path: "method-router/deep-analysis/SKILL.md" }
       - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
     rationale: "有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式"
 
@@ -141,7 +141,7 @@ routes:
 
 skill_registry:
   available:
-    - { name: 5W2H, path: "code-review/deep-analysis/SKILL.md", category: diagnose }
+    - { name: 5W2H, path: "method-router/deep-analysis/SKILL.md", category: diagnose }
     - { name: PDCA, path: "pdca-tuning/SKILL.md", category: improve }
     - { name: method-router, path: "method-router/SKILL.md", category: meta }
   planned:

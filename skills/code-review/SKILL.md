@@ -52,7 +52,7 @@ git diff
 | 涉及 `openspec/changes/` 的变更 | `code-review/openspec-docs/SKILL.md` | **Agent** | OpenSpec 文档 |
 | 涉及权限/角色/认证的变更 | `code-review/permissions-review/SKILL.md` | **Agent** | 权限审查 |
 | 任何包含 `*.yaml` / `*.yml` 文件的变更 | `code-review/yaml-format/SKILL.md` | **Agent** | YAML 格式检查 |
-| **数据管道/指标异常/匹配问题** | `code-review/deep-analysis/SKILL.md` | **Agent** | 5W2H 深度根因分析（当匹配率低、转化率低、数据管道异常时激活） |
+| **数据管道/指标异常/匹配问题** | `method-router/deep-analysis/SKILL.md` | **Agent** | 5W2H 深度根因分析（当匹配率低、转化率低、数据管道异常时激活） |
 | 任何代码审查 | `code-review/qeda-integration/SKILL.md` | **Agent** | QEDA 测试集成（始终应用） |
 | **任何代码审查** | `code-review/security-review/SKILL.md` | **Agent** | 安全审查（始终应用） |
 | **任何代码审查** | `code-review/solid-principles/SKILL.md` | **Agent** | SOLID 原则（始终应用） |

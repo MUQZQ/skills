@@ -350,7 +350,7 @@ route_log:
 | 文档 | 用途 |
 |------|------|
 | `references/method-mapping.yaml` | 完整的分类→框架映射配置 |
-| `../code-review/deep-analysis/SKILL.md` | 5W2H 子 Skill |
+| `deep-analysis/SKILL.md` | 5W2H 子 Skill |
 | `../pdca-tuning/SKILL.md` | PDCA 子 Skill |
 
 ---
