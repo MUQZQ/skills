@@ -2,8 +2,9 @@
 # 新增 Skill 时在此文件添加一条记录，method-router 自动识别
 # 无需修改 SKILL.md
 
-version: "1.0"
+version: "2.0"
 last_updated: "2026-07-24"
+# Phase 2: +Cynefin +OODA +FirstPrinciples +Eisenhower
 
 classification:
   diagnose:
@@ -34,6 +35,13 @@ urgency:
     action: show_route_for_confirmation
 
 routes:
+  # === 元路由：Cynefin 域判定 ===
+  - type: meta
+    condition: { cynefin_pre: true }
+    chain:
+      - { skill: Cynefin, order: 0, mandatory: false, path: "method-router/cynefin/SKILL.md" }
+    rationale: "先判断问题域(Simple/Complicated/Complex/Chaotic)，再选方法"
+
   - type: diagnose
     condition: { has_data: true }
     chain:
@@ -144,16 +152,18 @@ skill_registry:
     - { name: 5W2H, path: "method-router/deep-analysis/SKILL.md", category: diagnose }
     - { name: PDCA, path: "pdca-tuning/SKILL.md", category: improve }
     - { name: method-router, path: "method-router/SKILL.md", category: meta }
+    - { name: SCQA, path: "method-router/scqa/SKILL.md", category: report }
+    - { name: 5Whys, path: "method-router/5whys/SKILL.md", category: diagnose }
+    - { name: PreMortem, path: "method-router/pre-mortem/SKILL.md", category: risk }
+    - { name: Cynefin, path: "method-router/cynefin/SKILL.md", category: meta }
+    - { name: OODA, path: "method-router/ooda/SKILL.md", category: diagnose }
+    - { name: FirstPrinciples, path: "method-router/first-principles/SKILL.md", category: design }
+    - { name: Eisenhower, path: "method-router/eisenhower/SKILL.md", category: decide }
   planned:
-    - { name: SCQA, category: report, phase: 1 }
-    - { name: 5Whys, category: diagnose, phase: 1 }
-    - { name: PreMortem, category: risk, phase: 1 }
-    - { name: MECE, category: analysis, phase: 2 }
-    - { name: Eisenhower, category: decide, phase: 2 }
-    - { name: DMAIC, category: improve, phase: 2 }
-    - { name: OODA, category: decide, phase: 2 }
+    - { name: MECE, category: analysis, phase: 3 }
+    - { name: DMAIC, category: improve, phase: 3 }
     - { name: FMEA, category: risk, phase: 3 }
-    - { name: Cynefin, category: meta, phase: 3 }
+    - { name: Cynefin-Integration, category: meta, phase: 3, note: "将 Cynefin 深度集成到 method-router 分类逻辑" }
 
 composition_rules:
   - { rule: R_A, desc: "诊断类输出自动衔接 SCQA" }

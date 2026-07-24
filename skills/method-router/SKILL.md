@@ -350,8 +350,15 @@ route_log:
 | 文档 | 用途 |
 |------|------|
 | `references/method-mapping.yaml` | 完整的分类→框架映射配置 |
-| `deep-analysis/SKILL.md` | 5W2H 子 Skill |
-| `../pdca-tuning/SKILL.md` | PDCA 子 Skill |
+| `deep-analysis/SKILL.md` | 5W2H 深度分析 |
+| `5whys/SKILL.md` | 5 Whys 根因追问 |
+| `scqa/SKILL.md` | SCQA 叙事框架 |
+| `pre-mortem/SKILL.md` | Pre-mortem 事前验尸 |
+| `cynefin/SKILL.md` | Cynefin 问题域分类 |
+| `ooda/SKILL.md` | OODA 快速闭环 |
+| `first-principles/SKILL.md` | First Principles 第一性原理 |
+| `eisenhower/SKILL.md` | Eisenhower 优先级矩阵 |
+| `../pdca-tuning/SKILL.md` | PDCA 流程改进 |
 
 ---
 

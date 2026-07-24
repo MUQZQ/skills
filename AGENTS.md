@@ -86,7 +86,14 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 | Skill | 类别 | 用途 |
 |-------|------|------|
 | `method-router` | 元 | 统一路由器，分类 + 编排 |
+| `cynefin` | 元 | 问题域判定（Simple/Complicated/Complex/Chaotic） |
 | `deep-analysis` (5W2H) | 诊断 | 数据驱动的深度根因分析 |
+| `5whys` | 诊断 | 逻辑追问式根因定位 |
+| `ooda-loop` | 诊断 | 快速闭环，线上故障应急响应 |
+| `scqa` | 报告 | 情境→冲突→问题→答案叙事框架 |
+| `pre-mortem` | 风险 | 事前验尸，反向推导失败原因 |
+| `first-principles` | 设计 | 第一性原理，从零重建方案 |
+| `eisenhower-matrix` | 决策 | 紧急×重要四象限优先级 |
 | `pdca-tuning` | 改进 | PDCA 循环流程优化 |
 
 ### 触发规则
