@@ -449,9 +449,27 @@ uv run pytest tests/param_compare/test_browser.py -v
 uv run python tests/test_browser_quick.py
 ```
 
----
+## 常见错误与处理
 
-## 与 opencode Playwright MCP 配合
+| 错误 | 原因 | 处理方式 |
+|------|------|---------|
+| `net::ERR_CONNECTION_REFUSED` | 应用未启动或端口冲突 | 检查应用是否运行，确认端口未被占用 |
+| `wait_for_selector` 超时 | 元素未渲染、选择器错误或页面仍在加载 | 先检查 `page.content()` 确认页面状态，调整 wait timeout |
+| Monaco Editor 操作无效 | 内容在 Shadow DOM 中，常规 `fill()` 无效 | 改用 `page.keyboard.type()` 或 Monaco API |
+| AG Grid 行定位失败 | 虚拟滚动，行未在 DOM 中 | 先滚动到目标行位置，确保其进入视口 |
+| `q-notification` 定位不到 | 通知已消失或尚未出现 | 使用 `wait_for_selector` 等待，必要时增加 timeout |
+| fixture 端口冲突 | 指定端口被其他进程占用 | 更换端口号，或使用 `url_for` 动态分配 |
+| 异步/同步 API 混用 | `sync_playwright` 中调用 `await` 或反之 | 检查导入来源，确保 API 模式一致 |
+
+## 参考文档索引
+
+| 文档 | 用途 |
+|------|------|
+| `references/setup.md` | Playwright 安装指南（含镜像加速、网络排查） |
+| `tests/param_compare/test_browser.py` | 浏览器测试文件模板 |
+| `tests/test_browser_quick.py` | 同步 API 快速验证脚本 |
+
+---
 
 当 opencode 已配置 Playwright MCP 时，可在对话中直接操控浏览器测试应用：
 

@@ -195,6 +195,58 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 - ❌ 拒绝修复（需说明原因）
 - ⏸️ 待用户处理
 
+## 前置条件
+
+- 仓库中存在未提交的代码变更（`git diff` 或 `git diff --cached` 非空）
+- 所有审查子 skill 对应的 SKILL.md 文件可被正常读取
+- 工作区安全检查通过（见 `branch-manager` skill 的"分支命名与创建 → 工作区检查与分支创建"）
+
+## 铁律速查
+
+| 规则 | 内容 | 违反后果 |
+|------|------|:------:|
+| R0 | 任何代码审查必须同时执行安全审查、SOLID 原则、代码坏味道三项全局审查 | 安全漏洞或结构性缺陷被遗漏 |
+| R1 | 项目规则和语言规则必须根据文件路径/后缀自动路由，不得手动选择 | 审查维度不完整，特定领域问题被忽略 |
+| R2 | 所有子 skill 统一通过 Agent 执行，禁止协调者内联处理审查内容 | 审查上下文过大，质量下降 |
+| R3 | 审查结果必须按 P0/P1/P2 三级分类输出 | 优先级混乱，无法区分紧急和可选问题 |
+| R4 | 发现问题必须记录到 `review-issues.md`，格式遵循记录模板 | 问题跟踪链断裂，重复审查无效 |
+
+## 实战反例
+
+| Agent 可能产生的想法 | 实际现实 | 违反规则 | 实际后果 |
+|---------------------|---------|:------:|---------|
+| "变更只有 5 行代码，安全审查可以跳过" | 单行代码也可以引入 SQL 注入或密钥泄露 | R0 | 安全漏洞逃逸审查 |
+| "这次改动都是 .py 文件，应该用 lang-python 审查" | 项目可能还有 project-* 专项审查需要同时应用 | R1 | 项目特定规则（如目录约定、配置管理）未被检查 |
+| "子 skill 结果差不多，我直接汇总就行不用启动 Agent" | 子 skill 包含特定审查逻辑和检查清单 | R2 | 漏掉专项审查中的关键检查项 |
+| "这个问题很小，标 P0 有点小题大做" | 小问题可能触发其他模块的连锁失败 | R3 | 实际严重程度被低估，修订优先级倒置 |
+
+## 错误处理
+
+| 环节 | 失败条件 | 处理方式 |
+|------|---------|---------|
+| 获取变更 | git 命令返回空或无权限 | 检查仓库状态，确认当前目录为 git 仓库 |
+| 路由匹配 | 文件路径匹配到多个子 skill | 全部并行启动审查，去重汇总 |
+| 路由匹配 | 文件路径未匹配到任何子 skill | 仅执行全局审查（安全/SOLID/坏味道），警告路由盲区 |
+| Agent 执行 | explore agent 超时或返回错误 | 重试 3 次，仍失败则跳过该 skill 并在报告中标注 |
+| 结果汇总 | 多个子 skill 对同一问题产生重复报告 | 按文件:行号去重，保留优先级最高的问题 |
+
+## 参考文档索引
+
+| 文档 | 用途 |
+|------|------|
+| `code-review/security-review/SKILL.md` | 安全审查：密钥管理、注入防护、XSS/CSRF |
+| `code-review/solid-principles/SKILL.md` | SOLID 原则：SRP/OCP/LSP/ISP/DIP |
+| `code-review/code-smells/SKILL.md` | 代码坏味道：长函数、重复代码、God Class |
+| `code-review/lang-python/SKILL.md` | Python 编码规范 |
+| `code-review/lang-go/SKILL.md` | Go 编码规范 |
+| `code-review/lang-js/SKILL.md` | JavaScript 编码规范 |
+| `code-review/lang-ts/SKILL.md` | TypeScript 编码规范 |
+| `code-review/lang-react/SKILL.md` | React 前端编码规范 |
+| `code-review/yaml-format/SKILL.md` | YAML 格式检查 |
+| `code-review/permissions-review/SKILL.md` | 权限审查 |
+| `code-review/openspec-docs/SKILL.md` | OpenSpec 文档审查 |
+| `code-review/review-issues.md` | 问题跟踪文件 |
+
 ## 最佳实践
 
 1. **及时审查**: 代码提交前或 PR 创建后立即审查
