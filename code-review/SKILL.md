@@ -40,9 +40,6 @@ git diff
 
 | 变更路径 | 触发子 Skill | 执行方式 | 说明 |
 |----------|-------------|---------|------|
-| `AI_Data/` 或 `skills/datasheet-*` 或 `config.yaml` | `code-review/project-datasheet-parse/SKILL.md` | **Agent** | DatasheetParse 项目 |
-| `controller/` 或 `model/` 或 `middleware/` 或 `relay/` | `code-review/project-oneapi/SKILL.md` | **Agent** | One API 项目 |
-| `src/pcb_mcp/` 或 `frontend/` 或 `tests/` 或 `AGENTS.md` 或 `pyproject.toml` | `code-review/project-pcb-mcp/SKILL.md` | **Agent** | PCB MCP 项目 |
 | 任何包含 `*.py` 文件的变更 | `code-review/lang-python/SKILL.md` | **Agent** | Python 语言 |
 | 任何包含 `*.go` 文件的变更 | `code-review/lang-go/SKILL.md` | **Agent** | Go 语言 |
 | 任何包含 `*.js` 或 `*.mjs` 文件的变更 | `code-review/lang-js/SKILL.md` | **Agent** | JavaScript 语言 |
@@ -60,7 +57,6 @@ git diff
 
 **路由规则**：
 - 所有子 skill 统一通过 Agent 执行（条件触发或始终触发）
-- 项目规则根据文件路径匹配（含 `project-` 前缀）
 - 语言规则根据文件后缀匹配（含 `lang-` 前缀）
 - 安全/SOLID/坏味道无条件执行（始终启动 Agent 审查）
 
@@ -206,7 +202,7 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 | 规则 | 内容 | 违反后果 |
 |------|------|:------:|
 | R0 | 任何代码审查必须同时执行安全审查、SOLID 原则、代码坏味道三项全局审查 | 安全漏洞或结构性缺陷被遗漏 |
-| R1 | 项目规则和语言规则必须根据文件路径/后缀自动路由，不得手动选择 | 审查维度不完整，特定领域问题被忽略 |
+| R1 | 语言规则必须根据文件后缀自动路由，不得手动选择 | 审查维度不完整，特定领域问题被忽略 |
 | R2 | 所有子 skill 统一通过 Agent 执行，禁止协调者内联处理审查内容 | 审查上下文过大，质量下降 |
 | R3 | 审查结果必须按 P0/P1/P2 三级分类输出 | 优先级混乱，无法区分紧急和可选问题 |
 | R4 | 发现问题必须记录到 `review-issues.md`，格式遵循记录模板 | 问题跟踪链断裂，重复审查无效 |
@@ -216,7 +212,7 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 | Agent 可能产生的想法 | 实际现实 | 违反规则 | 实际后果 |
 |---------------------|---------|:------:|---------|
 | "变更只有 5 行代码，安全审查可以跳过" | 单行代码也可以引入 SQL 注入或密钥泄露 | R0 | 安全漏洞逃逸审查 |
-| "这次改动都是 .py 文件，应该用 lang-python 审查" | 项目可能还有 project-* 专项审查需要同时应用 | R1 | 项目特定规则（如目录约定、配置管理）未被检查 |
+| "这次改动都是 .py 文件，应该用 lang-python 审查" | 还需要检查安全、SOLID、代码坏味道等全局审查 | R1 | 全局审查维度被遗漏 |
 | "子 skill 结果差不多，我直接汇总就行不用启动 Agent" | 子 skill 包含特定审查逻辑和检查清单 | R2 | 漏掉专项审查中的关键检查项 |
 | "这个问题很小，标 P0 有点小题大做" | 小问题可能触发其他模块的连锁失败 | R3 | 实际严重程度被低估，修订优先级倒置 |
 
