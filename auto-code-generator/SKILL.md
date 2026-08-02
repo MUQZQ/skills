@@ -64,6 +64,7 @@ description: >
 Phase 0  探索阶段（可选）       explore → explore-review (最多 3 次循环) → Phase 1
 Phase 1  变更拆分（可选）       大需求拆分为多个变更，构建变更 DAG → Phase 2
          (Phase 0/1 均跳过则直接从用户描述进入 Phase 2)
+Phase 2  提案生成 + 工件检视    openspec-propose → artifact-review
 Phase 3  一致性校验            内置校验逻辑 + 跨变更一致性 [GATE]
 Phase 4  代码实施 + TDD+Code Review  DAG 分组 → 多 Agent 并行 → TDD 红绿 → 5 轮审查 [GATE]
 Phase 5  全流程校验            构建 + 单元测试 + 真实数据验证 + 任务 + artifact [GATE]
@@ -79,8 +80,6 @@ Phase 7  最终报告              所有变更的处理结果和偏差记录
 - critical 级别检视不通过需要决策（任何 Phase）
 
 **其他所有情况必须自动修复，禁止中断**。
-
-本地 commit 自动执行，合入主分支（main/master）由人工完成。
 
 本地 commit 自动执行，合入主分支（main/master）由人工完成。
 
@@ -423,6 +422,13 @@ Round 5: 最终检查 → 残留 P2 记录（允许）
 
 **若项目提供了真实数据验证脚本，必须执行并通过。不涉及真实数据的变更自动跳过此项**。
 
+
+验证入口由项目定义，按优先级自动检测：
+1. `.codex/verify-real-data.sh`
+2. `Makefile` 中的 `verify-real-data` target
+3. `.codex/verify-real-data.ps1`
+
+若以上均不存在且变更不涉及数据处理，自动跳过此项。
 ```bash
 # 参考示例（datasheet_mcp 项目）
 uv run python -c "
@@ -609,7 +615,7 @@ git commit -m "<message>"
 - Phase 4 代码实施：✓ (N 组，M tasks, 最大并行 K)
 - Phase 5 全流程校验：✓
 - Phase 6 归档：✓
-- Phase 6 自动提交：✓ (本地) (本地)
+- Phase 6 自动提交：✓ (本地)
 ```
 
 ---
@@ -712,10 +718,3 @@ git commit -m "<message>"
 *版本：3.1*
 *最后更新：2026-08-02*
 *变更：触发词优化、前置条件、场景路由、分支保护、全自动提交、TDD职责明确、重试上限、真实数据验证通用化、特有反例*
-验证入口由项目定义，按优先级自动检测：
-1. `.codex/verify-real-data.sh`
-2. `Makefile` 中的 `verify-real-data` target
-3. `.codex/verify-real-data.ps1`
-
-若以上均不存在且变更不涉及数据处理，自动跳过此项。
-
