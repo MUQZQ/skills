@@ -9,7 +9,7 @@ description: >
 
 ## 概述
 
-维护一份权威 `AGENTS.md`（位于 `C:\Users\Admin\.cc-switch\skills\AGENTS.md`），通过符号链接注入到各 agent 工具的全局配置中。当权威文件更新后，检查所有目标是否同步，未同步则自动修复。
+维护一份权威 `AGENTS.md`（位于 ``<skill-dir>/../AGENTS.md`（即 .cc-switch/skills/AGENTS.md）`），通过符号链接注入到各 agent 工具的全局配置中。当权威文件更新后，检查所有目标是否同步，未同步则自动修复。
 
 ## 铁律
 
@@ -46,7 +46,7 @@ description: >
 
 ### 步骤 1：确认权威源
 
-读取 `C:\Users\Admin\.cc-switch\skills\AGENTS.md`，记录内容哈希和修改时间。若源不存在则报错退出。
+读取 ``$PSScriptRoot/../AGENTS.md`（从 skill 自身位置向上推导）`，记录内容哈希和修改时间。若源不存在则报错退出。
 
 ### 步骤 2：遍历目标并检查
 
@@ -54,7 +54,7 @@ description: >
 
 ```powershell
 $target = "<目标路径>"
-$source = "C:\Users\Admin\.cc-switch\skills\AGENTS.md"
+$source = "$PSScriptRoot/../AGENTS.md"
 
 # 检查父目录是否存在
 $parent = Split-Path $target -Parent
@@ -128,6 +128,6 @@ Skill: agents-sync
 
 ---
 
-*版本：1.1*
+*版本：1.2*
 *最后更新：2026-08-02*
-*变更：铁律速查、未同步判定标准、Claude Code 自动检测、一键执行命令*
+*变更：源路径改为从 skill 自身位置推导（PSScriptRoot），消除硬编码*
