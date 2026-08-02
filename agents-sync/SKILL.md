@@ -11,90 +11,123 @@ description: >
 
 维护一份权威 `AGENTS.md`（位于 `C:\Users\Admin\.cc-switch\skills\AGENTS.md`），通过符号链接注入到各 agent 工具的全局配置中。当权威文件更新后，检查所有目标是否同步，未同步则自动修复。
 
+## 铁律
+
+| 规则 | 内容 |
+|------|------|
+| R0 | **符号链接优先** — 优先创建符号链接而非复制文件；仅当权限不足时降级为复制 |
+
 ## 前置条件
 
 - 权威 AGENTS.md 存在于 `.cc-switch/skills/AGENTS.md`
 - 目标路径的父目录已存在
-- Windows 上创建符号链接可能需要管理员权限
+- Windows 上创建符号链接需要管理员权限（若无则降级为文件复制）
 
 ## 目标路径
 
-| Agent 工具 | 目标路径 | 文件名 |
+自动检测规则（按优先级）：
+
+| Agent 工具 | 检测方式 | 目标文件名 |
 |-----------|---------|--------|
-| Codex | `C:\Users\Admin\.codex\` | `AGENTS.md` |
-| Claude Code | `C:\Users\Admin\` (或 `%USERPROFILE%\.claude\`) | `CLAUDE.md` |
-| OpenCode | `%USERPROFILE%\.opencode\` | `AGENTS.md` |
+| Codex | 固定路径 `$env:USERPROFILE\.codex\` | `AGENTS.md` |
+| Claude Code | 检测 `$env:USERPROFILE\CLAUDE.md` 或 `$env:USERPROFILE\.claude\CLAUDE.md`（优先已存在的路径） | `CLAUDE.md` |
+| OpenCode | 检测 `$env:USERPROFILE\.opencode\`（目录存在则同步） | `AGENTS.md` |
+
+## "未同步"判定标准
+
+| 状态 | 条件 | 处理方式 |
+|------|------|---------|
+| ✅ 已同步 | 符号链接指向权威源 | 无需操作 |
+| ⚠️ 内容过期 | 非符号链接，且内容与权威源不一致 | 删除旧文件 → 创建符号链接 |
+| ❌ 缺失 | 目标文件不存在（但父目录存在） | 直接创建符号链接 |
+| ⊘ 跳过 | 父目录不存在（该 agent 未安装） | 跳过，不报错 |
 
 ## 工作流
 
-### 步骤 1：读取权威源
+### 步骤 1：确认权威源
 
-读取 `C:\Users\Admin\.cc-switch\skills\AGENTS.md`，获取最新内容和修改时间。
+读取 `C:\Users\Admin\.cc-switch\skills\AGENTS.md`，记录内容哈希和修改时间。若源不存在则报错退出。
 
-### 步骤 2：检查所有目标
+### 步骤 2：遍历目标并检查
 
-对每个目标路径，依次检查：
+对每个目标：
 
-```
-1. 目标文件是否存在
-2. 是否为符号链接（Windows: 检查 LinkType）
-3. 符号链接是否指向权威源
-4. 若不是链接：内容是否与权威源一致
-```
-
-Windows 检测命令：
 ```powershell
-Get-Item <target> | Select-Object LinkType, Target
+$target = "<目标路径>"
+$source = "C:\Users\Admin\.cc-switch\skills\AGENTS.md"
+
+# 检查父目录是否存在
+$parent = Split-Path $target -Parent
+if (-not (Test-Path $parent)) { return "skip" }
+
+# 检查目标文件
+if (Test-Path $target) {
+    $item = Get-Item $target -Force -ErrorAction Stop
+    if ($item.LinkType -eq "SymbolicLink" -and $item.Target -eq $source) {
+        return "ok"
+    }
+    return "stale"
+} else {
+    return "missing"
+}
 ```
 
-### 步骤 3：同步状态报告
+### 步骤 3：输出状态报告
 
 ```
 == Agents 同步状态 ==
 
-| Agent | 路径 | 状态 | 说明 |
-|-------|------|------|------|
-| Codex | C:\Users\Admin\.codex\AGENTS.md | ✅ | 符号链接已指向源 |
-| Claude Code | C:\Users\Admin\CLAUDE.md | ❌ | 缺少文件 |
-| OpenCode | C:\Users\Admin\.opencode\AGENTS.md | ⚠️ | 内容不一致 |
+| Agent       | 路径                                      | 状态   | 说明               |
+|-------------|------------------------------------------|--------|-------------------|
+| Codex       | ~\.codex\AGENTS.md                     | ✅     | 符号链接已指向源    |
+| Claude Code | ~\CLAUDE.md                             | ⚠️    | 内容不一致，需更新  |
+| OpenCode    | ~\.opencode\AGENTS.md                  | ⊘     | 目录不存在，跳过    |
 ```
 
 ### 步骤 4：自动修复
 
-对未同步的目标，按优先级修复：
+仅处理 ⚠️ 和 ❌ 状态：
 
-1. **优先创建符号链接**（推荐，自动同步）
-2. 若符号链接失败（权限不足），则复制文件内容
-
-创建符号链接：
 ```powershell
-# 删除旧文件（如有）
-Remove-Item "<target>" -Force -ErrorAction SilentlyContinue
-# 创建符号链接
-New-Item -ItemType SymbolicLink -Path "<target>" -Target "C:\Users\Admin\.cc-switch\skills\AGENTS.md" -Force
+# 1. 删除旧文件（⚠️ 状态）
+Remove-Item $target -Force -ErrorAction SilentlyContinue
+
+# 2. 尝试创建符号链接
+try {
+    New-Item -ItemType SymbolicLink -Path $target -Target $source -Force -ErrorAction Stop
+    Write-Host "  ✅ 符号链接已创建"
+} catch {
+    # 3. 降级：复制文件内容
+    Copy-Item $source $target -Force
+    Write-Host "  ⚠️ 符号链接失败，已降级为文件复制（需管理员权限才能创建链接）"
+}
 ```
 
-**Claude Code 特殊处理**：Claude Code 读取 `CLAUDE.md`（非 `AGENTS.md`），但文件名不同。仍需创建指向 `AGENTS.md` 的符号链接，让 Claude Code 通过链接名 `CLAUDE.md` 读取权威内容。
+### 步骤 5：验证
 
-### 步骤 5：最终确认
+修复后重新运行步骤 2，确认所有非跳过目标均为 ✅。
 
-修复后重新运行步骤 2，确认全部 ✅。
+## 一键执行
 
-## 自动触发
+每次更新 AGENTS.md 后，运行：
 
-- 每次 `AGENTS.md` 提交后，可手动或通过 hook 触发同步
-- 定期检查（建议每次启动 Codex 时运行一次）
+```
+Skill: agents-sync
+```
+
+即可自动完成检查 + 修复 + 验证全流程。
 
 ## 错误处理
 
 | 场景 | 处理方式 |
 |------|---------|
-| 目标父目录不存在 | 自动创建父目录后重试 |
-| 符号链接创建失败（权限） | 降级为文件复制，并提示用户手动授权 |
+| 目标父目录不存在 | 跳过该目标（标记 ⊘），不报错 |
+| 符号链接创建失败（权限不足） | 降级为文件复制，提示用户手动授权以启用自动同步 |
 | 权威源不存在 | 报错退出，提示源文件路径 |
-| 目标被占用（文件锁定） | 跳过，标记为 ⚠️ 待处理 |
+| 目标被占用（文件锁定） | 跳过，标记 ⚠️ 并在报告中注明"文件被锁定" |
 
 ---
 
-*版本：1.0*
+*版本：1.1*
 *最后更新：2026-08-02*
+*变更：铁律速查、未同步判定标准、Claude Code 自动检测、一键执行命令*
