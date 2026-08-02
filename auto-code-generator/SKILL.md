@@ -1,6 +1,9 @@
 ---
 name: auto-code-generator
-description: 强制 spec 驱动全流程自动化 — 从提案到归档再到自动提交，必须执行 TDD 红绿循环、Code Review 5 轮审查、真实数据验证，所有关卡必须通过才允许进入下一阶段
+description: >
+  强制 spec 驱动全流程自动化，从提案到归档再到自动提交。
+  当用户提到“自动生成代码”“全流程实施”“spec 驱动开发”“openspec 自动提交”“一键实施变更”“自动化管线”时触发。
+  必须执行 TDD 红绿循环、Code Review 5 轮审查、真实数据验证，所有关卡必须通过才允许进入下一阶段
 ---
 
 # 自动代码生成器 v3.0
@@ -32,6 +35,9 @@ description: 强制 spec 驱动全流程自动化 — 从提案到归档再到�
 | "真实数据验证跑不过，应该是测试数据问题而不是代码问题" | 99% 的情况下就是代码问题 | R3 | 上线后用真实数据暴露 bug，hotfix 成本远高于追查 |
 | "5 轮 Code Review 太费时间，跑 2 轮没 P0 就够了" | P0 可能在第 3-5 轮审查中被不同角度发现 | R1 | 漏网的 P0 问题在归档后被发现，需要开新变更修复 |
 
+| "多个 Agent 编辑同一文件没关系，后写的覆盖前面的" | 并行 Agent 写同名文件会相互覆盖 | R0, R1 | 代码丢失，需要重新实施 |
+| "Phase 5 失败了，tasks.md 已经全部 [x]，直接归档吧" | 校验失败意味着代码有问题，状态标记不等于代码质量 | R3, R5 | 有 bug 的代码进入归档，后续全线受影响 |
+| "这个小变更不需要走完整 8 Phase，直接干" | 每个 Phase 都有其作用，跳过会留下漏洞 | R2, R5 | 缺少 spec 或测试的代码后期难以维护 |
 ## 参考文档索引
 
 | 文档 | 用途 |
@@ -55,9 +61,9 @@ description: 强制 spec 驱动全流程自动化 — 从提案到归档再到�
 ## 完整流程
 
 ```
-Phase 0  探索阶段（可选）       explore → explore-review (最多 3 次循环)
-Phase 1  变更拆分（可选）       大需求拆分为多个变更，构建变更 DAG
-Phase 2  提案生成 + 工件检视    openspec-propose → artifact-review
+Phase 0  探索阶段（可选）       explore → explore-review (最多 3 次循环) → Phase 1
+Phase 1  变更拆分（可选）       大需求拆分为多个变更，构建变更 DAG → Phase 2
+         (Phase 0/1 均跳过则直接从用户描述进入 Phase 2)
 Phase 3  一致性校验            内置校验逻辑 + 跨变更一致性 [GATE]
 Phase 4  代码实施 + TDD+Code Review  DAG 分组 → 多 Agent 并行 → TDD 红绿 → 5 轮审查 [GATE]
 Phase 5  全流程校验            构建 + 单元测试 + 真实数据验证 + 任务 + artifact [GATE]
@@ -73,6 +79,10 @@ Phase 7  最终报告              所有变更的处理结果和偏差记录
 - critical 级别检视不通过需要决策（任何 Phase）
 
 **其他所有情况必须自动修复，禁止中断**。
+
+本地 commit 自动执行，合入主分支（main/master）由人工完成。
+
+本地 commit 自动执行，合入主分支（main/master）由人工完成。
 
 ---
 
@@ -308,16 +318,15 @@ Group 3 (依赖 Group 2):
 
 3. **TDD 红绿循环验证（强制）**
    
-   对每个 task 的实现，**必须**验证 TDD 循环：
+   每个 task 的 subagent 在实施阶段自行完成 TDD（先写测试 → 实现代码 → 重构）。
+   主 agent 在此步骤仅做**结果验证**：
    ```
-   1. 运行现有测试（确保绿）
-   2. 添加新测试（红 - 预期失败）
-   3. 实现代码使测试通过（绿）
-   4. 重构优化
-   5. 全量测试验证
+   1. 确认 subagent 产出了测试文件（必须有新增/修改的测试）
+   2. 运行全量测试确认通过（绿）
+   3. 测试失败或缺少测试 → 返回 task 要求 subagent 补全（最多 3 次）
    ```
    
-   **验证失败**: 返回 task 重新执行 TDD 循环。
+   **验证失败**: 返回 task 重新执行，超过 3 次标记为遗留问题。
 
 4. **分组合并审查** — 调用 `code-review-before-commit` 进行 5 轮审查
 
@@ -374,7 +383,7 @@ Round 5: 最终检查 → 残留 P2 记录（允许）
 - 所有组 Code Review 通过（无 P0/P1 问题）
 - TDD 循环全部完成
 
-**失败处理**: 返回 Phase 4 重新实施失败的 task。
+**失败处理**: 返回 Phase 4 重新实施失败的 task（每个 task 最多重试 3 次，超过则标记为遗留问题，记录后继续）。
 
 ---
 
@@ -410,12 +419,12 @@ Round 5: 最终检查 → 残留 P2 记录（允许）
 
 **失败处理**: 修复后重新测试，**禁止跳过**。
 
-### 5.3 真实数据验证（强制）
+### 5.3 真实数据验证（如适用）
 
-**针对涉及真实数据的变更，必须使用真实数据验证功能正常**。
+**若项目提供了真实数据验证脚本，必须执行并通过。不涉及真实数据的变更自动跳过此项**。
 
 ```bash
-# 示例：datasheet_mcp 真实数据验证
+# 参考示例（datasheet_mcp 项目）
 uv run python -c "
 from datasheet_mcp.tools.utils.compare import convert
 import yaml
@@ -477,7 +486,7 @@ openspec status --change "<name>" --json
 
 **通过条件**: 所有检查项均为 ✅
 
-**失败处理**: 修复后重新执行全部校验，**禁止进入 Phase 6**。
+**失败处理**: 修复后重新执行全部校验（最多 3 次），超过则标记为遗留问题进入 Phase 7。
 
 ---
 
@@ -515,9 +524,19 @@ Skill: openspec-archive-change
 
 归档完成后，执行 git 提交：
 
-#### 6.2.1 查看变更状态
+#### 6.2.1 分支检查与变更状态
 
 ```bash
+# 检查当前分支
+BRANCH=$(git branch --show-current)
+echo 当前分支: $BRANCH
+
+# 若在主干分支上，记录警告但继续本地提交
+# 合入主分支由人工完成，此处仅做本地提交
+case "$BRANCH" in
+  main|master) echo "[WARN] 当前在主干分支上，commit 仅本地生效，合入由人工完成" ;;
+esac
+
 git status
 git diff --cached
 ```
@@ -549,11 +568,12 @@ git add <changed-files>
 - `docs`: 文档更新
 - `test`: 测试相关
 
-#### 6.2.4 用户确认
+#### 6.2.4 自动执行提交
 
-展示提交信息供用户确认:
+全自动提交，无需用户确认：
+
 ```
-== 提交预览 ==
+== 自动提交 ==
 
 提交信息:
   feat(sch-mcp): expand toolset with 40+ tools
@@ -563,9 +583,9 @@ git add <changed-files>
   A  src/sch_mcp/tools/auth.py
   A  src/sch_mcp/tools/schematic.py
   ...
-
-是否继续提交？[Y/n]
 ```
+
+**注意**: 仅本地提交，不执行 `git push`。合入主分支由人工完成。
 
 #### 6.2.5 执行提交
 
@@ -580,7 +600,7 @@ git commit -m "<message>"
 
 **Change:** <change-name>
 **归档位置:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**提交:** <commit-hash>
+**提交:** <commit-hash> (仅本地，未推送)
 **提交信息:** <message>
 
 === 流程统计 ===
@@ -589,7 +609,7 @@ git commit -m "<message>"
 - Phase 4 代码实施：✓ (N 组，M tasks, 最大并行 K)
 - Phase 5 全流程校验：✓
 - Phase 6 归档：✓
-- Phase 6 自动提交：✓
+- Phase 6 自动提交：✓ (本地) (本地)
 ```
 
 ---
@@ -634,15 +654,15 @@ git commit -m "<message>"
 
 | Phase | 调用 Skill | 说明 |
 |-------|-----------|------|
-| 1 | `openspec-propose` | 生成 proposal.md + design.md + tasks.md |
-| 2 | 内置校验逻辑 | 使用 `openspec status --json` 和文件内容校验 |
-| 3 | `openspec-apply-change` | 按 tasks.md 逐个实施（Agent 并行） |
-| 3 | `code-review-before-commit` | 每组实施后 5 轮审查循环 |
-| 3 | `code-review` | code-review-before-commit 内部自动路由 |
-| 4 | 内置校验逻辑 | 构建 + 测试 + 任务完成度 + artifact 完成度 |
-| 4 | `qeda-test-guard` 或类似 | 真实数据验证（如有） |
-| 5 | `openspec-archive-change` | 归档变更 + delta spec 同步 |
-| 6 | 内置 git 逻辑 | conventional commit 提交 |
+| 2 | `openspec-propose` | 生成 proposal.md + design.md + tasks.md |
+| 3 | 内置校验逻辑 | 使用 `openspec status --json` 和文件内容校验 |
+| 4 | `openspec-apply-change` | 按 tasks.md 逐个实施（Agent 并行） |
+| 4 | `code-review-before-commit` | 每组实施后 5 轮审查循环 |
+| 4 | `code-review` | code-review-before-commit 内部自动路由 |
+| 5 | 内置校验逻辑 | 构建 + 测试 + 任务完成度 + artifact 完成度 |
+| 5 | 项目自定义验证脚本 | 真实数据验证（如有，由项目提供） |
+| 6 | `openspec-archive-change` | 归档变更 + delta spec 同步 |
+| 6 | 内置 git 逻辑 | conventional commit 本地提交（不推送） |
 
 ---
 
@@ -666,7 +686,7 @@ git commit -m "<message>"
 | Code Review 5 轮后仍有 P0/P1 | 展示最终结果，用户决定是否继续 |
 | 真实数据验证失败 | 修复后重新验证，不跳过 |
 | 归档时 artifact 未完成 | 警告用户，确认后继续或返回修复 |
-| 并行 task 文件冲突 | 暂停，手动合并冲突后重试 |
+| 并行 task 文件冲突 | 自动重试合并（最多 3 次），失败则标记遗留问题 |
 | Task 依赖无法推断 | 标记为手动分组，用户确认后继续 |
 | 并行 Agent 部分失败 | 重试失败的 Agent，其他继续 |
 | 个别功能问题 | 可跳过，记录到遗留问题列表 |
@@ -689,6 +709,13 @@ git commit -m "<message>"
 
 ---
 
-*版本：3.0*
-*最后更新：2026-07-08*
-*变更：强化强制关卡 — 增加 TDD 红绿循环、真实数据验证、GATE CHECK 阻断机制*
+*版本：3.1*
+*最后更新：2026-08-02*
+*变更：触发词优化、前置条件、场景路由、分支保护、全自动提交、TDD职责明确、重试上限、真实数据验证通用化、特有反例*
+验证入口由项目定义，按优先级自动检测：
+1. `.codex/verify-real-data.sh`
+2. `Makefile` 中的 `verify-real-data` target
+3. `.codex/verify-real-data.ps1`
+
+若以上均不存在且变更不涉及数据处理，自动跳过此项。
+
