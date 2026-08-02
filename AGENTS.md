@@ -1,87 +1,72 @@
-# Environment Notes
+# 核心规则
 
-## Platform: Windows + Git Bash
+## 强制规则
 
-The host OS is **Windows**, but the shell is configured as **bash** (Git Bash). This creates a hybrid environment where most Unix commands work, but there are important differences to be aware of.
-
-## Path Conventions
-
-- Windows native paths use backslashes: `C:\Users\username\project`
-- Git Bash paths use forward slashes: `/c/Users/username/project`
-- When passing paths to bash commands, prefer forward-slash format or quote the path
-- Windows filesystem is **case-insensitive** but **case-preserving** — avoid relying on case-sensitive path distinctions
-- Avoid paths with spaces without quoting; prefer double quotes around paths
-
-## Command Behavior Differences
-
-- `sed`, `awk`, `grep`, `find` etc. are available via Git Bash but may have subtle behavioral differences from GNU/Linux versions
-- `which` works in Git Bash; `where` is the native Windows equivalent
-- `open` does not exist; use `explorer .` to open a folder in File Explorer, or `start` to open files with default programs
-- `pbcopy`/`pbpaste` do not exist; use `clip` and `powershell Get-Clipboard` as alternatives
-- `realpath` may not be available; use `readlink -f` or `cygpath -w`/`cygpath -u` for path conversion
-- Symbolic links require elevated privileges or Developer Mode enabled; prefer junctions or copies
-
-## Line Endings
-
-- Windows uses CRLF (`\r\n`); Git Bash tools typically output LF (`\n`)
-- Git may auto-convert line endings depending on `core.autocrlf` setting
-- When editing files, be mindful of mixed line endings
-
-## Process & System Commands
-
-- `ps` in Git Bash shows MSYS2 processes only; use `tasklist` for all Windows processes
-- `kill` works for Git Bash processes; use `taskkill /PID <pid> /F` for Windows processes
-- Environment variables: in bash use `$VAR` or `${VAR}`, not `%VAR%`
-- `echo $PATH` shows bash-style colon-separated paths, not Windows semicolon-separated
-
-## Networking
-
-- `curl` and `ssh` are available via Git Bash
-- `netstat`, `ping`, `nslookup` work from both Git Bash and CMD
-
-## File Permissions
-
-- Unix-style `chmod` has limited effect on NTFS; execute permission is determined by file extension (`.exe`, `.bat`, `.cmd`, `.ps1`)
-- `chmod +x` on a script without a Windows extension won't make it executable in CMD/PowerShell
-
-## Node.js / npm
-
-- Use `npx` and `npm` from Git Bash as usual
-- If Node scripts spawn child processes, they may use CMD by default unless explicitly configured
-
-## Python
-
-- If using Python, prefer `uv run` for virtual environment management as configured
-- `python` or `python3` may point to the Windows Python or the Git Bash Python depending on PATH order
+| 规则 | 内容 |
+|------|------|
+| R0 | **测试驱动开发 (TDD)** — 新功能和 Bug 修复必须遵循红→绿→重构循环，不可跳过 |
+| R1 | **代码质量门禁** — 提交前必须通过 `code-review` 审查，P0/P1 问题必须清零 |
+| R2 | **如无必要勿增实体** — 优先复用现有代码和模块，不创建任务未要求的文件、抽象层或依赖 |
+| R3 | **先想清楚再做** — 编码前必须理解需求、设计思路和影响范围 |
+| R4 | **高内聚低耦合** — 模块内部紧密相关，模块之间依赖最小化 |
+| R5 | **禁止操作主干分支** — 不在 `main`/`master` 上直接 commit；合入由人工完成 |
+| R6 | **禁止 force push** — 永远不使用 `git push --force`，rebase 后使用 `--force-with-lease` |
 
 ## 执行约束原则
 
-1. **严格步骤执行** — 执行 skill 时，必须严格遵循其定义的 phase/step 顺序，不得跳过、合并、调序或提前执行后续步骤。
+1. **严格步骤执行** — 执行 skill 时必须严格遵循其定义的 phase/step 顺序，不得跳过、合并、调序或提前执行后续步骤。
 
 2. **单步完成制** — 同一时间仅执行一个步骤，完成该步并自我验证通过后，才允许进入下一步。
 
-3. **如无必要勿增实体** — 不创建任务未要求的文件、抽象层、依赖或功能。仅实现明确指定的内容，不做过度设计。
+3. **大型变更走管线** — 预估任务数 > 5 或影响模块 > 2 的变更，优先使用 `auto-code-generator` skill 走全流程自动化管线，而非手动逐步骤执行。
 
-4. **使用中文** — 所有输出、交流、审查记录、日志及代码注释均使用中文。用户的母语是中文，全程保持中文交流。
+## 输出约定
 
-## 方法论 Skill 体系
+- **语言** — 所有输出、交流、审查记录、日志及代码注释均使用中文
 
-本项目内置了一套**方法论 Skill 体系**，由 `method-router` 元 Skill 统一调度。遇到需要诊断分析、决策选型、设计规划、风险评估、总结汇报等任务时，优先经过 method-router 路由，而非直接调用具体方法论 Skill。
+- **换行符** — 编辑文件前读取确认当前行尾风格（LF 或 CRLF）；写入时 `newline=''` 保持原样，不改变文件既有换行风格
 
-### 架构
+- **Emoji** — 不使用 emoji 字符
+
+---
+
+# 工作流 Skill 体系
+
+## 全流程自动化
+
+| Skill | 用途 | 触发 |
+|-------|------|------|
+| `auto-code-generator` | spec 驱动全流程：探索→提案→实施→校验→归档→提交 | "自动生成代码""全流程实施""一键实施变更" |
+
+## 代码质量
+
+| Skill | 用途 | 触发 |
+|-------|------|------|
+| `code-review` | 审查路由协调者，按文件类型分派子审查 | 提交前、"review""审查" |
+| `code-review-before-commit` | 5 轮审查循环 + 用户确认 + git commit | 提交前审查 |
+| `refactor-tdd` | TDD 驱动的安全重构流程 | "重构""refactor""重写""整理代码" |
+
+## 分支与同步
+
+| Skill | 用途 | 触发 |
+|-------|------|------|
+| `branch-manager` | Git 分支管理工作流 | "创建分支""stash""checkpoint""rebase" |
+| `usb-git-manager` | U 盘 Git 仓库同步 | "同步 U 盘""USB 同步" |
+
+## 方法论体系
+
+由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、风险评估、总结汇报等任务时，优先经过 method-router 路由。
 
 ```
-用户请求（"为什么匹配率低""有风险吗""三个方案选哪个"）
+用户请求
     │
     ▼
 method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/report）
     │
-    ├── 路由到单个 Skill（如 5W2H）
-    ├── 编排 Skill 链（如 5W2H → SCQA）
-    └── 降级为手动引导（Skill 缺失时）
+    ├── 路由到单个 Skill
+    ├── 编排 Skill 链
+    └── 降级为手动引导
 ```
-
-### 已有 Skill
 
 | Skill | 类别 | 用途 |
 |-------|------|------|
@@ -96,39 +81,85 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 | `eisenhower-matrix` | 决策 | 紧急×重要四象限优先级 |
 | `mece` | 分析 | 结构化穷举检查 |
 | `dmaic` | 改进 | 数据驱动的六西格玛改进 |
-| `fmea` | 风险 | 失效模式与影响分析 |
 | `star` | 报告 | 情境→任务→行动→结果叙事 |
 | `pdca-tuning` | 改进 | PDCA 循环流程优化 |
 
-### 触发规则
+**触发规则**：
+- 用户显式指定 > 路由推荐（用户说"用 5W2H"则直接执行，不经过路由器）
+- 置信度 < 70% 时降级，展示选项让用户选择
+- 紧急场景（线上故障/用户投诉）跳过确认，直接执行最短路径
+- 输出统一使用 SCQA 模板（情境→冲突→问题→答案）
 
-- **用户显式指定 > 路由推荐**：用户说"用 5W2H 分析"则跳过路由器直接执行
-- **置信度 < 70% 时降级**：不确定时展示选项让用户选，不猜测
-- **紧急场景跳过确认**：线上故障/用户投诉等直接执行最短路径
-- **输出统一用 SCQA 模板**：情境→冲突→问题→答案
+---
 
+# 工程约定
 
-# 全局规则
+## Git 约定
 
-对话时尽量使用中文回答。
+- **分支命名** — 新功能 `feat/<name>`，修复 `fix/<name>`，重构 `refactor/<name>`；Codex 自动分支使用 `codex/<name>`
+- **提交信息** — conventional commit 格式：`<type>(<scope>): <description>`
+- **提交前** — 运行 `code-review` 审查；禁止提交未审查的代码
+- **合入主干** — 由人工完成，agent 仅做本地提交
+- **换行符** — 不改变文件既有换行风格；读取文件时 Python 使用默认 `newline=None`
 
-## 注意事项
+## 下载约定
 
-- 不要使用 emoji 字符
+- 下载依赖或外部资源时优先使用国内镜像加速
 
-- 下载时优先使用国内镜像加速
+---
 
-## 强制规则
+# 环境参考
 
-- **先想清楚再做**: 编码前必须理解需求、设计思路和影响范围，避免盲目动手。
+## Platform: Windows + Git Bash
 
-- **测试驱动开发 (TDD)**: 所有新功能和 Bug 修复必须遵循红绿循环：
-  1. **红**: 先编写失败的测试
-  2. **绿**: 编写最小实现使测试通过
-  3. **重构**: 在测试保护下优化代码
+宿主 OS 为 Windows，shell 配置为 bash (Git Bash)。大部分 Unix 命令可用，但存在重要差异。
 
-- **如无必要勿增实体**: 优先复用现有代码和模块，避免过度设计和不必要的抽象。
+## Path Conventions
 
-- **高内聚低耦合**: 模块内部紧密相关，模块之间依赖最小化。
+- Windows 原生路径使用反斜杠：`C:\Users\username\project`
+- Git Bash 路径使用正斜杠：`/c/Users/username/project`
+- 向 bash 命令传路径时优先使用正斜杠格式或加引号
+- Windows 文件系统**大小写不敏感**但**保留大小写** — 避免依赖大小写区分路径
+- 避免含空格且不加引号的路径；路径优先使用双引号包裹
 
-- **代码质量门禁**: 提交前必须通过 code-review skill 审查
+## Command Behavior Differences
+
+- `sed`、`awk`、`grep`、`find` 等由 Git Bash 提供，但与 GNU/Linux 版本可能存在细微差异
+- `which` 在 Git Bash 中可用；`where` 是 Windows 等价命令
+- `open` 不存在；使用 `explorer .` 在文件管理器中打开目录，使用 `start` 以默认程序打开文件
+- `pbcopy`/`pbpaste` 不存在；使用 `clip` 和 `powershell Get-Clipboard` 替代
+- `realpath` 可能不可用；使用 `readlink -f` 或 `cygpath -w`/`cygpath -u` 进行路径转换
+- 符号链接需要管理员权限或启用开发者模式；优先使用 junction 或复制
+
+## Line Endings
+
+- Windows 使用 CRLF (`\r\n`)；Git Bash 工具通常输出 LF (`\n`)
+- Git 可能根据 `core.autocrlf` 设置自动转换行尾
+- 编辑文件时注意避免混合行尾风格
+
+## Process & System Commands
+
+- Git Bash 中的 `ps` 仅显示 MSYS2 进程；使用 `tasklist` 查看所有 Windows 进程
+- `kill` 适用于 Git Bash 进程；使用 `taskkill /PID <pid> /F` 终止 Windows 进程
+- 环境变量：bash 中使用 `$VAR` 或 `${VAR}`，不使用 `%VAR%`
+- `echo $PATH` 显示冒号分隔的 bash 风格路径，非 Windows 分号分隔格式
+
+## Networking
+
+- `curl` 和 `ssh` 由 Git Bash 提供
+- `netstat`、`ping`、`nslookup` 在 Git Bash 和 CMD 中均可使用
+
+## File Permissions
+
+- Unix 风格的 `chmod` 在 NTFS 上效果有限；执行权限由文件扩展名决定（`.exe`、`.bat`、`.cmd`、`.ps1`）
+- 对无 Windows 扩展名的脚本执行 `chmod +x` 不会使其在 CMD/PowerShell 中可执行
+
+## Node.js / npm
+
+- 在 Git Bash 中正常使用 `npx` 和 `npm`
+- 若 Node 脚本创建子进程，默认可能使用 CMD，除非显式配置
+
+## Python
+
+- 优先使用 `uv run` 管理虚拟环境
+- `python` 或 `python3` 可能指向 Windows Python 或 Git Bash Python，取决于 PATH 顺序
