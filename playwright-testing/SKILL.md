@@ -482,3 +482,49 @@ Playwright MCP 工具可用于：
 - **快速回归**：手动加载文件、点击按钮、截图对比
 - **元素定位**：通过 `page.locator()` 验证选择器是否有效
 - **调试辅助**：当 NiceGUI User fixture 无法覆盖时，用 MCP 快速验证
+
+
+---
+
+## 持久化浏览器测试规范（2026-08 更新）
+
+### 测试文件
+- 真实浏览器 pytest spec 统一放在 `tests/param_compare/test_browser_*.py`：
+  - `test_browser_workbench.py`：三工作区总流程
+  - `test_browser_config_page.py`：参数提取管理/配置页四 Tab 交互
+- 不要新建 `tests/test_browser_*.py` 这类独立脚本；旧脚本 `tests/test_browser_config.py` 已删除。
+
+### 服务器 fixture（配置页专用）
+- 使用 module-scoped `config_server` fixture：
+  - `tmp_path_factory.mktemp` 创建隔离 HOME
+  - 设置 `USERPROFILE` 指向临时 HOME，启动 `sys.executable -m param_compare.app.main`
+  - 用 `socket` 获取空闲端口，`urlopen` 轮询就绪
+  - 测试结束 terminate/wait 清理
+- 隔离 HOME 避免污染 `~/.qeda/category_config.db`。
+
+### 常用定位器（配置页中文 UI）
+- 子 Tab：`page.get_by_role("tab", name="类别定义")` 等
+- 新增类别：`page.get_by_role("button", name="新增类别")`
+- 字段类型下拉：`.pc-subpanels .q-select`，菜单项 `string（字符串）`
+- 器件类型：placeholder `新增器件类型，例如 LDO / EEPROM`
+- 上传 YAML：`input[type=file]` + `set_input_files`
+- 恢复快照：按钮 `恢复` → 对话框按钮 `确认恢复`
+
+### 运行命令
+```bash
+# 配置页浏览器 spec
+uv run pytest tests/param_compare/test_browser_config_page.py -q
+
+# 非浏览器单元/集成测试（排除真实浏览器 spec）
+uv run pytest tests/param_compare \
+  --ignore=tests/param_compare/test_browser_workbench.py \
+  --ignore=tests/param_compare/test_browser_config_page.py \
+  --ignore=tests/param_compare/test_e2e.py \
+  --ignore=tests/param_compare/test_e2e_ui.py \
+  tests/test_display_path.py -q
+```
+
+### 注意事项
+- 新页面交互必须沉淀为持久化 pytest Playwright spec，不能只做临时脚本验证。
+- 新增测试优先扩展现有 `test_browser_*.py`，避免重复启动服务器 fixture。
+- 页面文案变更时同步更新本 skill 的定位器速查表。
