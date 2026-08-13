@@ -1,720 +1,336 @@
 ---
 name: auto-code-generator
 description: >
-  强制 spec 驱动全流程自动化，从提案到归档再到自动提交。
-  当用户提到“自动生成代码”“全流程实施”“spec 驱动开发”“openspec 自动提交”“一键实施变更”“自动化管线”时触发。
-  必须执行 TDD 红绿循环、Code Review 5 轮审查、真实数据验证，所有关卡必须通过才允许进入下一阶段
+  规格驱动的自动代码实施编排器。用户提到“自动生成代码”“全流程实施”“一键实施变更”
+  “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用。先识别项目已有的
+  生命周期所有者和风险档位；有 OpenSpec、QEDA 或其他权威流程时服从其实时状态与指令，只提供
+  任务本地 TDD、安全并行、审查和验证等阶段内能力，不建立第二套流程、状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v3.0
+# 自动代码生成器 v4.0
 
-## 概述
+## 定位
 
-通用化的完整 spec 驱动全流程自动化 skill。**强制执行**从用户描述出发，依次经历 **探索 → 变更拆分 → 提案生成 → 一致性校验 → 代码实施（TDD+Code Review）→ 全流程校验（构建 + 测试 + 真实数据）→ 归档 → 最终报告** 八个 phase。
+本 skill 将已经确认的需求持续推进到可验证结果。它是自适应编排器，不是凌驾于项目工作流之上的
+第二套生命周期。项目的 AGENTS、schema、实时指令、任务状态和原生验证命令始终优先。
 
-**核心原则**: 每个 Phase 结束时必须有明确的 GATE CHECK（关卡检查），任何一项失败立即阻断，禁止跳过。
+保留的工程骨架：规格追踪、阶段门禁、行为任务 TDD、依赖调度、安全并行、严重度审查、最终验证，
+以及“验证后归档，另有 Git 授权时才提交”的顺序。
+
+## 前置输入
+
+开始前尽量确认以下信息；可以从仓库证据推导的内容不要反复询问用户：
+
+- 期望结果与明确排除项；
+- 当前项目规则、权威生命周期和活动 change；
+- 执行意图：`PLAN_ONLY` 或 `PLAN_AND_APPLY`；
+- Git 权限：默认 `NONE`，只有用户明确要求提交时才是 `LOCAL_COMMIT`；
+- 当前分支、HEAD、工作树和重要外部输入的基线；
+- 项目原生构建、测试、集成或人工验证入口。
+
+“实现”“实施”“修复”“自动生成代码”通常表示 `PLAN_AND_APPLY`；“规划”“出方案”“生成 spec”
+表示 `PLAN_ONLY`。这项推断不能覆盖项目要求的人工确认，也不能推断 commit、push、PR 或部署权限。
 
 ## 铁律速查
 
 | 规则 | 内容 | 违反后果 |
-|------|------|:------:|
-| R0 | TDD 红绿循环不可跳过 — 每个 task 实现后必须先写测试（红），再实现代码（绿），再重构 | 代码没有测试保护，退化风险不可控 |
-| R1 | Code Review 不可跳过 — 每个变更完成后必须经过 5 轮审查，P0/P1 问题必须清零 | 安全漏洞或架构问题逃逸到生产 |
-| R2 | Spec 一致性校验不可跳过 — 实施前必须校验 proposal ↔ design ↔ tasks 一致性 | 实现与设计偏差，后期返工成本巨大 |
-| R3 | 全流程校验不可跳过 — 构建 + 单元测试 + 真实数据验证 + 任务完成度 + artifact 完成度 全部通过 | 未验证的代码进入归档，最终交付物质量无保障 |
-| R4 | 归档后再提交不可跳过 — 必须先执行 `openspec-archive-change`，再执行 `git commit` | 提交顺序混乱，归档记录与 git 历史不一致 |
-| R5 | GATE CHECK 任一失败立即阻断，禁止跳过 | 带伤进入下一阶段，累计错误不可收拾 |
+|---|---|---|
+| R0 | 先识别生命周期所有者；已有权威流程时服从其 schema、状态、指令和工件图 | 双重流程产生冲突完成判定 |
+| R1 | 用户请求和已确认决策定义授权边界；工件、审查意见和最佳实践不能自行扩权 | 顺手修复演变为未授权变更 |
+| R2 | 只保留一个持久任务真相源；恢复时读取真实状态、diff 和测试，不依赖历史摘要 | checkbox、报告和消息互相矛盾 |
+| R3 | 风险决定流程深度；数量只触发评审，不能自动拆 change 或自动升级权限 | 低风险任务过载，高风险任务漏审 |
+| R4 | 实施前锁定目标与重要外部输入基线；基线漂移时展示差异并重新确认 | 旧计划被静默套到新代码上 |
+| R5 | 行为任务执行任务本地 `RED → GREEN → REFACTOR`；不为文档或配置任务虚构 RED | 产生无意义测试和虚假 TDD 证据 |
+| R6 | 依赖就绪不等于可并行；只有写入、契约、资源和测试证据均可隔离时才并行 | 多 Agent 覆盖改动或污染证据 |
+| R7 | 协调者必须核对真实 diff、范围和测试后才能完成任务 | 仅凭 worker 摘要制造假完成 |
+| R8 | 审查按严重度闭环，不以固定轮数作为质量指标 | 为凑轮数制造 churn 或被迫放行 |
+| R9 | 最终验证使用项目原生命令或可重复方法；未执行项不得标记通过 | 通用 runner 成为第二证据权威 |
+| R10 | OpenSpec、任务完成或归档都不授予 Git 权限；commit、push、PR、部署分别需要授权 | 自动化越过用户控制边界 |
+| R11 | 单次变更只能提出规则更新建议；未经明确请求不得自动修改项目或全局 skills | 单样本被过拟合成永久规则 |
 
 ## 实战反例
 
-| Agent 可能产生的想法 | 实际现实 | 违反规则 | 实际后果 |
-|---------------------|---------|:------:|---------|
-| "这个 task 很简单，直接写代码跳过测试" | 简单的代码也可能引入边界 bug | R0 | 退化未被发现，后续 Phase 可能因这个问题全线崩溃 |
-| "一致性校验报了 2 个警告，不严重，继续实施" | GATE CHECK 没通过就是没通过，没有"不严重" | R2, R5 | 设计偏差在实施中放大，最终返工重写 |
-| "构建失败了，但不影响核心逻辑，先归档再修复" | 构建失败意味着有编译错误或依赖问题 | R3, R5 | 归档了不可编译的代码，其他依赖此变更的任务全部受阻 |
-| "真实数据验证跑不过，应该是测试数据问题而不是代码问题" | 99% 的情况下就是代码问题 | R3 | 上线后用真实数据暴露 bug，hotfix 成本远高于追查 |
-| "5 轮 Code Review 太费时间，跑 2 轮没 P0 就够了" | P0 可能在第 3-5 轮审查中被不同角度发现 | R1 | 漏网的 P0 问题在归档后被发现，需要开新变更修复 |
+| Agent 可能产生的想法 | 实际现实 | 规则 |
+|---|---|:---:|
+| “项目有 OpenSpec，但这套九阶段更完整，再包一层更安全” | 两套工件、审查和完成结论会互相冲突 | R0 |
+| “任务很多，自动拆成五个 change 并行最快” | change 边界涉及授权、回滚和独立价值，只能建议后由人确认 | R3 |
+| “同一 DAG 层没有依赖，可以全部并行” | 两个任务仍可能写同一文件、manifest、migration 或公开契约 | R6 |
+| “worker 报告测试通过，可以直接勾选” | 摘要可能遗漏越界修改、失败测试或工作树重叠 | R7 |
+| “五轮 review 比一轮更严格” | 轮数不证明覆盖度，最终状态和问题严重度才可审计 | R8 |
+| “归档成功就顺便提交” | 归档只证明生命周期状态，不代表用户授权 Git mutation | R10 |
+| “这次出现了新模式，自动写入项目 skill” | 一次成功不等于稳定通用规则 | R11 |
 
-| "多个 Agent 编辑同一文件没关系，后写的覆盖前面的" | 并行 Agent 写同名文件会相互覆盖 | R0, R1 | 代码丢失，需要重新实施 |
-| "Phase 5 失败了，tasks.md 已经全部 [x]，直接归档吧" | 校验失败意味着代码有问题，状态标记不等于代码质量 | R3, R5 | 有 bug 的代码进入归档，后续全线受影响 |
-| "这个小变更不需要走完整 8 Phase，直接干" | 每个 Phase 都有其作用，跳过会留下漏洞 | R2, R5 | 缺少 spec 或测试的代码后期难以维护 |
-## 参考文档索引
+## 工作流总览
 
-| 文档 | 用途 |
-|------|------|
-| `openspec-propose` skill | 生成 proposal.md + design.md + tasks.md |
-| `code-review-before-commit` skill | 5 轮审查循环 + 用户确认 + git commit |
-| `code-review` skill | 审查路由协调者，按文件类型分派子审查 |
-| `openspec-archive-change` skill | 归档变更 + delta spec 同步 |
+```text
+Detect & Route
+  → Plan to Apply-ready
+  → Apply with bounded tasks
+  → Review & Verify final state
+  → Achieve and report
+  → Commit only with separate authority
+```
+
+连续推进，不在任务之间重复询问“是否继续”。只在项目规定的人类门禁、边界变化、基线漂移、
+缺失关键证据、不可逆外部操作或无法自行解决的真实阻塞处暂停。
+
+## Stage 1：Detect & Route
+
+每次执行的第一个实质动作都是只读取证：读取项目规则、实时生命周期状态与指令、当前分支、HEAD、status
+和相关 baseline。先不改文件、不更新任务状态、不执行 Git mutation；能从这些证据推导的内容不向用户重复确认。
+
+### 1.1 识别生命周期所有者
+
+按以下顺序读取并决定：
+
+1. 仓库级 `AGENTS.md`、项目说明和当前用户指令；
+2. 活动 change、schema、状态命令和实时 apply/archive 指令；
+3. 现有任务跟踪与验证约定；
+4. 没有项目权威流程时，才使用本 skill 的 fallback 结构。
+
+| 检测结果 | 本 skill 的行为 |
+|---|---|
+| 项目有 QEDA/OpenSpec/其他权威生命周期 | 调用官方生命周期操作；不新增 phase、artifact、reviewer、ledger 或 Git 动作 |
+| 项目只有既有任务/计划系统 | 以其任务状态为唯一真相源，本 skill 只编排实施与验证 |
+| 项目没有权威流程 | 使用本文件的最小 fallback 计划，不创建额外持久文件，除非用户要求 |
+
+每次执行都输出一句所有权决定：`因为 {证据}，由 {owner} 管理生命周期；本 skill 仅负责 {范围}`。
+
+### 1.2 选择风险档位
+
+| 档位 | 典型证据 | 最低控制 |
+|---|---|---|
+| Light | 根因已知、局部可逆、无公共契约/数据/安全/跨组件影响 | 聚焦计划、任务本地 TDD、自审、聚焦验证 |
+| Standard | 普通多文件功能或重构，无架构和高风险边界变化 | 完整规格追踪、测试计划、最终审查和项目原生验证 |
+| Strict | 架构、公共契约、持久化数据/迁移、安全/权限/隐私/支付、并发一致性、跨组件或外部系统影响 | 项目要求的架构/独立评审、全新 bounded worker、独立整体验证 |
+
+如果项目 schema 已经完成风险路由，直接使用其结果，不做第二次分类。风险事实不清且会改变档位时先取证；
+仍不清楚则停止并说明缺失项，不靠“更严格总没错”替代授权决定。
+
+### 1.3 锁定基线和权限
+
+在规划前记录到项目指定工件或当前协调上下文中：
+
+- Target：仓库根、当前分支、HEAD、预先存在的工作树状态；
+- Source：实质影响方案的外部仓库 revision，或非 Git 输入的版本/摘要；
+- Execution intent：`PLAN_ONLY` 或 `PLAN_AND_APPLY`；
+- Git authority：`NONE` 或用户明确授予的具体动作。
+
+不要另建 baseline ledger。规划前、Apply 前和 Achieve 前比较当前状态；预先存在的非流程改动、HEAD 或
+外部输入变化时，输出 `BASELINE_CHANGED`、具体差异和受影响决定，等待重新确认。
+
+## Stage 2：Plan to Apply-ready
+
+### 2.1 跟随实时工件图
+
+已有 schema 时：
+
+1. 读取实时 status 和当前 artifact instruction；
+2. 计算 Apply requirements 及其传递依赖闭包；
+3. 按依赖顺序生成或更新一个工件；
+4. 每次写入后重新读取 status；
+5. 到 Apply-ready 为止，不把每个工件当成额外用户检查点。
+
+不得硬编码所有项目都必须具有 proposal、design 和 tasks。项目 schema 可以合并、增加或条件省略工件。
+
+没有权威流程时，最小 fallback 计划应在现有计划工具或当前对话中包含：
+
+- 一个可观察结果与范围内/范围外；
+- 可验证需求或场景；
+- 必要设计决定及未采用方案；
+- 按依赖排序、可独立验收的任务；
+- 每个场景对应的项目原生验证方法；
+- 风险、回滚和真实阻塞。
+
+### 2.2 一致性门禁
+
+进入 Apply 前检查：
+
+- 需求/场景都有设计和验证路径；
+- 设计决定都有实施任务，任务不超出授权范围；
+- 任务依赖、允许写入范围和验收方式明确；
+- 所有阻塞决策已解决，Execution intent 允许实施；
+- baseline 未漂移。
+
+失败时只返回负责该事实的权威工件修正，不复制一份“校验报告”作为第二真相源。
+
+### 2.3 变更拆分评审
+
+当存在可独立交付价值、独立回滚/迁移边界、可分别批准的设计、不同验证/部署责任，或基础能力与
+多个下游迁移混合时，提出具名拆分建议。任务数、文件数、模块数和复杂度分数只能触发这项评审。
+
+默认保持单一 change。只有用户明确确认子变更名称、独立结果、前置依赖、回滚和验证边界后，才通过
+项目正常接口创建子变更；不得静默改 schema、伪造目录或自动并行多个 change。
+
+## Stage 3：Apply with bounded tasks
+
+### 3.1 唯一任务状态
+
+使用项目生命周期指定的 task tracker；若没有，则使用当前计划中的任务列表。它是唯一持久进度源。
+恢复执行时重新读取 task 状态、Git diff 和聚焦测试，不根据历史 worker 消息推断完成度，不创建
+`issues.md`、task brief、execution ledger 或第二份实施报告来维护状态。
+
+### 3.2 依赖就绪和安全并行
+
+每轮找出依赖已完成的任务。只有两个或更多候选同时满足以下条件时才并行：
+
+- 实际写入文件和生成输出不重叠；
+- 不竞争共享独占资源；
+- 不同时演进同一公共契约、migration、manifest 或依赖声明；
+- 不消费另一个任务尚未落地的行为或接口；
+- 聚焦测试和变更证据可以归属于各自任务。
+
+无法证明安全时，使用独立 worker 串行执行。出现意外重叠时冻结该并发集合，保留所有已有改动，
+由协调者检查组合状态后重新划分范围；不得覆盖、清理或自动回退用户及其他 worker 的改动。
+
+### 3.3 Worker assignment
+
+有子 Agent 能力且项目允许时，每个 Strict 实施任务使用上下文全新、输入受限的 worker。其他档位也可
+按收益使用同一合同。worker 不拥有任务状态、Git、归档或整个 change 的完成判定。
+
+每次 assignment 直接在调用中包含：
+
+```yaml
+change: 当前 change 与 schema，或 fallback 计划标识
+task: 任务编号、标题和完整文字
+completed_dependencies: 已由真实状态证明完成的依赖
+authorized_behavior: 相关 requirement/scenario 与确认结果
+required_decisions: 必须消费的设计、接口、数据或迁移决定
+allowed_writes: 允许修改的准确范围
+forbidden_scope: 排除项、相邻任务、Git 和生命周期状态
+focused_tests: 本任务的 RED/GREEN/REFACTOR 命令或方法
+return_contract: 状态、实际修改文件、测试命令与结果、疑虑、协调事项
+```
+
+worker 只返回以下状态之一：`DONE`、`DONE_WITH_CONCERNS`、`NEEDS_CONTEXT`、
+`NEEDS_COORDINATION`、`BLOCKED`。
+
+### 3.4 任务本地 TDD
+
+对可观察行为变更执行：
+
+1. RED：先添加并运行失败测试，确认失败来自目标行为尚未实现，而不是语法、fixture、环境或无关设置；
+2. GREEN：编写最小实现，循环运行新增和直接影响的测试直到通过；
+3. REFACTOR：只做当前任务必要整理；若改代码，复跑同一组测试。
+
+纯文档、声明性配置、生成物刷新或不能合理形成行为测试的任务按其验收方法执行，不虚构 RED。
+Apply 阶段运行聚焦测试；最终全量或跨场景验证留给 Stage 4。
+
+### 3.5 协调者验收
+
+worker 返回后，协调者必须检查共享工作树中的：
+
+- 实际 diff 与 allowed writes；
+- 是否覆盖预先存在或其他任务的改动；
+- 聚焦测试的真实命令和结果；
+- 任务需求、设计决定和范围是否全部满足；
+- 是否出现新的依赖、边界变化或疑虑。
+
+证据支持 `DONE` 后才更新唯一任务状态。缺上下文就补最小上下文恢复 worker；需要协调就重划边界；
+真实计划或授权问题才请求用户裁决。只要有依赖就绪任务就持续调度。
+
+## Stage 4：Review & Verify final state
+
+### 4.1 最终审查
+
+针对最终 diff，而不是每个并行组固定跑 N 轮：
+
+- 对照确认边界、需求/场景、设计、任务、测试计划和项目规则；
+- 将问题分为当前变更相关或既有/范围外，再分为 Critical、Important、Minor；
+- Critical 和 Important 必须在授权边界内解决；需要扩边界时先获得确认；
+- Strict 使用一次上下文独立的 whole-change reviewer；不要叠加任务级独立 reviewer；
+- 修复影响实现或验证后，重新审查受影响部分。
+
+### 4.2 项目原生验证
+
+只有当前最终审查不阻塞时才执行最终验证：
+
+1. 按 test plan 将每个变更场景映射到项目原生命令或可重复方法；
+2. 记录实际命令/方法、退出状态和关键结果；
+3. 真实数据、迁移、权限、并发、外部系统或人工验证只在场景需要时执行；
+4. 未执行或环境不可用的项目写 `PENDING`、`BLOCKED` 或 `N/A` 及原因，禁止伪造通过；
+5. 相关代码、测试、配置、生成行为、spec 或 test plan 变化后，重跑受影响结果。
+
+最终结论只能是：
+
+- `VERIFIED`：必要检查全部通过，且无当前变更的 Critical/Important；
+- `BLOCKED`：权限、策略、环境或外部依赖阻止完成；
+- `INCOMPLETE`：实施、审查或验证仍有必要工作未完成。
+
+不得用“真实数据 100%”“测试数量”或“审查轮数”代替按场景验证。
+
+## Stage 5：Achieve and report
+
+只有 `VERIFIED` 才能调用项目官方归档/关闭操作。归档前再次检查 baseline、最终审查、验证结论和任务状态；
+由生命周期所有者同步 spec 和移动 change，本 skill 不手工伪造归档结果。
+
+归档成功后输出简洁报告：
+
+```text
+结果：VERIFIED / BLOCKED / INCOMPLETE
+生命周期所有者与风险档位：...
+已完成结果与范围：...
+关键变更文件：...
+审查：Critical 0，Important 0，Minor N
+验证：命令/方法、退出状态、关键结果
+归档：位置或未归档原因
+Git：未授权 / 已按独立授权提交 <hash>
+范围外发现：仅列候选，不写入当前任务状态
+```
+
+报告是当前事实的展示，不是新的状态账本。Minor 和范围外发现可以报告，但不得把失败的必要测试或
+未解决的 Critical/Important 降级成“遗留问题后继续归档”。
+
+## Git 与外部动作边界
+
+- 默认不 stage、不 commit、不 push、不创建 PR、不部署；
+- 用户明确要求本地提交时，先从已确认变更的最终 diff 得到准确的 `AUTHORIZED_COMMIT_SET`，排除预先存在、
+  范围外或其他参与者的改动；
+- 紧邻暂存前重新读取 branch、HEAD 和 status，并与 Target baseline 比较；发生漂移时停止。当前分支是
+  `main`/`master` 时停止提交，只有项目分支工作流或用户另行授权后才能创建或切换分支；
+- 只暂存 `AUTHORIZED_COMMIT_SET` 中的明确路径，不改动预先存在的 staged 状态；暂存后必须检查
+  `git diff --cached --name-status` 和 `git diff --cached`，文件集合或内容不完全匹配就停止提交；
+- 提交前执行项目规定的审查与验证；不得 force push；
+- 一个 task、worker 返回、TDD transition 或 artifact 完成不是 commit 边界；
+- delivery checkpoint 只在用户另行授权多个提交时使用；用户要求“一个本地 commit”时，只创建一个
+  closeout commit；
+- closeout commit 只能在最终验证和官方归档成功后、且另有 Git 授权时执行。提交后报告 hash 和 status；
+- push、PR 和部署各自需要明确授权，不能从 commit 权限推导。
+
+## 错误与恢复
+
+| 场景 | 处理 |
+|---|---|
+| 权威流程或 schema 不明确 | 读取项目配置和实时状态；仍不明确则报告缺失证据并停止 |
+| baseline 漂移 | 输出 `BASELINE_CHANGED` 和差异，等待重新确认 |
+| 任务边界不明确 | 在权威计划中修正；需要新结果时先确认扩边界 |
+| RED 因环境或 fixture 失败 | 修复测试基础后重新建立有效 RED，不宣称 TDD 完成 |
+| worker 越界或并行重叠 | 冻结相关任务，保留改动，协调者重划边界后串行恢复 |
+| 连续根因假设失败 | 稳定复现并重新检查设计、任务粒度和授权，禁止叠加猜测性修复 |
+| Critical/Important 未解决 | 返回 Apply；不能自动跳过、归档或提交 |
+| 验证环境不可用 | 结论写 `BLOCKED` 或 `INCOMPLETE`，不得标记通过 |
+| 归档失败 | 保持活动 change，按官方错误恢复，不手工移动目录 |
+| 无 Git 授权 | 完成到归档和报告即停止，提供提交建议但不执行 |
 
 ## 输出质量指标
 
-| 指标 | 目标值 | 检查方法 |
-|------|--------|---------|
-| TDD 循环完成率 | 100% (每个 task 必须经过红→绿→重构) | Phase 4 完成报告 |
-| Code Review 通过率 | 100% (所有 P0/P1 清零) | Phase 4 Gate Check |
-| 一致性校验通过率 | 100% (所有检查项均为 ✅) | Phase 3 Gate Check |
-| 全流程校验通过率 | 100% (5 项检查全部通过) | Phase 5 Gate Check |
-| 真实数据验证通过率 | 100% | Phase 5.3 |
-| 并行加速比 | 实际并行数(最优组) | Phase 4 完成报告 |
+| 指标 | 目标 | 检查方法 |
+|---|---|---|
+| 生命周期唯一性 | 1 个 owner、1 个任务真相源、1 个最终结论 | 检查是否新增平行 phase/ledger/verdict |
+| 范围可追踪 | 每个改动可追溯到已确认场景或必要实现细节 | 对照 diff 与规格/任务 |
+| TDD 有效性 | 所有适用行为任务有有效 RED、GREEN、必要 REFACTOR | 检查失败原因和聚焦命令 |
+| 并行安全 | 并行任务满足五项隔离条件 | 检查写入、契约、资源和测试归属 |
+| 审查闭环 | 当前变更 Critical/Important 为 0 | 读取最终审查 |
+| 验证真实性 | 每项必要验证有实际命令/方法、状态和关键结果 | 读取最终验证 |
+| Git 授权 | 每个 Git/外部动作都有对应明确授权 | 对照用户指令和动作日志 |
 
-## 完整流程
+## 规则更新
 
-```
-Phase 0  探索阶段（可选）       explore → explore-review (最多 3 次循环) → Phase 1
-Phase 1  变更拆分（可选）       大需求拆分为多个变更，构建变更 DAG → Phase 2
-         (Phase 0/1 均跳过则直接从用户描述进入 Phase 2)
-Phase 2  提案生成 + 工件检视    openspec-propose → artifact-review
-Phase 3  一致性校验            内置校验逻辑 + 跨变更一致性 [GATE]
-Phase 4  代码实施 + TDD+Code Review  DAG 分组 → 多 Agent 并行 → TDD 红绿 → 5 轮审查 [GATE]
-Phase 5  全流程校验            构建 + 单元测试 + 真实数据验证 + 任务 + artifact [GATE]
-Phase 6  归档与提交            openspec-archive-change → git commit (全自动)
-Phase 7  最终报告              所有变更的处理结果和偏差记录
-```
-
-## 无人值守运行
-
-管线启动后自动执行，仅在以下情况中断等待用户输入：
-- 需求不明确需要澄清（Phase 0）
-- 拆解结果需要确认（Phase 1）
-- critical 级别检视不通过需要决策（任何 Phase）
-
-**其他所有情况必须自动修复，禁止中断**。
-
-本地 commit 自动执行，合入主分支（main/master）由人工完成。
+如果本次执行暴露出可复用模式，只在最终报告中给出“候选规则、证据、适用边界和反例”。只有用户另行
+明确要求更新 skill/AGENTS/项目规则时，才进入对应维护流程并通过其评估；本阶段不自动写规则。
 
 ---
 
-## Phase 0: 探索阶段（可选）
-
-**触发条件**:
-- 需求描述模糊，需要进一步澄清
-- 涉及多个模块，影响范围不明确
-- 技术方案存在多种选择，需要评估
-
-**流程**:
-```
-Phase 0 探索循环 (最多 3 次):
-  1. 调用 explore subagent 分析需求背景、技术选型、潜在风险
-  2. 调用 explore-reviewer 检视探索输出
-  3. 若 verdict=PASS，退出循环，进入 Phase 1
-  4. 若 NEEDS_CLARIFICATION，追加反馈后重新 explore
-  5. 3 次上限后：使用最后一次方案，记录未解决问题，进入 Phase 1
-```
-
-**输出**:
-- 需求澄清文档（可选）
-- 技术可行性分析
-- 是否需要正式变更的决策建议
-
----
-
-## Phase 1: 变更拆分（可选）
-
-**触发条件**:
-- **自动判断**: 预估任务数 > 15，或影响模块数 > 3，或复杂度评分 > 0.7
-- **用户显式指定**: 用户明确要求拆分
-
-**拆分算法**:
-```
-1. 识别需求中的功能点（通过 NLP 或规则）
-2. 按模块/工具组聚类功能点
-3. 分析功能点间的依赖关系
-4. 生成有向无环图 (DAG)
-5. 拓扑排序得到有序变更列表
-```
-
-**输出格式**:
-```json
-{
-  "changes": [
-    {
-      "name": "add-feature-core",
-      "description": "实现核心功能",
-      "dependencies": [],
-      "estimated_tasks": 8
-    },
-    {
-      "name": "add-feature-tools",
-      "description": "创建 MCP 工具",
-      "dependencies": ["add-feature-core"],
-      "estimated_tasks": 6
-    }
-  ]
-}
-```
-
-**约束**: 单次运行建议不超过 5 个变更，变更间按 DAG 并行执行。
-
----
-
-## Phase 2: 提案生成 + 工件检视
-
-调用 `openspec-propose` skill，从用户描述生成完整的 spec artifact 集合：
-
-- **proposal.md** — 变更名称、目的、背景、预期效果
-- **design.md** — 技术方案、架构设计、接口定义
-- **tasks.md** — 按依赖顺序拆解的实施任务列表
-
-**产出**: `openspec/changes/<change-name>/` 目录及所有 artifact 文件。
-
-**执行**:
-```
-Skill: openspec-propose
-输入：用户描述的需求
-输出：proposal.md, design.md, tasks.md
-```
-
-**验证**: 确认三个文件都生成成功，任一文件缺失则失败并返回 Phase 1。
-
----
-
-## Phase 3: 一致性校验（GATE）
-
-在开始实施前，**必须**校验三个核心 artifact 之间的一致性。**任何一项失败立即阻断，禁止进入 Phase 4**。
-
-### 3.1 运行状态检查
-
-```bash
-openspec status --change "<name>" --json
-```
-
-确认所有 `applyRequires` 类型 artifact 状态为 `done`。
-
-**失败处理**: 若有 artifact 状态不是 `done`，返回 Phase 2 补充生成。
-
-### 3.2 proposal ↔ design 一致性
-
-- [ ] proposal.md 中的功能描述是否全部在 design.md 中有对应技术方案
-- [ ] design.md 中的接口/组件/模型是否与 proposal.md 的功能范围一致（无遗漏、无超出）
-
-**失败处理**: 任一检查失败，返回 Phase 2 补充 artifact。
-
-### 3.3 design ↔ tasks 一致性
-
-- [ ] design.md 中的每个设计点是否都对应 tasks.md 中的至少一个 task
-- [ ] tasks.md 中的每个 task 是否都能在 design.md 中找到实现依据
-- [ ] tasks.md 的排序是否符合依赖关系（先 model → handler/service → router → test）
-
-**失败处理**: 任一检查失败，返回 Phase 2 补充 artifact。
-
-### 3.4 任务原子性检查
-
-- [ ] 每个 task 应该是独立的、可验证的最小实现单元
-- [ ] 每个 task 对应明确的文件变更范围
-
-**失败处理**: 任一检查失败，返回 Phase 2 拆分 task。
-
-### 3.5 校验报告
-
-```
-== Phase 3 一致性校验报告 ==
-
-| 检查项 | 状态 | 说明 |
-|--------|------|------|
-| artifact 状态 | ✅/❌ | 所有 applyRequires 为 done |
-| proposal ↔ design | ✅/❌ | 功能范围一致 |
-| design ↔ tasks | ✅/❌ | 设计点全部覆盖 |
-| 任务原子性 | ✅/❌ | 每个 task 独立可验证 |
-
-**结果**: 通过/失败
-```
-
-**通过条件**: 所有检查项均为 ✅
-
-**失败处理**: 返回 Phase 2 补充 artifact，**禁止进入 Phase 4**。
-
----
-
-## Phase 4: 代码实施 + TDD + Code Review（GATE）
-
-引入 DAG 分组 + 多 Agent 并行机制，**每个 task 必须执行 TDD 红绿循环**，每组完成后**必须**执行 `code-review-before-commit` 5 轮审查。
-
-### 4.1 加载 code-review 技能
-
-每个 group 开始实施前，加载审查规则：
-```
-Skill: code-review
-```
-
-审查规则自动路由：
-- `code-review/security-review` — 安全审查（始终应用）
-- `code-review/solid-principles` — SOLID 原则（始终应用）
-- `code-review/code-smells` — 代码坏味道（始终应用）
-- `code-review/lang-*` — 语言规则（按文件类型）
-
-### 4.2 DAG 分组与并行执行
-
-#### 4.2.1 依赖分析
-
-读取 `tasks.md`，自动分析 task 间的依赖关系，构建有向无环图（DAG）：
-
-```
-识别规则:
-1. 标记为 `- [ ]` 的为待办 task
-2. task 描述中包含"依赖"、"先完成"、"基于"等关键词
-3. 常见依赖模式:
-   - Model → Service → Handler → Router
-   - DTO → Service
-   - Interface → Implementation
-   - Core → Extension
-```
-
-#### 4.2.2 分组策略
-
-按 DAG 的拓扑排序将 task 分组：
-
-```
-Group 1: 无前置依赖的 task，可并行执行
-Group 2: 依赖 Group 1 全部完成的 task，可并行执行
-Group N: 依赖 Group N-1 全部完成的 task，可并行执行
-```
-
-**分组输出格式**:
-```
-== DAG 分组结果 ==
-
-Group 1 (可并行：2 tasks):
-  - [ ] 1. 创建 User 模型
-  - [ ] 2. 创建 User DTO
-
-Group 2 (依赖 Group 1):
-  - [ ] 3. 实现 User Service
-
-Group 3 (依赖 Group 2):
-  - [ ] 4. 创建 User Handler
-```
-
-#### 4.2.3 并行执行（每个 task 必须执行 TDD）
-
-对每个 Group：
-
-1. **启动多个 Agent**
-   ```
-   对 Group 中的每个 task:
-     Task:
-       subagent_type: general
-       prompt: |
-         请实施 tasks.md 中的 task N:
-         {task 描述}
-         
-         设计依据：design.md 中的 {相关章节}
-         
-         **必须执行 TDD 红绿循环**:
-         1. 先写测试（红 - 预期失败）
-         2. 实现代码使测试通过（绿）
-         3. 重构优化
-         4. 全量测试验证
-         
-         请完成代码实现，包括:
-         1. 创建/修改相关文件
-         2. 添加必要的类型定义
-         3. 实现核心逻辑
-         4. 添加单元测试
-   ```
-
-2. **等待完成** — 所有并行 Agent 完成后，收集变更文件列表
-
-3. **TDD 红绿循环验证（强制）**
-   
-   每个 task 的 subagent 在实施阶段自行完成 TDD（先写测试 → 实现代码 → 重构）。
-   主 agent 在此步骤仅做**结果验证**：
-   ```
-   1. 确认 subagent 产出了测试文件（必须有新增/修改的测试）
-   2. 运行全量测试确认通过（绿）
-   3. 测试失败或缺少测试 → 返回 task 要求 subagent 补全（最多 3 次）
-   ```
-   
-   **验证失败**: 返回 task 重新执行，超过 3 次标记为遗留问题。
-
-4. **分组合并审查** — 调用 `code-review-before-commit` 进行 5 轮审查
-
-#### 4.2.4 分组合并审查（强制 5 轮）
-
-```
-Skill: code-review-before-commit
-
-输入:
-  - 变更文件列表
-  - tasks.md 中对应 task 编号
-
-流程:
-  1. 汇总本组所有变更
-  2. 执行 5 轮 code review
-  3. 修复所有 P0/P1 问题
-  4. 标记 task 为 [x]
-```
-
-**审查循环**:
-```
-Round 1: 检查 → 发现问题 → 修复 → 重新审查
-Round 2: 检查 → 发现问题 → 修复 → 重新审查
-...
-Round 5: 最终检查 → 残留 P2 记录（允许）
-
-通过条件：无 P0/P1 问题
-```
-
-**失败处理**: 5 轮后仍有 P0/P1 问题，展示最终结果，用户决定是否继续。**禁止自动跳过**。
-
-### 4.3 下一组执行
-
-完成本组审查后，进入下一组的并行执行。重复 4.2 流程，直到所有 task 完成。
-
-### 4.4 Phase 4 完成报告
-
-```
-## Phase 4 完成
-
-**Change:** <change-name>
-**并行组数:** N 组
-**总 Task 数:** M 个
-**最大并行数:** K 个（在最优组中）
-**加速比:** ~Kx（相比串行）
-**TDD 循环:** M/M task 完成
-**Code Review:** N/N 组通过（P0/P1 问题清零）
-
-**所有 task 已完成！进入 Phase 5 全流程校验。**
-```
-
-**通过条件**: 
-- 所有 task 标记为 [x]
-- 所有组 Code Review 通过（无 P0/P1 问题）
-- TDD 循环全部完成
-
-**失败处理**: 返回 Phase 4 重新实施失败的 task（每个 task 最多重试 3 次，超过则标记为遗留问题，记录后继续）。
-
----
-
-## Phase 5: 全流程校验（GATE）
-
-在归档前，**必须**通过以下全部校验。**任何一项失败立即阻断，禁止进入 Phase 6**。
-
-### 5.1 构建校验
-
-```bash
-# 根据项目类型选择构建命令
-# Go: go build ./...
-# Python: python -m py_compile 或 pytest --collect-only
-# Node: npm run build
-# 通用：make build
-```
-
-**要求**: 无编译错误
-
-**失败处理**: 修复后重新构建，**禁止跳过**。
-
-### 5.2 单元测试校验
-
-```bash
-# 根据项目类型选择测试命令
-# Go: go test ./...
-# Python: pytest
-# Node: npm test
-# 通用：make test
-```
-
-**要求**: 全部测试通过
-
-**失败处理**: 修复后重新测试，**禁止跳过**。
-
-### 5.3 真实数据验证（如适用）
-
-**若项目提供了真实数据验证脚本，必须执行并通过。不涉及真实数据的变更自动跳过此项**。
-
-
-验证入口由项目定义，按优先级自动检测：
-1. `.codex/verify-real-data.sh`
-2. `Makefile` 中的 `verify-real-data` target
-3. `.codex/verify-real-data.ps1`
-
-若以上均不存在且变更不涉及数据处理，自动跳过此项。
-```bash
-# 参考示例（datasheet_mcp 项目）
-uv run python -c "
-from datasheet_mcp.tools.utils.compare import convert
-import yaml
-
-# 使用真实数据测试
-temp_dir = 'C:/Users/xxx/sandbox/temp/DEVICE_NAME/temp'
-temp_files = [f for f in os.listdir(temp_dir) if f.endswith('_temp.yaml')]
-
-success_count = 0
-for f in temp_files:
-    result = convert(os.path.join(temp_dir, f), output_path, 'yaml')
-    if result.get('success'):
-        with open(output_path, 'r', encoding='utf-8') as fh:
-            data = yaml.safe_load(fh)
-        if isinstance(data, dict):
-            success_count += 1
-
-assert success_count == len(temp_files), f'真实数据验证失败：{success_count}/{len(temp_files)}'
-"
-```
-
-**要求**: 真实数据验证 100% 通过
-
-**失败处理**: 修复后重新验证，**禁止跳过**。
-
-### 5.4 任务完成度校验
-
-检查 `tasks.md`:
-- 所有 task 均为 `- [x]`（无 `- [ ]` 遗留）
-- 若有未完成任务，返回 Phase 4 补充实施
-
-**失败处理**: 返回 Phase 4 补充实施。
-
-### 5.5 Artifact 完成度校验
-
-```bash
-openspec status --change "<name>" --json
-```
-
-**要求**: 所有 artifact 状态为 `done`
-
-**失败处理**: 返回 Phase 2 补充生成。
-
-### 5.6 校验报告
-
-```
-== Phase 5 全流程校验报告 ==
-
-| 检查项 | 状态 | 说明 |
-|--------|------|------|
-| 构建 | ✅/❌ | 无编译错误 |
-| 单元测试 | ✅/❌ | 全部通过 |
-| 真实数据验证 | ✅/❌ | 100% 通过 |
-| 任务完成度 | ✅/❌ | X/Y tasks 完成 |
-| Artifact | ✅/❌ | 所有 artifact done |
-
-**结果**: 通过/失败
-```
-
-**通过条件**: 所有检查项均为 ✅
-
-**失败处理**: 修复后重新执行全部校验（最多 3 次），超过则标记为遗留问题进入 Phase 7。
-
----
-
-## Phase 6: 归档与提交（强制顺序）
-
-**强制顺序**: 先归档，后提交。违反顺序禁止提交。
-
-### 6.1 执行 openspec-archive-change
-
-```
-Skill: openspec-archive-change
-
-输入：change-name
-
-流程:
-  1. 检查 artifact 完成状态
-  2. 检查 tasks.md 完成状态
-  3. 检查 delta spec 同步状态
-  4. 执行归档操作
-```
-
-**归档输出**:
-```
-## Archive Complete
-
-**Change:** <change-name>
-**Schema:** <schema-name>
-**Archived to:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**Specs:** ✓ Synced to main specs
-```
-
-**失败处理**: 任一检查失败，返回对应 Phase 修复。
-
-### 6.2 执行 git commit
-
-归档完成后，执行 git 提交：
-
-#### 6.2.1 分支检查与变更状态
-
-```bash
-# 检查当前分支
-BRANCH=$(git branch --show-current)
-echo 当前分支: $BRANCH
-
-# 若在主干分支上，记录警告但继续本地提交
-# 合入主分支由人工完成，此处仅做本地提交
-case "$BRANCH" in
-  main|master) echo "[WARN] 当前在主干分支上，commit 仅本地生效，合入由人工完成" ;;
-esac
-
-git status
-git diff --cached
-```
-
-#### 6.2.2 暂存变更
-
-```bash
-git add <changed-files>
-```
-
-**注意**: 绝不要将 `review-issues.md` 加入暂存区。
-
-#### 6.2.3 生成提交信息
-
-遵循 conventional commit 格式:
-```
-<type>(<scope>): <description>
-
-[optional body]
-
-[optional footer]
-```
-
-**类型建议**:
-- `feat`: 新功能
-- `fix`: 修复 bug
-- `refactor`: 重构
-- `chore`: 构建/工具变更
-- `docs`: 文档更新
-- `test`: 测试相关
-
-#### 6.2.4 自动执行提交
-
-全自动提交，无需用户确认：
-
-```
-== 自动提交 ==
-
-提交信息:
-  feat(sch-mcp): expand toolset with 40+ tools
-
-变更文件:
-  M  src/sch_mcp/sch_client.py
-  A  src/sch_mcp/tools/auth.py
-  A  src/sch_mcp/tools/schematic.py
-  ...
-```
-
-**注意**: 仅本地提交，不执行 `git push`。合入主分支由人工完成。
-
-#### 6.2.5 执行提交
-
-```bash
-git commit -m "<message>"
-```
-
-#### 6.2.6 完成摘要
-
-```
-## 自动代码生成完成
-
-**Change:** <change-name>
-**归档位置:** openspec/changes/archive/YYYY-MM-DD-<name>/
-**提交:** <commit-hash> (仅本地，未推送)
-**提交信息:** <message>
-
-=== 流程统计 ===
-- Phase 2 提案生成：✓
-- Phase 3 一致性校验：✓
-- Phase 4 代码实施：✓ (N 组，M tasks, 最大并行 K)
-- Phase 5 全流程校验：✓
-- Phase 6 归档：✓
-- Phase 6 自动提交：✓ (本地)
-```
-
----
-
-## Phase 7: 最终报告
-
-所有变更完成后，生成最终报告：
-
-### 7.1 变更统计
-
-```
-== 最终报告 ==
-
-**变更名称:** <change-name>
-**总耗时:** X 小时 Y 分钟
-**变更文件数:** N 个
-**代码行数:** +A -B
-**测试覆盖:** X%
-**Code Review:** N 轮通过
-**真实数据验证:** 通过/失败
-```
-
-### 7.2 遗留问题
-
-若有遗留问题，记录到 `issues.md`：
-
-```markdown
-## 遗留问题
-
-| # | 问题描述 | 优先级 | 状态 | 后续计划 |
-|---|----------|--------|------|----------|
-| 1 | xxx 测试失败 | P1 | 跳过 | 待修复 |
-```
-
-### 7.3 经验总结
-
-记录本次变更的经验教训，用于优化项目规则。
-
----
-
-## 与相关 Skill 的集成
-
-| Phase | 调用 Skill | 说明 |
-|-------|-----------|------|
-| 2 | `openspec-propose` | 生成 proposal.md + design.md + tasks.md |
-| 3 | 内置校验逻辑 | 使用 `openspec status --json` 和文件内容校验 |
-| 4 | `openspec-apply-change` | 按 tasks.md 逐个实施（Agent 并行） |
-| 4 | `code-review-before-commit` | 每组实施后 5 轮审查循环 |
-| 4 | `code-review` | code-review-before-commit 内部自动路由 |
-| 5 | 内置校验逻辑 | 构建 + 测试 + 任务完成度 + artifact 完成度 |
-| 5 | 项目自定义验证脚本 | 真实数据验证（如有，由项目提供） |
-| 6 | `openspec-archive-change` | 归档变更 + delta spec 同步 |
-| 6 | 内置 git 逻辑 | conventional commit 本地提交（不推送） |
-
----
-
-## 通用化说明
-
-- 不再绑定特定语言或框架
-- 代码风格通过 `code-review` 动态路由到 `lang-*` 子 skill（Go/Python/React 等）
-- 术语通用化：Handler/Service（替代 Controller）、Model（替代 struct）、DTO（通用）
-- 所有 language-specific 规则在 code-review-before-commit 阶段动态加载
-
----
-
-## 错误处理
-
-| 场景 | 处理方式 |
-|------|---------|
-| Task 不明确 | 暂停，请求用户澄清 |
-| 实施中发现设计问题 | 暂停，建议更新 design.md/tasks.md |
-| 构建/测试失败 | 修复后重试，不进入下一阶段 |
-| TDD 红绿循环失败 | 重新执行 TDD，不跳过 |
-| Code Review 5 轮后仍有 P0/P1 | 展示最终结果，用户决定是否继续 |
-| 真实数据验证失败 | 修复后重新验证，不跳过 |
-| 归档时 artifact 未完成 | 警告用户，确认后继续或返回修复 |
-| 并行 task 文件冲突 | 自动重试合并（最多 3 次），失败则标记遗留问题 |
-| Task 依赖无法推断 | 标记为手动分组，用户确认后继续 |
-| 并行 Agent 部分失败 | 重试失败的 Agent，其他继续 |
-| 个别功能问题 | 可跳过，记录到遗留问题列表 |
-
----
-
-## 遗留问题处理
-
-对于暂时无法解决的问题：
-
-```markdown
-## 遗留问题
-
-| # | 问题描述 | 优先级 | 状态 | 后续计划 |
-|---|----------|--------|------|----------|
-| 1 | xxx 测试失败 | P1 | 跳过 | 待修复 |
-```
-
-记录到 `openspec/changes/<name>/issues.md`，不影响归档和提交。
-
----
-
-*版本：3.1*
-*最后更新：2026-08-02*
-*变更：触发词优化、前置条件、场景路由、分支保护、全自动提交、TDD职责明确、重试上限、真实数据验证通用化、特有反例*
+*版本：4.1*
+*最后更新：2026-08-13*
+*变更：从固定九阶段包装器重构为生命周期所有权驱动的自适应编排器；增加风险路由、baseline、唯一状态源、bounded worker、安全并行、严重度审查、项目原生验证，以及精确暂存与独立 Git 授权。*
