@@ -82,28 +82,28 @@ routes:
     condition: { sub_type: comparison }
     chain:
       - { skill: PughMatrix, order: 1, mandatory: true, path: "method-router/pugh/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
     rationale: "多方案对比 → Pugh 量化矩阵 → ADR 记录决策"
 
   - type: decide
     condition: { sub_type: tech_selection }
     chain:
       - { skill: ADLMatrix, order: 1, mandatory: true, path: "method-router/adl/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
     rationale: "技术选型 → ADL 生命周期评估 → ADR 记录决策"
 
   - type: design
     condition: { scope: new_system }
     chain:
       - { skill: DesignThinking, order: 1, mandatory: true, path: "method-router/design-thinking/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
     rationale: "新系统 → Design Thinking 5 步法 → ADR 记录决策"
 
   - type: design
     condition: { scope: refactor }
     chain:
       - { skill: FirstPrinciples, order: 1, mandatory: true, path: "method-router/first-principles/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: true, path: "method-router/adr/SKILL.md" }
+      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
     rationale: "重构 → First Principles 拆解 → ADR 记录决策"
 
   - type: improve
@@ -151,7 +151,7 @@ skill_registry:
   available:
     - { name: 5W2H, path: "method-router/deep-analysis/SKILL.md", category: diagnose }
     - { name: PDCA, path: "pdca-tuning/SKILL.md", category: improve }
-    - { name: method-router, path: "method-router/SKILL.md", category: meta }
+    # method-router 自身为元层入口，不注册为可路由目标
     - { name: SCQA, path: "method-router/scqa/SKILL.md", category: report }
     - { name: 5Whys, path: "method-router/5whys/SKILL.md", category: diagnose }
     - { name: PreMortem, path: "method-router/pre-mortem/SKILL.md", category: risk }

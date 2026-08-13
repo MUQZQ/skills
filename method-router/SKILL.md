@@ -85,9 +85,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 ### 步骤
 
-1. 扫描 `skills/` 目录，识别所有可用方法论 Skill：
-   - 已存在：`deep-analysis`(5W2H)、`pdca-tuning`(PDCA)
-   - 检查是否存在：SCQA、5Whys、Pre-mortem、MECE、OODA 等
+1. 扫描 `skills/` 目录，识别所有可用方法论 Skill；可用/缺失清单以 `references/method-mapping.yaml` 的 `skill_registry` 与 routes 引用为唯一事实源，不在此维护副本
 2. 读取 `references/method-mapping.yaml` 获取完整映射规则
 3. 如果映射文件不存在，使用内置默认映射表（Phase 1 中定义）
 
@@ -95,9 +93,9 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 ```
 == 路由器就绪 ==
-可用 Skill: [5W2H, PDCA] (2 个)
-缺失 Skill: [SCQA, 5Whys, Pre-mortem, MECE, ...] (N 个)
-路由模式: 降级模式（缺失 Skill 将用建议文本替代）
+可用 Skill: 见 `references/method-mapping.yaml` skill_registry (共 13 个)
+缺失 Skill: [Pugh Matrix, ADL Matrix, Design Thinking, ADR, A3] (5 个，走降级手动引导)
+路由模式: 完整模式（缺失 Skill 降级为建议文本或手动引导）
 ```
 
 ---
@@ -164,10 +162,10 @@ confidence = 加权平均:
 | **decide** | 任务优先级 | **Eisenhower Matrix** | — | STAR |
 | **decide** | 多方案对比 | **Pugh Matrix** | — | ADR |
 | **decide** | 技术选型 | **ADL Matrix** | — | ADR |
-| **design** | 新功能/系统 | **Design Thinking** | MECE | ADR |
+| **design** | 新功能/系统 | **Design Thinking** | — | ADR |
 | **design** | 架构重构 | **First Principles** | — | ADR |
 | **improve** | 流程优化 | **PDCA** | — | A3 |
-| **improve** | 数据驱动 | **DMAIC** | 5 Whys | A3 |
+| **improve** | 数据驱动 | **DMAIC** | — | A3 |
 | **risk** | 代码变更 | **Pre-mortem** | — | SCQA |
 | **risk** | 系统性评估 | **FMEA** | — | SCQA |
 | **report** | 复盘总结 | **STAR** | — | SCQA |
@@ -262,6 +260,11 @@ SCQA 将自动格式化最终报告。
 ### 如果 SCQA Skill 可用
 
 自动调用 SCQA Skill 格式化所有输出。
+
+### 如果 ADR / A3 输出 Skill 不可用
+
+decide / design 链的输出 Skill 为 ADR（缺失），improve 链为 A3（缺失）。
+降级为 Markdown 决策记录（背景 / 选项 / 决策 / 理由）或 A3 一页纸摘要（问题 / 现状 / 对策 / 效果），无需强制依赖 SCQA。
 
 ### 如果 SCQA Skill 不可用
 
