@@ -32,6 +32,16 @@ description: |
 - 项目级配置可 git 共享
 - 可验证的冒烟结果
 
+## Luna 小颗粒委派契约
+
+- 每次只委派一个目标、一个角色、一个可独立验证的闭环；不要把完整功能、跨模块重构或“探索+实现+测试+审查”打包成一次调用。
+- 默认 prompt 上限 2000 字符，最终答复上限 1200 字符。控制器会注入短输出契约；超出 prompt 上限直接拒绝，由 Sol 拆分。
+- 单次 worker 最好只修改一个局部边界；单次 scout/critic/tester 只回答一个明确问题或运行一组指定命令。
+- Luna 发现前置不清、需要架构决策、范围扩张或无法一次闭环时，只返回证据与拆分建议，立即交回 Sol。
+- Sol 应按“探索 → 单点实施 → 指定测试 → 局部审查”分别调用；需要更多工作时开启下一次短调用，不延长当前响应事件。
+
+推荐颗粒：检查一个函数、修改一个局部行为、补一个测试文件、运行一条测试命令、审查一个小 diff。禁止颗粒：实现整个需求、全仓审查、跨多个模块自由修改、无边界地持续排障。
+
 ## 硬性安全规则
 
 1. **永远不要**把 API Key、主机 IP、SSH 密码、私钥写进 `config.toml`、`AGENTS.md`、README、文章正文或 git commit。
@@ -82,19 +92,28 @@ python $ctl run critic --model pro --risk high "深度审查指定变更"
 Windows 控制面优先直接执行 `claude.exe`；若环境只有 npm 生成的 `claude.cmd/.bat`，则使用固定参数包装器，
 并通过 stdin 传递用户 prompt。prompt 不进入 `cmd /c` 命令行，避免 shell 元字符改变执行边界。
 
-必须向 Claude Code 传完整模型 ID。不要用 `haiku` / `sonnet` 作为运行时切换开关：
+模型路由分为两层，禁止直接把未知 provider ID 传给 Claude Code：
 
-- `flash` → `deepseek-v4-flash`
-- `pro` → `deepseek-v4-pro`
+- `flash`：CLI 别名 `haiku` → Claude ID `claude-haiku-4-5-20251001` → provider `deepseek-v4-flash`
+- `pro`：CLI 别名 `sonnet` → Claude ID `claude-sonnet-4-6` → provider `deepseek-v4-pro`
 - `auto` → 普通有界任务用 Flash，高风险/跨模块任务用 Pro
 
-执行后解析 JSON `modelUsage`；实际模型不含请求模型时判定失败。
+先初始化用户级 `modelOverrides`：
+
+```powershell
+python $ctl configure-claude
+```
+
+该命令合并上述两个映射，保留其他设置和密钥，并移除会绕过 `modelOverrides` 的 `ANTHROPIC_MODEL` 与 `ANTHROPIC_DEFAULT_*_MODEL`；已有 `settings.json` 会先生成唯一时间戳备份。角色模板使用 `model: inherit`，最终模型由控制器的 `haiku/sonnet` 别名决定。执行后解析 JSON `modelUsage`；实际 provider 模型不含预期模型时判定失败。
+
+当前真实 API 证据表明 DeepSeek V4 Flash/Pro 的上下文窗口为 200k。不得追加 `[1m]`，不得设置 `CLAUDE_CODE_DISABLE_UNKNOWN_MODEL_WINDOW_ENFORCEMENT=1`。只有供应商明确支持且真实长上下文测试通过后才允许调整。
 
 ### 角色管理与验证
 
 ```powershell
 python $ctl audit --global
 python $ctl sync --global
+python $ctl configure-claude
 python $ctl smoke --model all
 ```
 
@@ -207,8 +226,10 @@ pi --print --provider gateway --model gpt-5.6-luna --no-session --no-tools "Repl
 Claude Code：
 
 - 非 root 用户更稳妥
+- 先执行 `python $ctl configure-claude`，用 Claude 已知模型 ID 路由到 DeepSeek provider ID
 - 使用 `python $ctl smoke --model all` 分别验证 Flash 与 Pro
 - 冒烟必须检查 `modelUsage`，不能只检查返回文本
+- 检查 stderr/stream-json 噪声中不再出现 `is not a model this version of Claude Code recognizes`
 - 若网关 Anthropic 通道失败，记录实际错误，不得假装成功
 
 ### 6. 交付报告模板
@@ -246,7 +267,8 @@ Claude Code：
 | wire_api 报错 | 使用 `responses`；确认网关实现 `/v1/responses` |
 | Claude root 拒绝 bypass | 换非 root 或降低 permission mode |
 | 工人写冲突 | 降并发、按文件分区 |
-| Flash/Pro 跑偏 | 使用完整模型 ID，并校验 JSON `modelUsage` |
+| Flash/Pro 跑偏 | 用 `haiku/sonnet` 别名经过 `modelOverrides`，并校验 JSON `modelUsage` |
+| unknown model / 200k 警告 | 运行 `configure-claude`；不要关闭保护或虚报 `[1m]` |
 | skill 多份漂移 | 只编辑 `.cc-switch/skills` 权威源，消费端使用链接/Junction |
 | 密钥进 diff | 立即剔除、轮换密钥 |
 

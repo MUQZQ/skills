@@ -12,6 +12,7 @@ import subprocess
 import sys
 import threading
 import time
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import list2cmdline
@@ -23,8 +24,18 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "model": "auto",
     "flash_model": "deepseek-v4-flash",
     "pro_model": "deepseek-v4-pro",
+    "flash_claude_model": "claude-haiku-4-5-20251001",
+    "pro_claude_model": "claude-sonnet-4-6",
+    "flash_claude_alias": "haiku",
+    "pro_claude_alias": "sonnet",
+    "max_task_chars": 2000,
+    "max_result_chars": 1200,
     "allow_escalation": True,
 }
+CLAUDE_FLASH_OVERRIDE_MODEL = "claude-haiku-4-5-20251001"
+CLAUDE_PRO_OVERRIDE_MODEL = "claude-sonnet-4-6"
+LUNA_FLASH_PROVIDER_MODEL = "deepseek-v4-flash"
+LUNA_PRO_PROVIDER_MODEL = "deepseek-v4-pro"
 VALID_MODES = {"off", "auto", "force"}
 VALID_MODELS = {"auto", "flash", "pro"}
 VALID_RISKS = {"normal", "high"}
@@ -42,6 +53,15 @@ class LunaDisabledError(SolLunaError):
 
 class ModelMismatchError(SolLunaError):
     """Claude Code 实际模型与请求模型不一致。"""
+
+
+@dataclass(frozen=True)
+class ModelRoute:
+    """Claude Code 入口模型与网关实际模型的映射。"""
+
+    selection: str
+    claude_model: str
+    provider_model: str
 
 
 class EventMonitor:
@@ -129,11 +149,21 @@ def _validate_config(config: Mapping[str, Any]) -> None:
         raise SolLunaError("mode 必须是 off、auto 或 force")
     if config.get("model") not in VALID_MODELS:
         raise SolLunaError("model 必须是 auto、flash 或 pro")
-    for key in ("flash_model", "pro_model"):
+    for key in (
+        "flash_model",
+        "pro_model",
+        "flash_claude_model",
+        "pro_claude_model",
+        "flash_claude_alias",
+        "pro_claude_alias",
+    ):
         if not isinstance(config.get(key), str) or not config[key].strip():
             raise SolLunaError(f"{key} 必须是非空模型 ID")
     if not isinstance(config.get("allow_escalation"), bool):
         raise SolLunaError("allow_escalation 必须是布尔值")
+    for key in ("max_task_chars", "max_result_chars"):
+        if not isinstance(config.get(key), int) or config[key] <= 0:
+            raise SolLunaError(f"{key} 必须是正整数")
 
 
 def config_path(scope: str, project_root: Path, home: Path) -> Path:
@@ -160,6 +190,10 @@ def resolve_config(
         "SOL_LUNA_MODEL": "model",
         "SOL_LUNA_FLASH_MODEL": "flash_model",
         "SOL_LUNA_PRO_MODEL": "pro_model",
+        "SOL_LUNA_FLASH_CLAUDE_MODEL": "flash_claude_model",
+        "SOL_LUNA_PRO_CLAUDE_MODEL": "pro_claude_model",
+        "SOL_LUNA_FLASH_CLAUDE_ALIAS": "flash_claude_alias",
+        "SOL_LUNA_PRO_CLAUDE_ALIAS": "pro_claude_alias",
     }
     for env_name, config_name in env_mapping.items():
         value = env.get(env_name)
@@ -193,7 +227,7 @@ def resolve_model(
     config: Mapping[str, Any],
     risk: str,
     requested: str | None = None,
-) -> str:
+) -> ModelRoute:
     if risk not in VALID_RISKS:
         raise SolLunaError("risk 必须是 normal 或 high")
     selection = requested or str(config["model"])
@@ -201,7 +235,93 @@ def resolve_model(
         raise SolLunaError("请求模型必须是 auto、flash 或 pro")
     if selection == "auto":
         selection = "pro" if risk == "high" else "flash"
-    return str(config[f"{selection}_model"])
+    return ModelRoute(
+        selection=selection,
+        claude_model=str(config[f"{selection}_claude_alias"]),
+        provider_model=str(config[f"{selection}_model"]),
+    )
+
+
+def _unique_backup_path(path: Path) -> Path:
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+    return path.with_name(f"{path.name}.{timestamp}.bak")
+
+
+def configure_claude_settings(
+    home: Path,
+    config: Mapping[str, Any],
+) -> dict[str, str | None]:
+    """合并 Luna modelOverrides，保留所有其他 Claude 用户配置。"""
+    settings_path = home / ".claude" / "settings.json"
+    settings = _read_json(settings_path)
+    overrides = settings.get("modelOverrides", {})
+    if not isinstance(overrides, dict):
+        raise SolLunaError(f"modelOverrides 必须是 JSON 对象: {settings_path}")
+    desired = {
+        CLAUDE_FLASH_OVERRIDE_MODEL: LUNA_FLASH_PROVIDER_MODEL,
+        CLAUDE_PRO_OVERRIDE_MODEL: LUNA_PRO_PROVIDER_MODEL,
+    }
+    legacy_env_values = {
+        "ANTHROPIC_MODEL": {LUNA_FLASH_PROVIDER_MODEL, LUNA_PRO_PROVIDER_MODEL},
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": {LUNA_FLASH_PROVIDER_MODEL},
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": {LUNA_PRO_PROVIDER_MODEL},
+    }
+    env = settings.get("env", {})
+    if not isinstance(env, dict):
+        raise SolLunaError(f"env 必须是 JSON 对象: {settings_path}")
+    removable_env_keys = {
+        key
+        for key, legacy_values in legacy_env_values.items()
+        if env.get(key) in legacy_values
+    }
+    if (
+        all(overrides.get(key) == value for key, value in desired.items())
+        and not removable_env_keys
+    ):
+        return {
+            "status": "unchanged",
+            "path": str(settings_path),
+            "backup": None,
+        }
+
+    backup: Path | None = None
+    if settings_path.exists():
+        backup = _unique_backup_path(settings_path)
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(settings_path, backup)
+    overrides.update(desired)
+    settings["modelOverrides"] = overrides
+    for key in removable_env_keys:
+        env.pop(key, None)
+    settings["env"] = env
+    settings_path.parent.mkdir(parents=True, exist_ok=True)
+    temporary_path = settings_path.with_name(f".{settings_path.name}.sol-luna.tmp")
+    temporary_path.write_text(
+        json.dumps(settings, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    temporary_path.replace(settings_path)
+    return {
+        "status": "updated",
+        "path": str(settings_path),
+        "backup": str(backup) if backup else None,
+    }
+
+
+def describe_model_routes(config: Mapping[str, Any]) -> dict[str, dict[str, str]]:
+    return {
+        selection: {
+            "claude_model": str(config[f"{selection}_claude_alias"]),
+            "override_model": (
+                CLAUDE_FLASH_OVERRIDE_MODEL
+                if selection == "flash"
+                else CLAUDE_PRO_OVERRIDE_MODEL
+            ),
+            "provider_model": str(config[f"{selection}_model"]),
+        }
+        for selection in ("flash", "pro")
+    }
 
 
 def build_claude_command(
@@ -237,6 +357,40 @@ def build_claude_command(
         ]
     )
     return command
+
+
+def bound_task_prompt(prompt: str, config: Mapping[str, Any]) -> str:
+    """限制单次 Luna 委派颗粒，并要求短输出。"""
+    max_task_chars = int(config["max_task_chars"])
+    if len(prompt) > max_task_chars:
+        raise SolLunaError(
+            f"Luna 任务颗粒过大：{len(prompt)} 字符，限制 {max_task_chars}；请由 Sol 拆成多个单目标任务"
+        )
+    max_result_chars = int(config["max_result_chars"])
+    return (
+        f"{prompt}\n\n"
+        "执行契约：只完成一个单一目标；不要顺带扩展范围。"
+        f"最终答复不超过 {max_result_chars} 个字符，只给结论、证据和必要的文件路径/命令。"
+        "如果当前任务无法形成一次可独立验证的小闭环，停止执行并返回拆分建议，不要自行扩大任务。"
+    )
+
+
+def bound_result(payload: Mapping[str, Any], max_result_chars: int) -> dict[str, Any]:
+    bounded = dict(payload)
+    result = bounded.get("result")
+    if not isinstance(result, str) or len(result) <= max_result_chars:
+        return bounded
+    bounded["result"] = result[:max_result_chars]
+    metadata = bounded.get("_sol_luna", {})
+    metadata = dict(metadata) if isinstance(metadata, dict) else {}
+    metadata.update(
+        {
+            "result_truncated": True,
+            "original_result_chars": len(result),
+        }
+    )
+    bounded["_sol_luna"] = metadata
+    return bounded
 
 
 def validate_model_usage(payload: Mapping[str, Any], expected_model: str) -> None:
@@ -314,6 +468,14 @@ def parse_stream_event(line: str, noise_lines: list[str]) -> dict[str, Any] | No
     return value if isinstance(value, dict) else None
 
 
+def reject_unknown_model_warning(lines: Sequence[str]) -> None:
+    marker = "is not a model this version of Claude Code recognizes"
+    if any(marker in line for line in lines):
+        raise SolLunaError(
+            "检测到 Claude Code 未知模型窗口警告；请运行 configure-claude 并使用 haiku/sonnet 别名路由"
+        )
+
+
 def run_luna(
     role: str,
     prompt: str,
@@ -326,12 +488,14 @@ def run_luna(
     timeout_seconds: float | None = None,
     quiet_interval_seconds: float = 30.0,
 ) -> dict[str, Any]:
-    model = resolve_model(config, risk, requested_model)
-    command = build_claude_command(role, model, prompt, config)
+    route = resolve_model(config, risk, requested_model)
+    command = build_claude_command(
+        role, route.claude_model, bound_task_prompt(prompt, config), config
+    )
     command[0] = resolve_claude_executable()
     process_command, stdin_prompt = prepare_process_command(command)
     monitor = EventMonitor(status_stream=sys.stderr, quiet=quiet)
-    monitor.starting(role, model)
+    monitor.starting(role, route.claude_model)
     try:
         process = subprocess.Popen(
             process_command,
@@ -432,8 +596,9 @@ def run_luna(
         raise SolLunaError(
             f"Claude Code 正常退出但没有 result 事件；最后活动距今 {quiet_for:.1f}s{detail}"
         )
-    validate_model_usage(payload, model)
-    return payload
+    reject_unknown_model_warning([*stdout_noise, *stderr_lines])
+    validate_model_usage(payload, route.provider_model)
+    return bound_result(payload, int(config["max_result_chars"]))
 
 
 def _skill_root() -> Path:
@@ -526,6 +691,11 @@ def build_parser() -> argparse.ArgumentParser:
     model.add_argument("value", choices=sorted(VALID_MODELS))
     model.add_argument("--global", dest="global_scope", action="store_true")
 
+    subparsers.add_parser(
+        "configure-claude",
+        help="安全合并 Claude modelOverrides，并备份已有 settings.json",
+    )
+
     audit = subparsers.add_parser("audit", help="只读检查四个 Luna 角色")
     audit.add_argument("--global", dest="global_scope", action="store_true")
 
@@ -567,6 +737,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             _print_json(
                 {
                     "config": config,
+                    "model_routes": describe_model_routes(config),
                     "scope": _scope_from_args(args),
                     "roles": audit_roles(_scope_from_args(args), project_root, home),
                 }
@@ -581,6 +752,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 _scope_from_args(args), project_root, home, {"model": args.value}
             )
             print(f"Luna model={args.value} 已写入 {path}")
+        elif args.command == "configure-claude":
+            _print_json(configure_claude_settings(home, config))
         elif args.command == "audit":
             _print_json(audit_roles(_scope_from_args(args), project_root, home))
         elif args.command == "sync":

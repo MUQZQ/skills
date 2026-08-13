@@ -37,6 +37,12 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual("auto", config["model"])
         self.assertEqual("deepseek-v4-flash", config["flash_model"])
         self.assertEqual("deepseek-v4-pro", config["pro_model"])
+        self.assertEqual(
+            "claude-haiku-4-5-20251001", config["flash_claude_model"]
+        )
+        self.assertEqual("claude-sonnet-4-6", config["pro_claude_model"])
+        self.assertEqual(2000, config["max_task_chars"])
+        self.assertEqual(1200, config["max_result_chars"])
 
     def test_precedence_is_environment_then_project_then_global_then_default(self):
         self.write_json(
@@ -60,22 +66,150 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual("off", env_config["mode"])
         self.assertEqual("pro", env_config["model"])
 
-    def test_auto_model_routes_high_risk_to_pro_and_normal_work_to_flash(self):
+    def test_auto_model_routes_known_claude_ids_and_expected_provider_ids(self):
         config = sol_luna.resolve_config(self.project, self.home, {})
 
-        self.assertEqual("deepseek-v4-flash", sol_luna.resolve_model(config, "normal"))
-        self.assertEqual("deepseek-v4-pro", sol_luna.resolve_model(config, "high"))
+        flash = sol_luna.resolve_model(config, "normal")
+        pro = sol_luna.resolve_model(config, "high")
+
+        self.assertEqual("haiku", flash.claude_model)
+        self.assertEqual("deepseek-v4-flash", flash.provider_model)
+        self.assertEqual("sonnet", pro.claude_model)
+        self.assertEqual("deepseek-v4-pro", pro.provider_model)
 
     def test_explicit_model_selection_uses_full_model_ids(self):
         config = sol_luna.resolve_config(self.project, self.home, {})
 
         self.assertEqual(
-            "deepseek-v4-flash",
-            sol_luna.resolve_model(config, "high", requested="flash"),
+            "haiku",
+            sol_luna.resolve_model(config, "high", requested="flash").claude_model,
         )
         self.assertEqual(
             "deepseek-v4-pro",
-            sol_luna.resolve_model(config, "normal", requested="pro"),
+            sol_luna.resolve_model(config, "normal", requested="pro").provider_model,
+        )
+
+    def test_configure_claude_merges_overrides_without_changing_secrets(self):
+        settings_path = self.home / ".claude" / "settings.json"
+        self.write_json(
+            settings_path,
+            {
+                "env": {
+                    "ANTHROPIC_AUTH_TOKEN": "secret-value",
+                    "ANTHROPIC_BASE_URL": "https://private.example",
+                    "ANTHROPIC_MODEL": "deepseek-v4-pro",
+                    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-v4-flash",
+                    "ANTHROPIC_DEFAULT_SONNET_MODEL": "deepseek-v4-pro",
+                    "ANTHROPIC_DEFAULT_OPUS_MODEL": "deepseek-v4-pro",
+                },
+                "effortLevel": "xhigh",
+                "modelOverrides": {"claude-opus-4-6": "existing-provider-model"},
+            },
+        )
+        config = sol_luna.resolve_config(self.project, self.home, {})
+
+        result = sol_luna.configure_claude_settings(self.home, config)
+        updated = json.loads(settings_path.read_text(encoding="utf-8"))
+
+        self.assertEqual("secret-value", updated["env"]["ANTHROPIC_AUTH_TOKEN"])
+        self.assertEqual("https://private.example", updated["env"]["ANTHROPIC_BASE_URL"])
+        self.assertNotIn("ANTHROPIC_MODEL", updated["env"])
+        self.assertNotIn("ANTHROPIC_DEFAULT_HAIKU_MODEL", updated["env"])
+        self.assertNotIn("ANTHROPIC_DEFAULT_SONNET_MODEL", updated["env"])
+        self.assertEqual(
+            "deepseek-v4-pro", updated["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"]
+        )
+        self.assertEqual("xhigh", updated["effortLevel"])
+        self.assertEqual(
+            "existing-provider-model",
+            updated["modelOverrides"]["claude-opus-4-6"],
+        )
+        self.assertEqual(
+            "deepseek-v4-flash",
+            updated["modelOverrides"]["claude-haiku-4-5-20251001"],
+        )
+        self.assertEqual(
+            "deepseek-v4-pro",
+            updated["modelOverrides"]["claude-sonnet-4-6"],
+        )
+        self.assertTrue(Path(result["backup"]).exists())
+
+    def test_configure_claude_preserves_unrelated_model_defaults(self):
+        settings_path = self.home / ".claude" / "settings.json"
+        self.write_json(
+            settings_path,
+            {
+                "env": {
+                    "ANTHROPIC_DEFAULT_OPUS_MODEL": "private-opus",
+                    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "private-haiku",
+                }
+            },
+        )
+        config = sol_luna.resolve_config(self.project, self.home, {})
+
+        sol_luna.configure_claude_settings(self.home, config)
+        updated = json.loads(settings_path.read_text(encoding="utf-8"))
+
+        self.assertEqual("private-opus", updated["env"]["ANTHROPIC_DEFAULT_OPUS_MODEL"])
+        self.assertEqual("private-haiku", updated["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"])
+
+    def test_configure_claude_ignores_project_override_ids(self):
+        config = sol_luna.resolve_config(self.project, self.home, {})
+        config["flash_claude_model"] = "claude-opus-4-6"
+        config["flash_model"] = "private-haiku"
+        settings_path = self.home / ".claude" / "settings.json"
+        self.write_json(
+            settings_path,
+            {"env": {"ANTHROPIC_DEFAULT_HAIKU_MODEL": "private-haiku"}},
+        )
+
+        sol_luna.configure_claude_settings(self.home, config)
+        updated = json.loads(
+            (self.home / ".claude" / "settings.json").read_text(encoding="utf-8")
+        )
+
+        self.assertNotIn("claude-opus-4-6", updated["modelOverrides"])
+        self.assertEqual(
+            "deepseek-v4-flash",
+            updated["modelOverrides"]["claude-haiku-4-5-20251001"],
+        )
+        self.assertEqual(
+            "private-haiku", updated["env"]["ANTHROPIC_DEFAULT_HAIKU_MODEL"]
+        )
+
+    def test_configure_claude_is_idempotent_when_overrides_are_current(self):
+        config = sol_luna.resolve_config(self.project, self.home, {})
+        first = sol_luna.configure_claude_settings(self.home, config)
+        second = sol_luna.configure_claude_settings(self.home, config)
+
+        self.assertEqual("updated", first["status"])
+        self.assertEqual("unchanged", second["status"])
+        self.assertIsNone(second["backup"])
+
+    def test_parser_exposes_configure_claude_command(self):
+        args = sol_luna.build_parser().parse_args(["configure-claude"])
+
+        self.assertEqual("configure-claude", args.command)
+
+    def test_status_model_routes_do_not_include_secrets(self):
+        config = sol_luna.resolve_config(self.project, self.home, {})
+
+        routes = sol_luna.describe_model_routes(config)
+
+        self.assertEqual(
+            {
+                "flash": {
+                    "claude_model": "haiku",
+                    "override_model": "claude-haiku-4-5-20251001",
+                    "provider_model": "deepseek-v4-flash",
+                },
+                "pro": {
+                    "claude_model": "sonnet",
+                    "override_model": "claude-sonnet-4-6",
+                    "provider_model": "deepseek-v4-pro",
+                },
+            },
+            routes,
         )
 
     def test_off_mode_rejects_luna_execution(self):
@@ -110,6 +244,30 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertIn("--no-session-persistence", command)
         self.assertIn("stream-json", command)
         self.assertEqual("审查变更", command[-1])
+
+    def test_task_prompt_adds_small_task_and_concise_result_contract(self):
+        config = sol_luna.resolve_config(self.project, self.home, {})
+
+        prompt = sol_luna.bound_task_prompt("检查一个函数", config)
+
+        self.assertIn("单一目标", prompt)
+        self.assertIn("1200", prompt)
+        self.assertIn("拆分建议", prompt)
+
+    def test_task_prompt_rejects_oversized_delegation(self):
+        config = sol_luna.resolve_config(self.project, self.home, {})
+
+        with self.assertRaisesRegex(sol_luna.SolLunaError, "任务颗粒过大"):
+            sol_luna.bound_task_prompt("x" * 2001, config)
+
+    def test_result_is_truncated_with_explicit_metadata(self):
+        payload = {"result": "x" * 1201}
+
+        bounded = sol_luna.bound_result(payload, 1200)
+
+        self.assertEqual(1200, len(bounded["result"]))
+        self.assertTrue(bounded["_sol_luna"]["result_truncated"])
+        self.assertEqual(1201, bounded["_sol_luna"]["original_result_chars"])
 
     def test_worker_does_not_use_bypass_permissions(self):
         config = sol_luna.resolve_config(self.project, self.home, {})
@@ -168,6 +326,12 @@ class SolLunaConfigTests(unittest.TestCase):
 
         self.assertIsNone(event)
         self.assertEqual(["Claude warning banner"], noise)
+
+    def test_unknown_model_window_warning_is_rejected(self):
+        warning = '"deepseek-v4-flash" is not a model this version of Claude Code recognizes'
+
+        with self.assertRaisesRegex(sol_luna.SolLunaError, "未知模型窗口警告"):
+            sol_luna.reject_unknown_model_warning([warning])
 
     def test_claude_command_requests_verbose_stream_json(self):
         config = sol_luna.resolve_config(self.project, self.home, {})
@@ -276,7 +440,7 @@ class SolLunaConfigTests(unittest.TestCase):
             self.assertTrue(template.exists(), f"缺少角色模板: {template}")
             content = template.read_text(encoding="utf-8")
             self.assertIn(f"name: luna-{role}", content)
-            self.assertIn("model: haiku", content)
+            self.assertIn("model: inherit", content)
 
         for role in ("scout", "critic"):
             content = (template_dir / f"luna-{role}.md").read_text(encoding="utf-8")

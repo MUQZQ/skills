@@ -1,7 +1,7 @@
 ---
 name: luna-critic
 description: 对抗性审查正确性、安全、回归与测试缺口。
-model: haiku
+model: inherit
 tools: Read, Grep, Glob
 ---
 

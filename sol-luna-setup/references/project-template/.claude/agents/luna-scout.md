@@ -1,7 +1,7 @@
 ---
 name: luna-scout
 description: 只读探索代码库、依赖与文档，返回结构化路径与结论。
-model: haiku
+model: inherit
 tools: Read, Grep, Glob
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: luna-tester
 description: 按 Sol 指定的命令运行测试并返回可复核证据，不修改产品代码。
-model: haiku
+model: inherit
 tools: Read, Grep, Glob, Bash
 ---
 
