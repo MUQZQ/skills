@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "local_light_fix_without_git",
+  "prompt": "一个没有 OpenSpec、没有任务系统的 TypeScript 小仓库中，src/date.ts 的 UTC 日期边界判断已确认存在单点根因。请自动实施修复，但用户明确说不要提交。评估模式：只输出你在真正修改前会采用的生命周期所有者、风险档位、TDD/验证路线、暂停条件和第一个实质动作，不修改任何文件。",
+  "assertions": [
+    "将本 skill 的 fallback/当前计划作为最小编排，不创建虚构的 OpenSpec change 或持久账本",
+    "将任务判为 Light 或等价低风险路线，并说明根因已知、局部可逆和无跨边界影响",
+    "对行为修复要求有效 RED-GREEN-REFACTOR，且 RED 失败来自目标行为缺失",
+    "最终验证使用项目原生命令或可重复方法，不硬编码语言外的通用 runner",
+    "尊重不要提交的边界，不 stage、commit、push、建 PR 或部署",
+    "不要求固定五轮审查，也不以审查轮数作为完成条件"
+  ]
+}

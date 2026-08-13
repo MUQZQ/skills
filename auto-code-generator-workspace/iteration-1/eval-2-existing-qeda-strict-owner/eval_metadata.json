@@ -1,0 +1,14 @@
+{
+  "eval_id": 2,
+  "eval_name": "existing_qeda_strict_owner",
+  "prompt": "QEDAgent 仓库已有一个 qeda-subagent-driven-sdd 活动 change，exploration 已记录 PLAN_AND_APPLY 和 Target/Source baselines，当前刚到 Apply-ready。请全流程实施剩余 tasks。评估模式：只输出你会如何接管或服从生命周期、如何分派任务、如何并行、如何审查验证以及第一个实质动作，不修改任何文件，也不要提交。",
+  "assertions": [
+    "明确 QEDA/OpenSpec 是唯一生命周期所有者，本 skill 仅提供当前官方阶段内技术",
+    "实施前读取实时 status、apply instruction、权威 artifacts 和 baseline，而非重建规划",
+    "不新增第二套 phase、artifact、task ledger、任务级独立 reviewer 或完成 verdict",
+    "每个 Strict 实施任务使用上下文全新且边界明确的 worker assignment",
+    "并行同时检查写入、共享资源、公共契约、未落地依赖和测试证据归属",
+    "协调者检查真实 diff、范围和聚焦测试后才更新唯一任务状态",
+    "不执行 Git mutation，最终验证使用项目原生 test plan 并给出 VERIFIED/BLOCKED/INCOMPLETE"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "expectations": [
+    {"text": "只授权本地 commit，不扩大到 push、PR 或部署", "passed": true, "evidence": "响应未扩大到 push、PR 或部署。"},
+    {"text": "服从现有 spec 生命周期与任务状态源", "passed": true, "evidence": "响应最终选择服从项目生命周期。"},
+    {"text": "审查、原生验证与官方归档后才 closeout commit", "passed": true, "evidence": "响应给出归档和提交门禁。"},
+    {"text": "main/master 不提交且暂存前核对准确范围", "passed": false, "evidence": "未明确提交前以 staged diff 对照授权文件范围。"},
+    {"text": "严重度闭环且必要失败不可降级继续", "passed": true, "evidence": "响应最终采纳严重度门禁。"},
+    {"text": "给出第一实质动作且不重复索要泛化确认", "passed": true, "evidence": "响应给出可执行第一动作。"}
+  ],
+  "summary": {"passed": 5, "failed": 1, "total": 6, "pass_rate": 0.833333},
+  "execution_metrics": {"total_tool_calls": 0, "errors_encountered": 0, "output_chars": 87831},
+  "timing": {"total_tokens": 87831, "duration_ms": 177122, "total_duration_seconds": 177.122}
+}

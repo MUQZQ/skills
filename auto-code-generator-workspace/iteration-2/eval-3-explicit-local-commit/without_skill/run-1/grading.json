@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "只授权一个本地 closeout commit，不扩大到其他动作或额外提交", "passed": false, "evidence": "v4.0 同时提到 delivery checkpoint 与 closeout commit，未明确一个提交的唯一边界。"},
+    {"text": "服从现有生命周期、实时任务状态与 Target baseline", "passed": true, "evidence": "响应服从 QEDA/OpenSpec 并读取实时状态和 baseline。"},
+    {"text": "审查、项目原生验证和官方归档成功后才提交", "passed": true, "evidence": "响应给出审查、验证、归档到 closeout commit 的顺序。"},
+    {"text": "暂存前检查 branch、HEAD、status，主干或漂移时停止", "passed": false, "evidence": "只声明不在主干提交，未明确复读 branch/HEAD/status 与漂移停止。"},
+    {"text": "建立准确 AUTHORIZED_COMMIT_SET 并只暂存显式路径", "passed": false, "evidence": "只泛称准确暂存范围，没有授权集合与排除规则。"},
+    {"text": "暂存后核验两个 cached diff，不一致时停止", "passed": false, "evidence": "没有两个 cached diff 的强制核验。"},
+    {"text": "严重度闭环且第一实质动作只读取证", "passed": false, "evidence": "严重度闭环存在，但第一动作随后编辑任务，不是明确只读取证。"}
+  ],
+  "summary": {"passed": 2, "failed": 5, "total": 7, "pass_rate": 0.285714},
+  "execution_metrics": {"total_tool_calls": 0, "errors_encountered": 0, "output_chars": 44928},
+  "timing": {"total_tokens": 44928, "duration_ms": 128475, "total_duration_seconds": 128.475}
+}

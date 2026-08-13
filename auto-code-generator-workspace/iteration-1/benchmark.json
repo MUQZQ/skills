@@ -1,0 +1,363 @@
+{
+  "metadata": {
+    "skill_name": "auto-code-generator",
+    "skill_path": "C:\\Users\\30960\\.cc-switch\\skills\\auto-code-generator",
+    "executor_model": "deepseek-v4-flash via Luna critic",
+    "analyzer_model": "deepseek-v4-flash via Luna critic",
+    "timestamp": "2026-08-13T02:06:28Z",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 50.085,
+        "tokens": 16311,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "\u4f7f\u7528\u6700\u5c0f fallback \u7f16\u6392\uff0c\u4e0d\u865a\u6784 OpenSpec change \u6216\u6301\u4e45\u8d26\u672c",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u91c7\u7528 fallback/\u5f53\u524d\u8ba1\u5212\u4f5c\u4e3a\u552f\u4e00\u6700\u5c0f\u7f16\u6392\u3002"
+        },
+        {
+          "text": "\u5c06\u4efb\u52a1\u5224\u4e3a Light \u6216\u7b49\u4ef7\u4f4e\u98ce\u9669\u8def\u7ebf\u5e76\u8bf4\u660e\u4f9d\u636e",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u57fa\u4e8e\u5df2\u77e5\u6839\u56e0\u3001\u5c40\u90e8\u53ef\u9006\u548c\u65e0\u8de8\u8fb9\u754c\u5f71\u54cd\u9009\u62e9 Light\u3002"
+        },
+        {
+          "text": "\u884c\u4e3a\u4fee\u590d\u6267\u884c\u6709\u6548 RED-GREEN-REFACTOR",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u8981\u6c42 RED \u5fc5\u987b\u7531\u76ee\u6807\u884c\u4e3a\u7f3a\u5931\u5bfc\u81f4\u3002"
+        },
+        {
+          "text": "\u6700\u7ec8\u9a8c\u8bc1\u4f7f\u7528\u9879\u76ee\u539f\u751f\u547d\u4ee4\u6216\u53ef\u91cd\u590d\u65b9\u6cd5",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u4f7f\u7528\u9879\u76ee\u539f\u751f\u547d\u4ee4\uff0c\u4e0d\u786c\u7f16\u7801\u901a\u7528 runner\u3002"
+        },
+        {
+          "text": "\u5c0a\u91cd\u4e0d\u8981\u63d0\u4ea4\u7684 Git \u8fb9\u754c",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u4e0d stage\u3001commit\u3001push\u3001\u5efa PR \u6216\u90e8\u7f72\u3002"
+        },
+        {
+          "text": "\u4e0d\u8981\u6c42\u56fa\u5b9a\u4e94\u8f6e\u5ba1\u67e5",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u91c7\u7528\u4e25\u91cd\u5ea6\u95ed\u73af\uff0c\u4e0d\u4ee5\u5ba1\u67e5\u8f6e\u6570\u4f5c\u4e3a\u5b8c\u6210\u6761\u4ef6\u3002"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 36.717,
+        "tokens": 13982,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "QEDA/OpenSpec \u662f\u552f\u4e00\u751f\u547d\u5468\u671f\u6240\u6709\u8005",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e QEDA/OpenSpec \u662f\u552f\u4e00 lifecycle owner\u3002"
+        },
+        {
+          "text": "\u8bfb\u53d6\u5b9e\u65f6 status\u3001apply instruction\u3001\u6743\u5a01 artifacts \u548c baseline",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u8981\u6c42\u8bfb\u53d6\u5b9e\u65f6\u72b6\u6001\u3001Apply contract \u548c Target/Source baseline\u3002"
+        },
+        {
+          "text": "\u4e0d\u65b0\u589e\u7b2c\u4e8c\u5957 phase\u3001artifact\u3001ledger\u3001reviewer \u6216 verdict",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u9650\u5b9a\u4e3a Apply \u9636\u6bb5\u5185\u6280\u672f\u80fd\u529b\u4e0e\u552f\u4e00\u4efb\u52a1\u72b6\u6001\u3002"
+        },
+        {
+          "text": "Strict \u4efb\u52a1\u4f7f\u7528\u5168\u65b0\u4e14\u6709\u754c\u7684 worker assignment",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e fresh bounded worker \u53ca\u5199\u5165\u3001\u7981\u533a\u3001\u6d4b\u8bd5\u548c\u8fd4\u56de\u5408\u540c\u3002"
+        },
+        {
+          "text": "\u5e76\u884c\u68c0\u67e5\u4e94\u9879\u5b89\u5168\u6761\u4ef6",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u9010\u9879\u5217\u51fa\u5199\u5165\u3001\u8d44\u6e90\u3001\u516c\u5171\u5951\u7ea6\u3001\u672a\u843d\u5730\u4f9d\u8d56\u548c\u8bc1\u636e\u5f52\u5c5e\u3002"
+        },
+        {
+          "text": "\u534f\u8c03\u8005\u6838\u9a8c\u771f\u5b9e diff\u3001\u8303\u56f4\u548c\u805a\u7126\u6d4b\u8bd5\u540e\u66f4\u65b0\u552f\u4e00\u4efb\u52a1\u72b6\u6001",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u7531\u534f\u8c03\u8005\u5b8c\u6210\u771f\u5b9e diff \u4e0e\u805a\u7126\u6d4b\u8bd5\u9a8c\u6536\u3002"
+        },
+        {
+          "text": "\u65e0 Git mutation\uff0c\u4f7f\u7528\u539f\u751f test plan \u548c\u6807\u51c6 verdict",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u65e0 Git mutation\uff0c\u5e76\u4f7f\u7528 VERIFIED/BLOCKED/INCOMPLETE\u3002"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 128.475,
+        "tokens": 44928,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "\u53ea\u6388\u6743\u672c\u5730 commit\uff0c\u4e0d\u6269\u5927\u5230 push\u3001PR \u6216\u90e8\u7f72",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u5c06\u6743\u9650\u9650\u5b9a\u4e3a LOCAL_COMMIT\u3002"
+        },
+        {
+          "text": "\u670d\u4ece\u73b0\u6709 spec \u751f\u547d\u5468\u671f\u4e0e\u4efb\u52a1\u72b6\u6001\u6e90",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u5148\u8bc6\u522b\u4ed3\u5e93\u751f\u547d\u5468\u671f owner \u4e0e\u4efb\u52a1\u771f\u76f8\u6e90\u3002"
+        },
+        {
+          "text": "\u5ba1\u67e5\u3001\u539f\u751f\u9a8c\u8bc1\u4e0e\u5b98\u65b9\u5f52\u6863\u540e\u624d closeout commit",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u5c06\u5b8c\u6210\u95e8\u7981\u7f6e\u4e8e closeout commit \u4e4b\u524d\u3002"
+        },
+        {
+          "text": "main/master \u4e0d\u63d0\u4ea4\u4e14\u6682\u5b58\u524d\u6838\u5bf9\u51c6\u786e\u8303\u56f4",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u58f0\u660e\u4e3b\u5e72\u4fdd\u62a4\u5e76\u5728\u63d0\u4ea4\u524d\u68c0\u67e5\u8303\u56f4\u3002"
+        },
+        {
+          "text": "\u4e25\u91cd\u5ea6\u95ed\u73af\u4e14\u5fc5\u8981\u5931\u8d25\u4e0d\u53ef\u964d\u7ea7\u7ee7\u7eed",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u91c7\u7528 P0/P1 \u95ed\u73af\u800c\u975e\u56fa\u5b9a\u4e94\u8f6e\u3002"
+        },
+        {
+          "text": "\u7ed9\u51fa\u7b2c\u4e00\u5b9e\u8d28\u52a8\u4f5c\u4e14\u4e0d\u91cd\u590d\u7d22\u8981\u6cdb\u5316\u786e\u8ba4",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u76f4\u63a5\u8bfb\u53d6\u5b9e\u65f6\u72b6\u6001\u3001\u57fa\u7ebf\u3001\u5206\u652f\u548c\u6388\u6743\u3002"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 3,
+        "failed": 3,
+        "total": 6,
+        "time_seconds": 78.048,
+        "tokens": 26273,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "\u4f7f\u7528\u6700\u5c0f fallback \u7f16\u6392\uff0c\u4e0d\u865a\u6784 OpenSpec change \u6216\u6301\u4e45\u8d26\u672c",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u672a\u521b\u5efa\u865a\u6784 OpenSpec change\u3002"
+        },
+        {
+          "text": "\u5c06\u4efb\u52a1\u5224\u4e3a Light \u6216\u7b49\u4ef7\u4f4e\u98ce\u9669\u8def\u7ebf\u5e76\u8bf4\u660e\u4f9d\u636e",
+          "passed": false,
+          "evidence": "\u54cd\u5e94\u9009\u62e9\u65e7\u7248 B \u6863\uff0c\u672a\u7ed9\u51fa Light \u81ea\u9002\u5e94\u8def\u7531\u3002"
+        },
+        {
+          "text": "\u884c\u4e3a\u4fee\u590d\u6267\u884c\u6709\u6548 RED-GREEN-REFACTOR",
+          "passed": false,
+          "evidence": "\u672a\u660e\u786e RED \u5fc5\u987b\u7531\u76ee\u6807\u884c\u4e3a\u7f3a\u5931\u5bfc\u81f4\u3002"
+        },
+        {
+          "text": "\u6700\u7ec8\u9a8c\u8bc1\u4f7f\u7528\u9879\u76ee\u539f\u751f\u547d\u4ee4\u6216\u53ef\u91cd\u590d\u65b9\u6cd5",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u5305\u542b\u9879\u76ee\u9a8c\u8bc1\u8def\u7ebf\u3002"
+        },
+        {
+          "text": "\u5c0a\u91cd\u4e0d\u8981\u63d0\u4ea4\u7684 Git \u8fb9\u754c",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u6ca1\u6709\u6269\u5927 Git \u6743\u9650\u3002"
+        },
+        {
+          "text": "\u4e0d\u8981\u6c42\u56fa\u5b9a\u4e94\u8f6e\u5ba1\u67e5",
+          "passed": false,
+          "evidence": "\u54cd\u5e94\u6cbf\u7528\u56fa\u5b9a\u4e94\u8f6e\u5ba1\u67e5\u3002"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.285714,
+        "passed": 2,
+        "failed": 5,
+        "total": 7,
+        "time_seconds": 144.926,
+        "tokens": 86860,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "QEDA/OpenSpec \u662f\u552f\u4e00\u751f\u547d\u5468\u671f\u6240\u6709\u8005",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u6700\u7ec8\u62d2\u7edd\u65e7\u7248\u5916\u5c42\u751f\u547d\u5468\u671f\u5e76\u670d\u4ece QEDA\u3002"
+        },
+        {
+          "text": "\u8bfb\u53d6\u5b9e\u65f6 status\u3001apply instruction\u3001\u6743\u5a01 artifacts \u548c baseline",
+          "passed": false,
+          "evidence": "\u672a\u5b8c\u6574\u8986\u76d6 baseline \u4e0e\u6743\u5a01 artifacts\uff0c\u4e14\u63d0\u51fa\u8865\u5efa\u89c4\u5212\u3002"
+        },
+        {
+          "text": "\u4e0d\u65b0\u589e\u7b2c\u4e8c\u5957 phase\u3001artifact\u3001ledger\u3001reviewer \u6216 verdict",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u660e\u786e\u62d2\u7edd\u65e7\u7248\u516b\u9636\u6bb5\u3001\u4e94\u8f6e\u548c\u7b2c\u4e8c\u5b8c\u6210\u5224\u5b9a\u3002"
+        },
+        {
+          "text": "Strict \u4efb\u52a1\u4f7f\u7528\u5168\u65b0\u4e14\u6709\u754c\u7684 worker assignment",
+          "passed": false,
+          "evidence": "\u53ea\u6cdb\u79f0 bounded worker\uff0c\u7f3a\u5c11 fresh context \u4e0e assignment \u8fb9\u754c\u3002"
+        },
+        {
+          "text": "\u5e76\u884c\u68c0\u67e5\u4e94\u9879\u5b89\u5168\u6761\u4ef6",
+          "passed": false,
+          "evidence": "\u53ea\u6cdb\u79f0\u5b89\u5168\u5e76\u884c\uff0c\u672a\u5217\u51fa\u4e94\u9879\u6761\u4ef6\u3002"
+        },
+        {
+          "text": "\u534f\u8c03\u8005\u6838\u9a8c\u771f\u5b9e diff\u3001\u8303\u56f4\u548c\u805a\u7126\u6d4b\u8bd5\u540e\u66f4\u65b0\u552f\u4e00\u4efb\u52a1\u72b6\u6001",
+          "passed": false,
+          "evidence": "\u53ea\u63d0\u5230 diff \u9a8c\u6536\uff0c\u7f3a\u5c11\u8303\u56f4\u3001\u805a\u7126\u6d4b\u8bd5\u548c\u552f\u4e00\u72b6\u6001\u66f4\u65b0\u3002"
+        },
+        {
+          "text": "\u65e0 Git mutation\uff0c\u4f7f\u7528\u539f\u751f test plan \u548c\u6807\u51c6 verdict",
+          "passed": false,
+          "evidence": "\u6ca1\u6709\u7ed9\u51fa test plan \u539f\u751f\u547d\u4ee4\u4e0e\u4e09\u6001 verdict\u3002"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.833333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 177.122,
+        "tokens": 87831,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "\u53ea\u6388\u6743\u672c\u5730 commit\uff0c\u4e0d\u6269\u5927\u5230 push\u3001PR \u6216\u90e8\u7f72",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u672a\u6269\u5927\u5230 push\u3001PR \u6216\u90e8\u7f72\u3002"
+        },
+        {
+          "text": "\u670d\u4ece\u73b0\u6709 spec \u751f\u547d\u5468\u671f\u4e0e\u4efb\u52a1\u72b6\u6001\u6e90",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u6700\u7ec8\u9009\u62e9\u670d\u4ece\u9879\u76ee\u751f\u547d\u5468\u671f\u3002"
+        },
+        {
+          "text": "\u5ba1\u67e5\u3001\u539f\u751f\u9a8c\u8bc1\u4e0e\u5b98\u65b9\u5f52\u6863\u540e\u624d closeout commit",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u7ed9\u51fa\u5f52\u6863\u548c\u63d0\u4ea4\u95e8\u7981\u3002"
+        },
+        {
+          "text": "main/master \u4e0d\u63d0\u4ea4\u4e14\u6682\u5b58\u524d\u6838\u5bf9\u51c6\u786e\u8303\u56f4",
+          "passed": false,
+          "evidence": "\u672a\u660e\u786e\u63d0\u4ea4\u524d\u4ee5 staged diff \u5bf9\u7167\u6388\u6743\u6587\u4ef6\u8303\u56f4\u3002"
+        },
+        {
+          "text": "\u4e25\u91cd\u5ea6\u95ed\u73af\u4e14\u5fc5\u8981\u5931\u8d25\u4e0d\u53ef\u964d\u7ea7\u7ee7\u7eed",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u6700\u7ec8\u91c7\u7eb3\u4e25\u91cd\u5ea6\u95e8\u7981\u3002"
+        },
+        {
+          "text": "\u7ed9\u51fa\u7b2c\u4e00\u5b9e\u8d28\u52a8\u4f5c\u4e14\u4e0d\u91cd\u590d\u7d22\u8981\u6cdb\u5316\u786e\u8ba4",
+          "passed": true,
+          "evidence": "\u54cd\u5e94\u7ed9\u51fa\u53ef\u6267\u884c\u7b2c\u4e00\u52a8\u4f5c\u3002"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 71.759,
+        "stddev": 49.5702,
+        "min": 36.717,
+        "max": 128.475
+      },
+      "tokens": {
+        "mean": 25073.6667,
+        "stddev": 17233.7452,
+        "min": 13982,
+        "max": 44928
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.5397,
+        "stddev": 0.276,
+        "min": 0.2857,
+        "max": 0.8333
+      },
+      "time_seconds": {
+        "mean": 133.3653,
+        "stddev": 50.5386,
+        "min": 78.048,
+        "max": 177.122
+      },
+      "tokens": {
+        "mean": 66988.0,
+        "stddev": 35263.5666,
+        "min": 26273,
+        "max": 87831
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.46",
+      "time_seconds": "-61.6",
+      "tokens": "-41914"
+    }
+  },
+  "notes": []
+}

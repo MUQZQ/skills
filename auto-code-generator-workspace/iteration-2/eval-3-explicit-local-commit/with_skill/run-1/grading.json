@@ -1,0 +1,17 @@
+{
+  "expectations": [
+    {"text": "只授权一个本地 closeout commit，不扩大到其他动作或额外提交", "passed": true, "evidence": "明确一个本地 commit 只产生一个 closeout commit，其他外部动作独立授权。"},
+    {"text": "服从现有生命周期、实时任务状态与 Target baseline", "passed": true, "evidence": "Detect & Route 的第一动作读取权威流程、实时状态和 baseline。"},
+    {"text": "审查、项目原生验证和官方归档成功后才提交", "passed": true, "evidence": "Git 边界将三项设为 closeout commit 前置门禁。"},
+    {"text": "暂存前检查 branch、HEAD、status，主干或漂移时停止", "passed": true, "evidence": "规则明确紧邻暂存前复读并设定 STOP 条件。"},
+    {"text": "建立准确 AUTHORIZED_COMMIT_SET 并只暂存显式路径", "passed": true, "evidence": "规则明确排除预存、范围外及其他参与者改动。"},
+    {"text": "暂存后核验两个 cached diff，不一致时停止", "passed": true, "evidence": "文件集合和完整内容都必须匹配。"},
+    {"text": "严重度闭环且第一实质动作只读取证", "passed": true, "evidence": "独立 critic 核验 7/7，P0/P1 为 0。"}
+  ],
+  "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1.0},
+  "execution_metrics": {"total_tool_calls": 0, "errors_encountered": 0, "output_chars": 18330},
+  "timing": {"duration_ms": 27320, "total_duration_seconds": 27.32},
+  "claims": [
+    {"claim": "定向 Git 权限门禁 7/7 通过", "type": "process", "verified": true, "evidence": "独立 Luna critic 返回 passed=7, failed=0, p0_p1=[]。"}
+  ]
+}

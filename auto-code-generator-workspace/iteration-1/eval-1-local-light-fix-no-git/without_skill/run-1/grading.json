@@ -1,0 +1,13 @@
+{
+  "expectations": [
+    {"text": "使用最小 fallback 编排，不虚构 OpenSpec change 或持久账本", "passed": true, "evidence": "响应未创建虚构 OpenSpec change。"},
+    {"text": "将任务判为 Light 或等价低风险路线并说明依据", "passed": false, "evidence": "响应选择旧版 B 档，未给出 Light 自适应路由。"},
+    {"text": "行为修复执行有效 RED-GREEN-REFACTOR", "passed": false, "evidence": "未明确 RED 必须由目标行为缺失导致。"},
+    {"text": "最终验证使用项目原生命令或可重复方法", "passed": true, "evidence": "响应包含项目验证路线。"},
+    {"text": "尊重不要提交的 Git 边界", "passed": true, "evidence": "响应没有扩大 Git 权限。"},
+    {"text": "不要求固定五轮审查", "passed": false, "evidence": "响应沿用固定五轮审查。"}
+  ],
+  "summary": {"passed": 3, "failed": 3, "total": 6, "pass_rate": 0.5},
+  "execution_metrics": {"total_tool_calls": 0, "errors_encountered": 0, "output_chars": 26273},
+  "timing": {"total_tokens": 26273, "duration_ms": 78048, "total_duration_seconds": 78.048}
+}

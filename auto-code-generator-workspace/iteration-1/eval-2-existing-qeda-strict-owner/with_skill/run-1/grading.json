@@ -1,0 +1,14 @@
+{
+  "expectations": [
+    {"text": "QEDA/OpenSpec 是唯一生命周期所有者", "passed": true, "evidence": "响应明确 QEDA/OpenSpec 是唯一 lifecycle owner。"},
+    {"text": "读取实时 status、apply instruction、权威 artifacts 和 baseline", "passed": true, "evidence": "响应要求读取实时状态、Apply contract 和 Target/Source baseline。"},
+    {"text": "不新增第二套 phase、artifact、ledger、reviewer 或 verdict", "passed": true, "evidence": "响应限定为 Apply 阶段内技术能力与唯一任务状态。"},
+    {"text": "Strict 任务使用全新且有界的 worker assignment", "passed": true, "evidence": "响应明确 fresh bounded worker 及写入、禁区、测试和返回合同。"},
+    {"text": "并行检查五项安全条件", "passed": true, "evidence": "响应逐项列出写入、资源、公共契约、未落地依赖和证据归属。"},
+    {"text": "协调者核验真实 diff、范围和聚焦测试后更新唯一任务状态", "passed": true, "evidence": "响应明确由协调者完成真实 diff 与聚焦测试验收。"},
+    {"text": "无 Git mutation，使用原生 test plan 和标准 verdict", "passed": true, "evidence": "响应明确无 Git mutation，并使用 VERIFIED/BLOCKED/INCOMPLETE。"}
+  ],
+  "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1.0},
+  "execution_metrics": {"total_tool_calls": 0, "errors_encountered": 0, "output_chars": 13982},
+  "timing": {"total_tokens": 13982, "duration_ms": 36717, "total_duration_seconds": 36.717}
+}
