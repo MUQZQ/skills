@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+                             "passed":  true,
+                             "evidence":  "输出明确最终只建立一个权威持久任务，并给出单一可观察结果。"
+                         },
+                         {
+                             "text":  "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+                             "passed":  true,
+                             "evidence":  "输出把 RED、GREEN、审计断言和 REFACTOR 全部放在同一 task 内。"
+                         },
+                         {
+                             "text":  "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+                             "passed":  true,
+                             "evidence":  "输出末段逐项拒绝按 TDD 阶段、测试文件、实现函数或 Agent 拆分。"
+                         },
+                         {
+                             "text":  "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+                             "passed":  true,
+                             "evidence":  "输出定义过期拒绝、状态不变和审计事件完整场景，并要求从项目配置读取原生聚焦及场景验证命令。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "output_chars":  793,
+                              "transcript_chars":  218,
+                              "errors_encountered":  0
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

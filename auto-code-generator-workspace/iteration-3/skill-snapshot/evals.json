@@ -1,0 +1,26 @@
+{
+  "skill_name": "auto-code-generator",
+  "evals": [
+    {
+      "id": 1,
+      "name": "local_light_fix_without_git",
+      "prompt": "一个没有 OpenSpec、没有任务系统的 TypeScript 小仓库中，src/date.ts 的 UTC 日期边界判断已确认存在单点根因。请自动实施修复，但用户明确说不要提交。评估模式：只输出你在真正修改前会采用的生命周期所有者、风险档位、TDD/验证路线、暂停条件和第一个实质动作，不修改任何文件。",
+      "expected_output": "选择最小 fallback/Light 路线，不伪造 OpenSpec 工件；行为修复使用有效 RED-GREEN-REFACTOR；使用项目原生测试验证；不执行 Git mutation；不固定五轮审查。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "existing_qeda_strict_owner",
+      "prompt": "QEDAgent 仓库已有一个 qeda-subagent-driven-sdd 活动 change，exploration 已记录 PLAN_AND_APPLY 和 Target/Source baselines，当前刚到 Apply-ready。请全流程实施剩余 tasks。评估模式：只输出你会如何接管或服从生命周期、如何分派任务、如何并行、如何审查验证以及第一个实质动作，不修改任何文件，也不要提交。",
+      "expected_output": "明确 QEDA/OpenSpec 是唯一生命周期所有者；读取实时状态和执行合同；不新增第二套 phase/artifact/ledger/reviewer；每任务 bounded worker、五项安全并行、协调者核验 diff；无 Git mutation。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "implementation_with_explicit_local_commit",
+      "prompt": "请按仓库现有 spec 实施一个跨两个 package 的普通功能，完成验证和归档后帮我做一个本地 commit；不要 push、不要建 PR、不要部署。评估模式：只输出权限解释、实施到提交的门禁、分支保护、验证结论和第一个实质动作，不修改任何文件。",
+      "expected_output": "识别显式 LOCAL_COMMIT 权限但不扩大到 push/PR/deploy；服从项目 spec 生命周期；仅在最终验证与官方归档成功后提交；禁止主干提交；不以固定轮数或自动提交代替门禁。",
+      "files": []
+    }
+  ]
+}

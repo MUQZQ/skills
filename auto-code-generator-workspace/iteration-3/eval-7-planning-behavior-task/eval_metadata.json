@@ -1,0 +1,11 @@
+{
+  "eval_id": 7,
+  "eval_name": "planning_merges_tdd_microsteps_into_behavior_task",
+  "prompt": "一个尚未创建权威 tasks 的密码重置变更，草稿把同一行为拆成：T1 写 token 过期失败测试、T2 实现过期判断、T3 补充审计事件断言。三项修改同一模块、共享 fixture，只有密码重置过期与审计场景整体通过才可验收。请在 Apply-ready 前审查并给出最终任务规划。评估模式：只输出任务粒度决定、任务内容、TDD/验收项和理由，不修改文件。",
+  "assertions": [
+    "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+    "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+    "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+    "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据"
+  ]
+}

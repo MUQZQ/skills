@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+                             "passed":  true,
+                             "evidence":  "旧版识别该返回不符合其单 task 合同，并按需要协调的异常处理。"
+                         },
+                         {
+                             "text":  "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+                             "passed":  true,
+                             "evidence":  "旧版只允许证据完整的 T1 完成，T2/T3 仍未完成。"
+                         },
+                         {
+                             "text":  "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+                             "passed":  true,
+                             "evidence":  "旧版同样明确保留现场且不做破坏性恢复。"
+                         },
+                         {
+                             "text":  "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+                             "passed":  true,
+                             "evidence":  "旧版先解决 schema 决策，再串行恢复 T2，验收后才调度 T3。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "output_chars":  848,
+                              "transcript_chars":  503,
+                              "errors_encountered":  0
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+                                                     "旧版没有场景组重算语义，但可用单 task 串行恢复满足实质安全结果。"
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

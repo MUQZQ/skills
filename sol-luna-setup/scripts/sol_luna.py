@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import queue
+import re
 import shutil
 import subprocess
 import sys
@@ -20,7 +21,7 @@ from typing import Any, Mapping, Sequence, TextIO
 
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "mode": "auto",
+    "mode": "off",
     "model": "auto",
     "flash_model": "deepseek-v4-flash",
     "pro_model": "deepseek-v4-pro",
@@ -41,6 +42,14 @@ VALID_MODELS = {"auto", "flash", "pro"}
 VALID_RISKS = {"normal", "high"}
 VALID_ROLES = {"scout", "worker", "critic", "tester"}
 READ_ONLY_ROLES = {"scout", "critic", "tester"}
+TASK_BRIEF_FIELDS = (
+    "目标",
+    "允许范围",
+    "禁止范围",
+    "约束",
+    "预期输出",
+    "验证证据",
+)
 
 
 class SolLunaError(RuntimeError):
@@ -366,10 +375,25 @@ def bound_task_prompt(prompt: str, config: Mapping[str, Any]) -> str:
         raise SolLunaError(
             f"Luna 任务颗粒过大：{len(prompt)} 字符，限制 {max_task_chars}；请由 Sol 拆成多个单目标任务"
         )
+    missing_fields = [
+        field
+        for field in TASK_BRIEF_FIELDS
+        if re.search(
+            rf"(?m)^[ \t]*(?:[-*][ \t]*)?{re.escape(field)}[ \t]*[:：][ \t]*\S[^\r\n]*\r?$",
+            prompt,
+        )
+        is None
+    ]
+    if missing_fields:
+        raise SolLunaError(
+            f"Luna 任务卡缺少非空字段：{', '.join(missing_fields)}；Sol 必须先明确目标与边界"
+        )
     max_result_chars = int(config["max_result_chars"])
     return (
         f"{prompt}\n\n"
-        "执行契约：只完成一个单一目标；不要顺带扩展范围。"
+        "Sol 委派前置：原始任务必须明确单一目标、允许范围、禁止范围、约束、预期输出和验证证据；"
+        "任何一项缺失时停止并返回缺失项，不得猜测或自行扩展。"
+        "执行契约：只完成该单一目标，不要顺带扩展范围。"
         f"最终答复不超过 {max_result_chars} 个字符，只给结论、证据和必要的文件路径/命令。"
         "如果当前任务无法形成一次可独立验证的小闭环，停止执行并返回拆分建议，不要自行扩大任务。"
     )
@@ -674,6 +698,13 @@ def _print_json(value: Any) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
 
+def require_user_triggered(user_triggered: bool) -> None:
+    if not user_triggered:
+        raise LunaDisabledError(
+            "Luna 默认关闭；必须由用户在当前会话显式触发"
+        )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sol-luna", description=__doc__)
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
@@ -683,7 +714,9 @@ def build_parser() -> argparse.ArgumentParser:
     status = subparsers.add_parser("status", help="显示最终有效配置和角色状态")
     status.add_argument("--global", dest="global_scope", action="store_true")
 
-    mode = subparsers.add_parser("mode", help="设置 Luna 使用模式")
+    mode = subparsers.add_parser(
+        "mode", help="设置 Luna 委派策略（不授予当前或后续会话调用权限）"
+    )
     mode.add_argument("value", choices=sorted(VALID_MODES))
     mode.add_argument("--global", dest="global_scope", action="store_true")
 
@@ -705,6 +738,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     run = subparsers.add_parser("run", help="以指定 Luna 角色执行一次任务")
     run.add_argument("role", choices=sorted(VALID_ROLES))
+    run.add_argument(
+        "--user-triggered",
+        action="store_true",
+        help="确认用户已在当前会话显式触发 Luna；仅本次启用且不写配置",
+    )
     run.add_argument("--model", choices=sorted(VALID_MODELS), default=None)
     run.add_argument("--risk", choices=sorted(VALID_RISKS), default="normal")
     run.add_argument("--quiet", action="store_true", help="只输出最终 JSON")
@@ -717,9 +755,15 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("prompt")
 
-    smoke = subparsers.add_parser("smoke", help="验证 Flash 和 Pro 的实际模型解析")
+    smoke = subparsers.add_parser(
+        "smoke", help="验证 Flash 和 Pro 的实际模型解析（需要当前会话触发）"
+    )
+    smoke.add_argument(
+        "--user-triggered",
+        action="store_true",
+        help="确认用户已在当前会话显式触发 Luna；仅本次启用且不写配置",
+    )
     smoke.add_argument("--model", choices=["flash", "pro", "all"], default="all")
-    smoke.add_argument("--ignore-mode", action="store_true")
     return parser
 
 
@@ -766,10 +810,14 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
         elif args.command == "run":
+            require_user_triggered(args.user_triggered)
+            run_config = dict(config)
+            if run_config["mode"] == "off":
+                run_config["mode"] = "auto"
             payload = run_luna(
                 args.role,
                 args.prompt,
-                config,
+                run_config,
                 args.risk,
                 args.model,
                 project_root,
@@ -778,15 +826,27 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             _print_json(payload)
         elif args.command == "smoke":
+            require_user_triggered(args.user_triggered)
             smoke_config = dict(config)
-            if args.ignore_mode:
+            if smoke_config["mode"] == "off":
                 smoke_config["mode"] = "auto"
             selections = ["flash", "pro"] if args.model == "all" else [args.model]
             results = []
             for selection in selections:
+                expected_result = f"LUNA_{selection.upper()}_SMOKE_OK"
+                smoke_task = "\n".join(
+                    [
+                        f"目标：验证 {selection} 模型并只返回 {expected_result}",
+                        "允许范围：仅执行无工具的模型响应",
+                        "禁止范围：不读取文件，不调用工具，不修改任何状态",
+                        "约束：只回复指定标记，不附加解释",
+                        f"预期输出：{expected_result}",
+                        "验证证据：最终 JSON 的 result 与 modelUsage",
+                    ]
+                )
                 payload = run_luna(
                     "scout",
-                    f"只回复 LUNA_{selection.upper()}_SMOKE_OK，不读取文件，不调用工具。",
+                    smoke_task,
                     smoke_config,
                     "normal",
                     selection,

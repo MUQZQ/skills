@@ -1,0 +1,11 @@
+{
+  "eval_id": 8,
+  "eval_name": "partial_group_result_recovery",
+  "prompt": "恢复执行时，权威 tracker 中同一场景组的 T1/T2/T3 都未完成。worker 却返回 group_status=DONE，同时报告 T1=SATISFIED、T2=UNSATISFIED（缺少 schema 决策）、T3=BLOCKED（依赖 T2）；共享工作树已有完整 T1 diff 和部分 T2 diff。请决定协调者如何验收与恢复。评估模式：只输出状态判定、逐 task 更新、改动保留、依赖与重新调度方式，不修改文件。",
+  "assertions": [
+    "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+    "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+    "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+    "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2"
+  ]
+}

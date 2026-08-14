@@ -1,0 +1,462 @@
+{
+    "metadata":  {
+                     "skill_name":  "auto-code-generator",
+                     "skill_path":  "auto-code-generator",
+                     "executor_model":  "native Codex subagents; exact model id unavailable",
+                     "analyzer_model":  "native Codex subagent; exact model id unavailable",
+                     "timestamp":  "2026-08-14T06:05:51Z",
+                     "evals_run":  [
+                                       4,
+                                       5,
+                                       6,
+                                       7,
+                                       8
+                                   ],
+                     "runs_per_configuration":  1
+                 },
+    "runs":  [
+                 {
+                     "eval_id":  4,
+                     "configuration":  "with_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  885
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+                                              "passed":  true,
+                                              "evidence":  "输出明确写明 T1/T2/T3 是唯一持久状态与独立验收单元，场景组只用于调度且不落盘。"
+                                          },
+                                          {
+                                              "text":  "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+                                              "passed":  true,
+                                              "evidence":  "输出将三项合为“登录锁定闭环”，并列出同一认证模块、共享 fixture/测试进程及减少重复准备成本。"
+                                          },
+                                          {
+                                              "text":  "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+                                              "passed":  true,
+                                              "evidence":  "输出给出 T1 RED、T2 GREEN、T3 审计断言的顺序，并明确不分别启动 worker。"
+                                          },
+                                          {
+                                              "text":  "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+                                              "passed":  true,
+                                              "evidence":  "输出逐项列出 T1/T2/T3 验收证据，并禁止因组级 DONE 一键完成。"
+                                          }
+                                      ],
+                     "notes":  [
+
+                               ]
+                 },
+                 {
+                     "eval_id":  5,
+                     "configuration":  "with_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  1026
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "将 T1 公共接口基础任务单独成组并首先执行",
+                                              "passed":  true,
+                                              "evidence":  "输出定义 G1-foundation，仅包含 T1，并放在第一波。"
+                                          },
+                                          {
+                                              "text":  "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+                                              "passed":  true,
+                                              "evidence":  "输出明确要求协调者验收 T1 且 tracker 标完成后才调度第二波。"
+                                          },
+                                          {
+                                              "text":  "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+                                              "passed":  true,
+                                              "evidence":  "输出逐项检查写入、独占资源、公共契约和证据隔离后并行 G2/G3。"
+                                          },
+                                          {
+                                              "text":  "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+                                              "passed":  true,
+                                              "evidence":  "输出以 T2 失败为例，只恢复 G2，明确不回退已验收 G1。"
+                                          }
+                                      ],
+                     "notes":  [
+
+                               ]
+                 },
+                 {
+                     "eval_id":  6,
+                     "configuration":  "with_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  1249
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+                                              "passed":  true,
+                                              "evidence":  "输出开头明确拒绝因同属企业用户开通而合并。"
+                                          },
+                                          {
+                                              "text":  "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+                                              "passed":  true,
+                                              "evidence":  "输出分别定义 G1-migration、G2-permission，并逐项说明审批、回滚、风险和专项验证边界。"
+                                          },
+                                          {
+                                              "text":  "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+                                              "passed":  true,
+                                              "evidence":  "输出在成本收益判断中完整给出该门禁并应用到本例。"
+                                          },
+                                          {
+                                              "text":  "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+                                              "passed":  true,
+                                              "evidence":  "输出说明一组一 task 是边界判断结果而非固定规则，并按真实生产者关系和五项隔离决定波次。"
+                                          }
+                                      ],
+                     "notes":  [
+
+                               ]
+                 },
+                 {
+                     "eval_id":  7,
+                     "configuration":  "with_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  793
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+                                              "passed":  true,
+                                              "evidence":  "输出明确最终只建立一个权威持久任务，并给出单一可观察结果。"
+                                          },
+                                          {
+                                              "text":  "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+                                              "passed":  true,
+                                              "evidence":  "输出把 RED、GREEN、审计断言和 REFACTOR 全部放在同一 task 内。"
+                                          },
+                                          {
+                                              "text":  "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+                                              "passed":  true,
+                                              "evidence":  "输出末段逐项拒绝按 TDD 阶段、测试文件、实现函数或 Agent 拆分。"
+                                          },
+                                          {
+                                              "text":  "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+                                              "passed":  true,
+                                              "evidence":  "输出定义过期拒绝、状态不变和审计事件完整场景，并要求从项目配置读取原生聚焦及场景验证命令。"
+                                          }
+                                      ],
+                     "notes":  [
+
+                               ]
+                 },
+                 {
+                     "eval_id":  8,
+                     "configuration":  "with_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  1056
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+                                              "passed":  true,
+                                              "evidence":  "输出拒绝 DONE，并改判 NEEDS_COORDINATION，必要时 BLOCKED。"
+                                          },
+                                          {
+                                              "text":  "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+                                              "passed":  true,
+                                              "evidence":  "输出逐项要求 T1 证据完整才完成，T2/T3 保持未完成。"
+                                          },
+                                          {
+                                              "text":  "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+                                              "passed":  true,
+                                              "evidence":  "输出明确保留两部分 diff，禁止覆盖、清理或自动回退。"
+                                          },
+                                          {
+                                              "text":  "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+                                              "passed":  true,
+                                              "evidence":  "输出先走权威 schema 决策，再重算恢复组并要求 T2 验收后才调度 T3。"
+                                          }
+                                      ],
+                     "notes":  [
+
+                               ]
+                 },
+                 {
+                     "eval_id":  4,
+                     "configuration":  "without_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  0.25,
+                                    "passed":  1,
+                                    "failed":  3,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  885
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+                                              "passed":  false,
+                                              "evidence":  "旧版输出明确说没有独立的多 task 场景组调度单元，直接以 task 作为 worker assignment。"
+                                          },
+                                          {
+                                              "text":  "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+                                              "passed":  false,
+                                              "evidence":  "旧版把三项拆成三个串行 bounded worker，未形成单一场景组。"
+                                          },
+                                          {
+                                              "text":  "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+                                              "passed":  false,
+                                              "evidence":  "虽然顺序正确，但旧版分别启动 worker-T1、worker-T2、worker-T3，切断了同一 worker 内的 TDD 闭环。"
+                                          },
+                                          {
+                                              "text":  "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+                                              "passed":  true,
+                                              "evidence":  "输出要求协调者分别核对每个 task 的 diff、测试与范围后才更新对应状态。"
+                                          }
+                                      ],
+                     "notes":  [
+                                   "旧版基于安全影响将登录锁定判为 Strict；题面未显式给出风险档位。"
+                               ]
+                 },
+                 {
+                     "eval_id":  5,
+                     "configuration":  "without_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  753
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "将 T1 公共接口基础任务单独成组并首先执行",
+                                              "passed":  true,
+                                              "evidence":  "旧版虽没有场景组抽象，但把 T1 作为独立 worker 并首先执行，实质满足基础边界。"
+                                          },
+                                          {
+                                              "text":  "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+                                              "passed":  true,
+                                              "evidence":  "旧版明确要求 T1 验收完成后 T2/T3 才进入第二波。"
+                                          },
+                                          {
+                                              "text":  "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+                                              "passed":  true,
+                                              "evidence":  "旧版完整列出五项隔离条件并据此并行 T2/T3。"
+                                          },
+                                          {
+                                              "text":  "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+                                              "passed":  true,
+                                              "evidence":  "旧版明确 T2 局部失败只恢复 T2，T1 已完成状态不自动回退。"
+                                          }
+                                      ],
+                     "notes":  [
+                                   "此场景的合理场景组恰好与 task 一一对应，主要用于回归而非区分版本。"
+                               ]
+                 },
+                 {
+                     "eval_id":  6,
+                     "configuration":  "without_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  0.5,
+                                    "passed":  2,
+                                    "failed":  2,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  934
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+                                              "passed":  true,
+                                              "evidence":  "旧版依据 Strict 风险和任务级 worker 保持三项分离。"
+                                          },
+                                          {
+                                              "text":  "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+                                              "passed":  true,
+                                              "evidence":  "旧版分别委派迁移与权限 worker，并明确依据独立审批、回滚和专项验证保持边界。"
+                                          },
+                                          {
+                                              "text":  "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+                                              "passed":  false,
+                                              "evidence":  "旧版输出明确承认没有跨 task 合组的量化或显式成本收益门禁。"
+                                          },
+                                          {
+                                              "text":  "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+                                              "passed":  false,
+                                              "evidence":  "旧版使用真实依赖和隔离条件，但 Strict 路线仍固定每个实施 task 一个全新 worker，因此未完整满足断言。"
+                                          }
+                                      ],
+                     "notes":  [
+                                   "该 run 使用旧版 skill 快照作为 baseline，目录名沿用查看器兼容的 without_skill。"
+                               ]
+                 },
+                 {
+                     "eval_id":  7,
+                     "configuration":  "without_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  735
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+                                              "passed":  true,
+                                              "evidence":  "旧版从可独立验收要求推导出一个行为任务。"
+                                          },
+                                          {
+                                              "text":  "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+                                              "passed":  true,
+                                              "evidence":  "旧版也把完整 TDD 与审计断言保留在同一任务。"
+                                          },
+                                          {
+                                              "text":  "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+                                              "passed":  true,
+                                              "evidence":  "旧版输出明确不按测试文件、实现函数或 worker 分割状态。"
+                                          },
+                                          {
+                                              "text":  "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+                                              "passed":  true,
+                                              "evidence":  "旧版提供完整行为结果及项目原生聚焦和场景测试证据。"
+                                          }
+                                      ],
+                     "notes":  [
+                                   "旧版也可从可独立验收与任务本地 TDD 推导正确规划，因此本例主要是回归保护。"
+                               ]
+                 },
+                 {
+                     "eval_id":  8,
+                     "configuration":  "without_skill",
+                     "run_number":  1,
+                     "result":  {
+                                    "pass_rate":  1.0,
+                                    "passed":  4,
+                                    "failed":  0,
+                                    "total":  4,
+                                    "time_seconds":  null,
+                                    "tokens":  null,
+                                    "tool_calls":  null,
+                                    "errors":  0,
+                                    "output_chars":  848
+                                },
+                     "expectations":  [
+                                          {
+                                              "text":  "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+                                              "passed":  true,
+                                              "evidence":  "旧版识别该返回不符合其单 task 合同，并按需要协调的异常处理。"
+                                          },
+                                          {
+                                              "text":  "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+                                              "passed":  true,
+                                              "evidence":  "旧版只允许证据完整的 T1 完成，T2/T3 仍未完成。"
+                                          },
+                                          {
+                                              "text":  "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+                                              "passed":  true,
+                                              "evidence":  "旧版同样明确保留现场且不做破坏性恢复。"
+                                          },
+                                          {
+                                              "text":  "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+                                              "passed":  true,
+                                              "evidence":  "旧版先解决 schema 决策，再串行恢复 T2，验收后才调度 T3。"
+                                          }
+                                      ],
+                     "notes":  [
+                                   "旧版没有场景组重算语义，但可用单 task 串行恢复满足实质安全结果。"
+                               ]
+                 }
+             ],
+    "run_summary":  {
+                        "with_skill":  {
+                                           "pass_rate":  {
+                                                             "mean":  1.0,
+                                                             "stddev":  0.0,
+                                                             "min":  1.0,
+                                                             "max":  1.0
+                                                         },
+                                           "time_seconds":  null,
+                                           "tokens":  null
+                                       },
+                        "without_skill":  {
+                                              "pass_rate":  {
+                                                                "mean":  0.75,
+                                                                "stddev":  0.3536,
+                                                                "min":  0.25,
+                                                                "max":  1.0
+                                                            },
+                                              "time_seconds":  null,
+                                              "tokens":  null
+                                          },
+                        "delta":  {
+                                      "pass_rate":  "+0.25",
+                                      "time_seconds":  "N/A",
+                                      "tokens":  "N/A"
+                                  }
+                    },
+    "notes":  [
+                  "新版 20/20，旧版 15/20；差异集中于微任务合组和显式成本收益门禁。",
+                  "eval 5、7、8 两版均通过，用于基础后消费者并行、规划粒度和部分失败恢复的回归保护。",
+                  "每个 eval/config 只有一次受控规则运行，不能判断统计方差。",
+                  "真实时长、token 与工具调用未采集；资源字段已保留为 null，output_chars 单独记录。"
+              ]
+}

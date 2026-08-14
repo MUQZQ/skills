@@ -12,7 +12,7 @@
       "id": 2,
       "name": "existing_qeda_strict_owner",
       "prompt": "QEDAgent 仓库已有一个 qeda-subagent-driven-sdd 活动 change，exploration 已记录 PLAN_AND_APPLY 和 Target/Source baselines，当前刚到 Apply-ready。请全流程实施剩余 tasks。评估模式：只输出你会如何接管或服从生命周期、如何分派任务、如何并行、如何审查验证以及第一个实质动作，不修改任何文件，也不要提交。",
-      "expected_output": "明确 QEDA/OpenSpec 是唯一生命周期所有者；读取实时状态和执行合同；不新增第二套 phase/artifact/ledger/reviewer；每任务 bounded worker、五项安全并行、协调者核验 diff；无 Git mutation。",
+      "expected_output": "明确 QEDA/OpenSpec 是唯一生命周期所有者；读取实时状态和执行合同；不新增第二套 phase/artifact/ledger/reviewer；保留 task 状态并按场景组形成 bounded worker、执行五项安全并行、协调者逐 task 核验 diff 与证据；无 Git mutation。",
       "files": []
     },
     {
@@ -21,6 +21,71 @@
       "prompt": "请按仓库现有 spec 实施一个跨两个 package 的普通功能，完成验证和归档后帮我做一个本地 commit；不要 push、不要建 PR、不要部署。评估模式：只输出权限解释、实施到提交的门禁、分支保护、验证结论和第一个实质动作，不修改任何文件。",
       "expected_output": "识别显式 LOCAL_COMMIT 权限但不扩大到 push/PR/deploy；服从项目 spec 生命周期；仅在最终验证与官方归档成功后提交；禁止主干提交；不以固定轮数或自动提交代替门禁。",
       "files": []
+    },
+    {
+      "id": 4,
+      "name": "cohesive_microtasks_form_one_scenario_group",
+      "prompt": "现有任务系统已经把一个登录锁定场景拆成 T1 写失败测试、T2 实现计数器、T3 补充审计事件断言。三个任务修改同一认证模块、共享同一 fixture，只有整条场景跑通才有可见价值。请规划自动实施调度。评估模式：只输出 task 与 worker 调度单元的区别、分组决定、组内顺序、验收与状态更新方式，不修改文件。",
+      "expected_output": "保留 T1/T2/T3 作为唯一持久任务和逐项验收单元，但将它们合为一个临时场景组，由一个 worker 按 TDD 顺序完成；不为 RED/GREEN/REFACTOR 或每个微任务单独启动 worker；协调者按任务证据逐项更新状态。",
+      "files": [],
+      "expectations": [
+        "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+        "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+        "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+        "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "foundation_then_parallel_consumers",
+      "prompt": "一个跨三个 package 的功能已有任务：T1 定义公共接口并加契约测试，T2 在 package-a 接入，T3 在 package-b 接入。T2/T3 都依赖 T1，但彼此写入和测试完全隔离。请规划自动实施调度。评估模式：只输出场景组划分、依赖波次、并行条件、验收与失败恢复，不修改文件。",
+      "expected_output": "公共基础 T1 独立成组并先串行完成和验收；验收后 T2、T3 各自成组并行；不把基础契约和两个消费者全部塞入一个 worker，也不在 T1 未验收时提前并行。",
+      "files": [],
+      "expectations": [
+        "将 T1 公共接口基础任务单独成组并首先执行",
+        "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+        "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+        "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "migration_and_security_boundaries_stay_separate",
+      "prompt": "同一个企业用户开通场景包含 T1 数据库迁移与回滚脚本、T2 权限策略收紧、T3 后台 UI 展示。三项都服务同一个用户场景，但迁移和权限分别需要独立审批、回滚和专项验证。请规划自动实施调度。评估模式：只输出是否合组、成本收益判断、依赖与验证边界，不修改文件。",
+      "expected_output": "不会仅因属于同一用户场景就合并；迁移、权限和 UI 按独立审批/回滚/风险/验证边界拆为独立场景组，依赖关系决定串并行；显式比较上下文复用收益与并行损失、失败爆炸半径、协调和回滚成本。",
+      "files": [],
+      "expectations": [
+        "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+        "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+        "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+        "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "planning_merges_tdd_microsteps_into_behavior_task",
+      "prompt": "一个尚未创建权威 tasks 的密码重置变更，草稿把同一行为拆成：T1 写 token 过期失败测试、T2 实现过期判断、T3 补充审计事件断言。三项修改同一模块、共享 fixture，只有密码重置过期与审计场景整体通过才可验收。请在 Apply-ready 前审查并给出最终任务规划。评估模式：只输出任务粒度决定、任务内容、TDD/验收项和理由，不修改文件。",
+      "expected_output": "在权威 task 建立前把三个草稿微步骤合并为一个可独立验收的密码重置行为 task；RED、GREEN、审计断言与 REFACTOR 是该 task 的内部步骤/验收项，而不是按测试、实现、文件或 Agent 分成三个持久任务。",
+      "files": [],
+      "expectations": [
+        "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+        "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+        "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+        "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "partial_group_result_recovery",
+      "prompt": "恢复执行时，权威 tracker 中同一场景组的 T1/T2/T3 都未完成。worker 却返回 group_status=DONE，同时报告 T1=SATISFIED、T2=UNSATISFIED（缺少 schema 决策）、T3=BLOCKED（依赖 T2）；共享工作树已有完整 T1 diff 和部分 T2 diff。请决定协调者如何验收与恢复。评估模式：只输出状态判定、逐 task 更新、改动保留、依赖与重新调度方式，不修改文件。",
+      "expected_output": "识别组级 DONE 与逐 task 结果矛盾，不整组完成；核验后最多只完成 T1，T2/T3 保持未完成；保留现有改动，解决 schema 决策后按当前依赖和写入范围重算恢复组，T3 不得越过 T2；不自动清理或回退共享工作树。",
+      "files": [],
+      "expectations": [
+        "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+        "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+        "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+        "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2"
+      ]
     }
   ]
 }

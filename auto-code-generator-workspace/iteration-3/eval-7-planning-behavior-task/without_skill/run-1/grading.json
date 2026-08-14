@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+                             "passed":  true,
+                             "evidence":  "旧版从可独立验收要求推导出一个行为任务。"
+                         },
+                         {
+                             "text":  "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+                             "passed":  true,
+                             "evidence":  "旧版也把完整 TDD 与审计断言保留在同一任务。"
+                         },
+                         {
+                             "text":  "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+                             "passed":  true,
+                             "evidence":  "旧版输出明确不按测试文件、实现函数或 worker 分割状态。"
+                         },
+                         {
+                             "text":  "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+                             "passed":  true,
+                             "evidence":  "旧版提供完整行为结果及项目原生聚焦和场景测试证据。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "output_chars":  735,
+                              "transcript_chars":  269,
+                              "errors_encountered":  0
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+                                                     "旧版也可从可独立验收与任务本地 TDD 推导正确规划，因此本例主要是回归保护。"
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}
