@@ -5,13 +5,25 @@ import unittest
 from io import StringIO
 from pathlib import Path
 from queue import Queue
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 os.sys.path.insert(0, str(SCRIPT_DIR))
 
 import sol_luna
+
+
+VALID_TASK_BRIEF = "\n".join(
+    [
+        "目标：检查配置解析行为",
+        "允许范围：sol-luna 控制器的配置读取逻辑",
+        "禁止范围：不修改文件，不调用外部服务",
+        "约束：只读检查，保持现有接口",
+        "预期输出：结论和相关代码位置",
+        "验证证据：返回读取路径和配置值",
+    ]
+)
 
 
 class SolLunaConfigTests(unittest.TestCase):
@@ -30,10 +42,10 @@ class SolLunaConfigTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(value), encoding="utf-8")
 
-    def test_default_config_uses_auto_mode_and_model(self):
+    def test_default_config_keeps_luna_off_and_uses_auto_model(self) -> None:
         config = sol_luna.resolve_config(self.project, self.home, {})
 
-        self.assertEqual("auto", config["mode"])
+        self.assertEqual("off", config["mode"])
         self.assertEqual("auto", config["model"])
         self.assertEqual("deepseek-v4-flash", config["flash_model"])
         self.assertEqual("deepseek-v4-pro", config["pro_model"])
@@ -43,6 +55,119 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual("claude-sonnet-4-6", config["pro_claude_model"])
         self.assertEqual(2000, config["max_task_chars"])
         self.assertEqual(1200, config["max_result_chars"])
+
+    @patch("sol_luna.run_luna", return_value={"result": "完成"})
+    def test_user_triggered_run_enables_luna_for_session_without_persisting(
+        self, run_luna: MagicMock
+    ) -> None:
+        with patch("sys.stdout", new_callable=StringIO):
+            result = sol_luna.main(
+                [
+                    "--project-root",
+                    str(self.project),
+                    "--home",
+                    str(self.home),
+                    "run",
+                    "scout",
+                    "--user-triggered",
+                    VALID_TASK_BRIEF,
+                ]
+            )
+
+        self.assertEqual(0, result)
+        self.assertEqual("auto", run_luna.call_args.args[2]["mode"])
+        self.assertEqual(VALID_TASK_BRIEF, run_luna.call_args.args[1])
+        self.assertFalse((self.project / ".codex" / "sol-luna.json").exists())
+        self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
+
+    @patch("sol_luna.run_luna", return_value={"result": "不应执行"})
+    def test_run_requires_user_trigger_even_when_persistent_mode_is_auto(
+        self, run_luna: MagicMock
+    ) -> None:
+        self.write_json(
+            self.project / ".codex" / "sol-luna.json", {"mode": "auto"}
+        )
+
+        with (
+            patch("sys.stdout", new_callable=StringIO),
+            patch("sys.stderr", new_callable=StringIO) as stderr,
+        ):
+            result = sol_luna.main(
+                [
+                    "--project-root",
+                    str(self.project),
+                    "--home",
+                    str(self.home),
+                    "run",
+                    "scout",
+                    "检查仓库",
+                ]
+            )
+
+        self.assertEqual(2, result)
+        self.assertIn("当前会话", stderr.getvalue())
+        run_luna.assert_not_called()
+
+    @patch("sol_luna.run_luna", return_value={"result": "不应执行"})
+    def test_smoke_requires_user_trigger_even_when_persistent_mode_is_auto(
+        self, run_luna: MagicMock
+    ) -> None:
+        self.write_json(
+            self.project / ".codex" / "sol-luna.json", {"mode": "auto"}
+        )
+
+        with (
+            patch("sys.stdout", new_callable=StringIO),
+            patch("sys.stderr", new_callable=StringIO) as stderr,
+        ):
+            result = sol_luna.main(
+                [
+                    "--project-root",
+                    str(self.project),
+                    "--home",
+                    str(self.home),
+                    "smoke",
+                    "--model",
+                    "flash",
+                ]
+            )
+
+        self.assertEqual(2, result)
+        self.assertIn("当前会话", stderr.getvalue())
+        run_luna.assert_not_called()
+
+    @patch(
+        "sol_luna.run_luna",
+        return_value={"modelUsage": {}, "result": "冒烟完成"},
+    )
+    def test_user_triggered_smoke_runs_without_persisting(
+        self, run_luna: MagicMock
+    ) -> None:
+        with patch("sys.stdout", new_callable=StringIO):
+            result = sol_luna.main(
+                [
+                    "--project-root",
+                    str(self.project),
+                    "--home",
+                    str(self.home),
+                    "smoke",
+                    "--user-triggered",
+                    "--model",
+                    "flash",
+                ]
+            )
+
+        self.assertEqual(0, result)
+        self.assertEqual("auto", run_luna.call_args.args[2]["mode"])
+        for field in sol_luna.TASK_BRIEF_FIELDS:
+            self.assertIn(f"{field}：", run_luna.call_args.args[1])
+        self.assertFalse((self.project / ".codex" / "sol-luna.json").exists())
+        self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
+
+    def test_smoke_rejects_legacy_ignore_mode_escape(self) -> None:
+        with patch("sys.stderr", new_callable=StringIO):
+            with self.assertRaises(SystemExit):
+                sol_luna.build_parser().parse_args(["smoke", "--ignore-mode"])
 
     def test_precedence_is_environment_then_project_then_global_then_default(self):
         self.write_json(
@@ -228,7 +353,9 @@ class SolLunaConfigTests(unittest.TestCase):
             )
 
     def test_read_only_roles_use_plan_mode_and_non_persistent_stream_output(self):
-        config = sol_luna.resolve_config(self.project, self.home, {})
+        config = sol_luna.resolve_config(
+            self.project, self.home, {"SOL_LUNA_MODE": "auto"}
+        )
 
         command = sol_luna.build_claude_command(
             role="critic",
@@ -245,14 +372,71 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertIn("stream-json", command)
         self.assertEqual("审查变更", command[-1])
 
-    def test_task_prompt_adds_small_task_and_concise_result_contract(self):
+    def test_task_prompt_adds_planned_boundary_and_result_contract(self) -> None:
         config = sol_luna.resolve_config(self.project, self.home, {})
 
-        prompt = sol_luna.bound_task_prompt("检查一个函数", config)
+        for task_brief in (
+            VALID_TASK_BRIEF,
+            VALID_TASK_BRIEF.replace("\n", "\r\n"),
+        ):
+            with self.subTest(newline=repr(task_brief.splitlines(keepends=True)[0])):
+                prompt = sol_luna.bound_task_prompt(task_brief, config)
 
-        self.assertIn("单一目标", prompt)
-        self.assertIn("1200", prompt)
-        self.assertIn("拆分建议", prompt)
+                self.assertIn("单一目标", prompt)
+                self.assertIn("允许范围", prompt)
+                self.assertIn("禁止范围", prompt)
+                self.assertIn("预期输出", prompt)
+                self.assertIn("验证证据", prompt)
+                self.assertIn("1200", prompt)
+                self.assertIn("拆分建议", prompt)
+
+    def test_task_prompt_rejects_each_missing_task_brief_field(self) -> None:
+        config = sol_luna.resolve_config(self.project, self.home, {})
+        lines = VALID_TASK_BRIEF.splitlines()
+
+        for missing_field in sol_luna.TASK_BRIEF_FIELDS:
+            with self.subTest(missing_field=missing_field):
+                incomplete = "\n".join(
+                    line for line in lines if not line.startswith(f"{missing_field}：")
+                )
+                with self.assertRaisesRegex(sol_luna.SolLunaError, missing_field):
+                    sol_luna.bound_task_prompt(incomplete, config)
+
+    def test_task_prompt_rejects_each_empty_task_brief_field(self) -> None:
+        config = sol_luna.resolve_config(self.project, self.home, {})
+        lines = VALID_TASK_BRIEF.splitlines()
+
+        for empty_field in sol_luna.TASK_BRIEF_FIELDS:
+            with self.subTest(empty_field=empty_field):
+                incomplete = "\n".join(
+                    f"{empty_field}：   "
+                    if line.startswith(f"{empty_field}：")
+                    else line
+                    for line in lines
+                )
+                with self.assertRaisesRegex(sol_luna.SolLunaError, empty_field):
+                    sol_luna.bound_task_prompt(incomplete, config)
+
+    def test_incomplete_task_brief_is_rejected_before_process_start(self) -> None:
+        config = sol_luna.resolve_config(
+            self.project, self.home, {"SOL_LUNA_MODE": "auto"}
+        )
+        incomplete = VALID_TASK_BRIEF.replace(
+            "验证证据：返回读取路径和配置值", "验证证据：   "
+        )
+
+        with patch("sol_luna.subprocess.Popen") as popen:
+            with self.assertRaisesRegex(sol_luna.SolLunaError, "验证证据"):
+                sol_luna.run_luna(
+                    "scout",
+                    incomplete,
+                    config,
+                    "normal",
+                    "flash",
+                    self.project,
+                )
+
+        popen.assert_not_called()
 
     def test_task_prompt_rejects_oversized_delegation(self):
         config = sol_luna.resolve_config(self.project, self.home, {})
@@ -270,7 +454,9 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual(1201, bounded["_sol_luna"]["original_result_chars"])
 
     def test_worker_does_not_use_bypass_permissions(self):
-        config = sol_luna.resolve_config(self.project, self.home, {})
+        config = sol_luna.resolve_config(
+            self.project, self.home, {"SOL_LUNA_MODE": "auto"}
+        )
 
         command = sol_luna.build_claude_command(
             role="worker",
@@ -334,7 +520,9 @@ class SolLunaConfigTests(unittest.TestCase):
             sol_luna.reject_unknown_model_warning([warning])
 
     def test_claude_command_requests_verbose_stream_json(self):
-        config = sol_luna.resolve_config(self.project, self.home, {})
+        config = sol_luna.resolve_config(
+            self.project, self.home, {"SOL_LUNA_MODE": "auto"}
+        )
 
         command = sol_luna.build_claude_command(
             role="critic",
@@ -448,6 +636,23 @@ class SolLunaConfigTests(unittest.TestCase):
 
         tester = (template_dir / "luna-tester.md").read_text(encoding="utf-8")
         self.assertIn("tools: Read, Grep, Glob, Bash", tester)
+
+    def test_project_policy_requires_user_triggered_session_opt_in(self) -> None:
+        setup_root = Path(__file__).resolve().parents[1]
+        policy = (
+            setup_root / "references" / "project-template" / "AGENTS.md"
+        ).read_text(encoding="utf-8")
+        claude_policy = (
+            setup_root / "references" / "project-template" / "CLAUDE.md"
+        ).read_text(encoding="utf-8")
+        skill = (setup_root / "SKILL.md").read_text(encoding="utf-8")
+
+        for content in (policy, claude_policy, skill):
+            self.assertIn("Luna 默认关闭", content)
+            self.assertIn("--user-triggered", content)
+            self.assertIn("字段：非空内容", content)
+            for field in sol_luna.TASK_BRIEF_FIELDS:
+                self.assertIn(field, content)
 
     def test_replacing_custom_role_creates_unique_recoverable_backups(self):
         target_dir = self.home / ".claude" / "agents"

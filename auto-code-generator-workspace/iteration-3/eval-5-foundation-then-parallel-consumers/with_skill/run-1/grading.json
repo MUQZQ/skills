@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "将 T1 公共接口基础任务单独成组并首先执行",
+                             "passed":  true,
+                             "evidence":  "输出定义 G1-foundation，仅包含 T1，并放在第一波。"
+                         },
+                         {
+                             "text":  "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+                             "passed":  true,
+                             "evidence":  "输出明确要求协调者验收 T1 且 tracker 标完成后才调度第二波。"
+                         },
+                         {
+                             "text":  "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+                             "passed":  true,
+                             "evidence":  "输出逐项检查写入、独占资源、公共契约和证据隔离后并行 G2/G3。"
+                         },
+                         {
+                             "text":  "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+                             "passed":  true,
+                             "evidence":  "输出以 T2 失败为例，只恢复 G2，明确不回退已验收 G1。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  1026,
+                              "transcript_chars":  364
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

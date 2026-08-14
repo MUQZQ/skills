@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+                             "passed":  false,
+                             "evidence":  "旧版输出明确说没有独立的多 task 场景组调度单元，直接以 task 作为 worker assignment。"
+                         },
+                         {
+                             "text":  "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+                             "passed":  false,
+                             "evidence":  "旧版把三项拆成三个串行 bounded worker，未形成单一场景组。"
+                         },
+                         {
+                             "text":  "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+                             "passed":  false,
+                             "evidence":  "虽然顺序正确，但旧版分别启动 worker-T1、worker-T2、worker-T3，切断了同一 worker 内的 TDD 闭环。"
+                         },
+                         {
+                             "text":  "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+                             "passed":  true,
+                             "evidence":  "输出要求协调者分别核对每个 task 的 diff、测试与范围后才更新对应状态。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  1,
+                    "failed":  3,
+                    "total":  4,
+                    "pass_rate":  0.25
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  885,
+                              "transcript_chars":  358
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+                                                     "旧版基于安全影响将登录锁定判为 Strict；题面未显式给出风险档位。"
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

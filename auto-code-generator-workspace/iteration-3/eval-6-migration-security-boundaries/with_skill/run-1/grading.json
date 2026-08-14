@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+                             "passed":  true,
+                             "evidence":  "输出开头明确拒绝因同属企业用户开通而合并。"
+                         },
+                         {
+                             "text":  "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+                             "passed":  true,
+                             "evidence":  "输出分别定义 G1-migration、G2-permission，并逐项说明审批、回滚、风险和专项验证边界。"
+                         },
+                         {
+                             "text":  "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+                             "passed":  true,
+                             "evidence":  "输出在成本收益判断中完整给出该门禁并应用到本例。"
+                         },
+                         {
+                             "text":  "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+                             "passed":  true,
+                             "evidence":  "输出说明一组一 task 是边界判断结果而非固定规则，并按真实生产者关系和五项隔离决定波次。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  1249,
+                              "transcript_chars":  368
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

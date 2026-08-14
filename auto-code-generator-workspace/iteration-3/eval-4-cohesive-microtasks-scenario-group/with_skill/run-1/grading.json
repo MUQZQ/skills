@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+                             "passed":  true,
+                             "evidence":  "输出明确写明 T1/T2/T3 是唯一持久状态与独立验收单元，场景组只用于调度且不落盘。"
+                         },
+                         {
+                             "text":  "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+                             "passed":  true,
+                             "evidence":  "输出将三项合为“登录锁定闭环”，并列出同一认证模块、共享 fixture/测试进程及减少重复准备成本。"
+                         },
+                         {
+                             "text":  "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+                             "passed":  true,
+                             "evidence":  "输出给出 T1 RED、T2 GREEN、T3 审计断言的顺序，并明确不分别启动 worker。"
+                         },
+                         {
+                             "text":  "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+                             "passed":  true,
+                             "evidence":  "输出逐项列出 T1/T2/T3 验收证据，并禁止因组级 DONE 一键完成。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  885,
+                              "transcript_chars":  275
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

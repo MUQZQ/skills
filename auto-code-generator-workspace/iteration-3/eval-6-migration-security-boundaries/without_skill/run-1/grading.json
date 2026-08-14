@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+                             "passed":  true,
+                             "evidence":  "旧版依据 Strict 风险和任务级 worker 保持三项分离。"
+                         },
+                         {
+                             "text":  "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+                             "passed":  true,
+                             "evidence":  "旧版分别委派迁移与权限 worker，并明确依据独立审批、回滚和专项验证保持边界。"
+                         },
+                         {
+                             "text":  "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+                             "passed":  false,
+                             "evidence":  "旧版输出明确承认没有跨 task 合组的量化或显式成本收益门禁。"
+                         },
+                         {
+                             "text":  "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+                             "passed":  false,
+                             "evidence":  "旧版使用真实依赖和隔离条件，但 Strict 路线仍固定每个实施 task 一个全新 worker，因此未完整满足断言。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  2,
+                    "failed":  2,
+                    "total":  4,
+                    "pass_rate":  0.5
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  934,
+                              "transcript_chars":  401
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+                                                     "该 run 使用旧版 skill 快照作为 baseline，目录名沿用查看器兼容的 without_skill。"
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}

@@ -1,0 +1,49 @@
+{
+    "expectations":  [
+                         {
+                             "text":  "将 T1 公共接口基础任务单独成组并首先执行",
+                             "passed":  true,
+                             "evidence":  "旧版虽没有场景组抽象，但把 T1 作为独立 worker 并首先执行，实质满足基础边界。"
+                         },
+                         {
+                             "text":  "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+                             "passed":  true,
+                             "evidence":  "旧版明确要求 T1 验收完成后 T2/T3 才进入第二波。"
+                         },
+                         {
+                             "text":  "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+                             "passed":  true,
+                             "evidence":  "旧版完整列出五项隔离条件并据此并行 T2/T3。"
+                         },
+                         {
+                             "text":  "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+                             "passed":  true,
+                             "evidence":  "旧版明确 T2 局部失败只恢复 T2，T1 已完成状态不自动回退。"
+                         }
+                     ],
+    "summary":  {
+                    "passed":  4,
+                    "failed":  0,
+                    "total":  4,
+                    "pass_rate":  1.0
+                },
+    "execution_metrics":  {
+                              "errors_encountered":  0,
+                              "output_chars":  753,
+                              "transcript_chars":  404
+                          },
+    "claims":  [
+
+               ],
+    "user_notes_summary":  {
+                               "uncertainties":  [
+                                                     "此场景的合理场景组恰好与 task 一一对应，主要用于回归而非区分版本。"
+                                                 ],
+                               "needs_review":  [
+
+                                                ],
+                               "workarounds":  [
+
+                                               ]
+                           }
+}
