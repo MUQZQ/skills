@@ -6,13 +6,16 @@
 无 frontmatter，不进入 skill 列表。**自动编码的唯一用户入口是 `auto-code-generator`**；执行委派由其
 适配层调用。Sol 始终是当前主会话所用的高能力模型，不在 Luna 模型列表中。管理员用
 `scripts/bootstrap.sh` 做项目初始化；控制器的管理与诊断子命令为 `status`、`models`、`mode`、`model`、
-`configure-claude`、`sync`、`audit` 和 `smoke`。
+`configure-claude`、`sync`、`audit` 和 `smoke`。Codex 原生委派由 `auto-code-generator` 编排层发起，
+不由 Python 控制器递归启动子 Agent；`scripts/sol_luna.py run` 只实现外部 runner。
 
 ## 运行时范围
 
-- 仅通过 `scripts/sol_luna.py` 的 `run` / `smoke` 命令执行，且必须携带 `--user-triggered`。
 - **Luna 默认关闭**：只有当前会话用户明确同意后，才可用 `--user-triggered` 单次启用，不写持久配置；
-  持久 `auto` / `force` 只描述触发后的委派策略，不能替代当前会话显式同意。
+  持久 `auto` / `force` 只描述触发后的委派策略，不能替代当前会话显式同意。编排层走原生委派时也必须
+  从当前用户消息确认同一会话授权；`--user-triggered` 是 CLI runner 的审计声明，不是可绕过授权的安全凭据。
+- 外部 runner 仅通过 `scripts/sol_luna.py` 的 `run` / `smoke` 命令执行，且必须携带
+  `--user-triggered`；原生 runner 由编排层直接调用宿主 `spawn_agent`。
 - 任务卡六项各占一行，严格使用 `字段：非空内容`：目标、允许范围、禁止范围、约束、预期输出、验证证据；
   任一项缺失或为空时拒绝委派。
 - `auto-code-generator` 必须把完整内聚场景组作为一个可观察目标写入任务卡；不得为了满足长度限制拆分
@@ -28,10 +31,17 @@
 - 公共字段是 `id`、`label`、`backend`、`provider_model` 和 `aliases`。`backend=codex` 还需
   `reasoning_effort`；`backend=claude` 还需 `claude_model` 与 `override_model`。缺少 `backend` 的旧条目按
   `claude` 解释。列表不得包含密钥、Token 或服务地址。
-- `backend=codex` 由控制器通过受限的 `codex exec` 执行：临时会话、明确模型和沙箱，不使用原生
-  `spawn_agent`，不得加入 bypass、ignore-rules 或额外写目录参数。其 JSONL 当前只能证明命令请求的模型，
-  返回标记为 `model_verification=command_only`，不得伪称等价于实际模型证明。
-- `backend=claude` 由 Claude Code 执行；用户调整 Claude 条目后应运行 `configure-claude` 合并映射，
+- `backend` 与 `runner` 分离：Codex 条目按 `native_spawn → codex_exec` 选择，Claude 条目使用
+  `claude_code`。runner 是当前会话的动态执行决策，不写入用户维护的模型列表。
+- `backend=codex` 时，编排层仅在所选**精确模型**位于当前会话暴露的原生 allowlist 且权限满足角色边界时
+  使用 `native_spawn`；必须显式传入模型、reasoning effort 与输入受限的 assignment，不得继承 Sol 或
+  静默换模。allowlist 与权限能力只取自当前 `spawn_agent` 工具说明，不从 CLI 缓存推断。否则仅在启动前
+  回退同一模型的 `codex_exec`。用户要求 `native only` 时不可回退。
+- `codex_exec` 由控制器通过临时会话、明确模型和沙箱执行，不得加入 bypass、ignore-rules 或额外写目录
+  参数。其 JSONL 当前只能证明命令请求的模型，返回标记为 `model_verification=command_only`，不得伪称
+  等价于实际模型证明。`spawn_agent` 返回 Agent 标识即视为 `native_spawn` 已启动；之后失败不得自动再跑
+  CLI，以免重复副作用。
+- `backend=claude` 由 `claude_code` runner 执行；用户调整 Claude 条目后应运行 `configure-claude` 合并映射，
   并通过 `modelUsage` 核验实际 provider 模型。`configure-claude` 不处理 Codex 条目。
 - `models` 和 `status` 是只读查看命令，不代表当前会话已授权 Luna；真正的 `run` / `smoke` 仍需
   `--user-triggered`。`smoke` 默认只验证第一项；只有显式指定 `--model all` 才遍历整个列表。

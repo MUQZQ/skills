@@ -155,13 +155,53 @@
       "id": 12,
       "name": "no_view_and_unauthorized_luna_do_not_invent",
       "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，但全局配置曾保存 mode=auto。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行 provider 选择、TDD 和权限边界，不修改文件。",
-      "expected_output": "没有维护视图契约时不创建或伪造投影；没有当前会话显式 Luna 同意时忽略持久 mode=auto，不调用共享 Sol-Luna provider；按风险匹配的直接 TDD 路线实施；不推断 commit、push、PR 或部署权限。",
+      "expected_output": "没有维护视图契约时不创建或伪造投影；没有当前会话显式 Luna 同意时忽略持久 mode=auto，不调用 native_spawn 或 codex_exec；按风险匹配的直接 TDD 路线实施；不推断 commit、push、PR 或部署权限。",
       "files": [],
       "expectations": [
         "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
-        "持久 mode=auto 不能替代当前会话显式同意，因此不调用 Sol-Luna provider",
+        "持久 mode=auto 不能替代当前会话显式同意，因此 native_spawn 与 codex_exec 均不调用",
         "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
         "不从实施请求推断 commit、push、PR 或部署权限"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "codex_native_first_runner",
+      "prompt": "用户在当前会话明确要求使用 Luna，并分别给出三个选择：默认 gpt-5.6-luna 在当前原生 allowlist；gpt-5.3-codex-spark 不在 allowlist；以及对 Spark 额外要求 native only。请说明 backend 与 runner 的选择、权限门禁和失败处理。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "backend 与 runner 分离。Sol 只从当前用户消息确认会话授权，并从当前 spawn_agent 工具说明读取 allowlist 与权限边界。默认 Luna 的精确模型受原生支持且权限满足时使用 native_spawn；Spark 不在原生 allowlist或权限边界无法证明时，仅在启动前保持同一模型走 codex_exec，不静默换模；Spark 加 native only 时返回 BLOCKED 并展示原生可选模型。spawn_agent 返回 Agent 标识后，任何失败都升级给 Sol 检查共享工作树，不自动跨 runner 重跑。",
+      "files": [],
+      "expectations": [
+        "Codex 精确模型受原生 allowlist 支持且权限满足时优先 native_spawn",
+        "授权只来自当前用户消息，allowlist 与权限边界只来自当前 spawn_agent 工具说明",
+        "原生不支持 Spark 时保持 gpt-5.3-codex-spark 并在启动前选择 codex_exec，不替换模型",
+        "native only 与原生不支持冲突时返回 BLOCKED",
+        "原生任务启动后失败不自动回退 CLI，避免重复副作用"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "started_native_failure_does_not_fallback",
+      "prompt": "用户已在当前会话明确启用 Luna。Sol 为一个可写场景组选中 gpt-5.6-luna，调用 spawn_agent 后已经收到 Agent 标识；随后该 Agent 以失败状态结束，共享工作树可能已有部分改动。请说明 Sol 的恢复动作以及是否允许改用 codex_exec 重跑。评估模式：只输出恢复决策，不修改文件。",
+      "expected_output": "收到 Agent 标识即代表原生任务已经启动。Sol 必须读取 Agent 结果并检查共享工作树、diff 与测试证据，保留已有改动后决定补充上下文、重划任务或由 Sol 恢复；禁止调用 codex_exec 自动重跑同一场景，避免重复写入和重复测试。",
+      "files": [],
+      "expectations": [
+        "把 spawn_agent 返回 Agent 标识识别为 started 边界",
+        "先检查 Agent 结果、共享工作树、diff 和测试证据",
+        "禁止调用 codex_exec 自动重跑同一场景",
+        "恢复由 Sol 决策，不覆盖或清理已有改动"
+      ]
+    },
+    {
+      "id": 15,
+      "name": "native_permission_mismatch",
+      "prompt": "用户已在当前会话明确启用 Luna，所选 gpt-5.6-luna 位于当前 spawn_agent 模型 allowlist，但当前 spawn_agent 工具说明没有提供该只读 critic 角色所需的权限能力；任务尚未启动，用户没有要求 native only。请说明 runner 选择。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "原生资格同时要求精确模型和权限边界都由当前 spawn_agent 工具说明证明；模型可用但权限能力无法证明时，native_spawn 不适用。由于任务尚未启动且用户未要求 native only，应保持同一精确模型在启动前选择 codex_exec，不继承 Sol、不换模；若用户要求 native only，则返回 BLOCKED。",
+      "files": [],
+      "expectations": [
+        "权限能力只取自当前 spawn_agent 工具说明",
+        "模型在 allowlist 但权限无法证明时不启动 native_spawn",
+        "任务未启动时通过 codex_exec 执行同一精确模型",
+        "native only 时返回 BLOCKED，不静默换模"
       ]
     }
   ]

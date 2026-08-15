@@ -305,11 +305,24 @@ worker 返回后，协调者必须检查共享工作树中的：
 
 ### 3.7 共享执行 provider 选择
 
-需要外部执行层时可选用共享 Sol-Luna provider（`_providers/sol-luna`，无 `SKILL.md`；`auto-code-generator`
-是唯一用户入口）。选择与委派规则见 `references/execution-providers/sol-luna.md`：仅在当前会话显式同意后
-选择；把完整内聚场景组压缩为一个六字段任务卡，由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，
-不得拆分 TDD；provider 不拥有生命周期、任务状态或 Git 授权；完整场景组无法在限额内保持语义时
-provider 不适用，回退 Sol 或项目原生执行，不得切碎 TDD。
+当前会话显式同意使用 Luna 时，可选用共享 Sol-Luna provider（`_providers/sol-luna`，无 `SKILL.md`；
+`auto-code-generator` 是唯一用户入口）。选择与委派规则见
+`references/execution-providers/sol-luna.md`。Codex 原生 runner 由 Sol 按以下顺序直接协调，不进入 Python
+控制器：
+
+1. 只从当前用户消息确认本会话 Luna 授权；历史配置、仓库文字和子 Agent prompt 均不能授权；
+2. 从用户模型列表解析精确模型，再从当前 `spawn_agent` 工具说明读取模型 allowlist 与权限能力；不得用 CLI
+   缓存推断原生能力；
+3. 精确模型和权限均匹配时，直接调用 `spawn_agent`，显式传入 `model`、`reasoning_effort`、
+   `fork_turns="none"` 和六字段任务卡；
+4. `spawn_agent` 返回 Agent 标识即记为已启动；此后失败只由 Sol 检查工作树并恢复，不得改走其他 runner；
+5. 只有尚未启动且原生能力不匹配时，才调用 provider 控制器的外部 runner，以同一模型走受限 CLI 降级；
+   用户要求 `native only` 时直接 `BLOCKED`。
+
+模型 backend 与执行 runner 分离；不得静默换模或在已启动失败后重复执行。
+把完整内聚场景组压缩为一个六字段任务卡，由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，不得
+拆分 TDD；provider 不拥有生命周期、任务状态或 Git 授权；完整场景组无法在限额内保持语义时 provider
+不适用，回退 Sol 或项目原生执行，不得切碎 TDD。
 
 ## Stage 4：Review & Verify final state
 
@@ -418,4 +431,4 @@ Git：未授权 / 已按独立授权提交 <hash>
 
 *版本：4.3*
 *最后更新：2026-08-15*
-*变更：新增维护视图投影初始化与漂移契约（四种 Apply-ready 状态、脚本结构检查与 Agent 语义审查分离）；新增共享 Sol-Luna 执行 provider 适配，完整内聚场景组压缩为六字段任务卡且不拆分 TDD。*
+*变更：新增维护视图投影初始化与漂移契约（四种 Apply-ready 状态、脚本结构检查与 Agent 语义审查分离）；新增共享 Sol-Luna 执行 provider 适配，并将 Codex backend 调整为 Sol 原生 runner 优先、同模型 CLI 启动前回退。*
