@@ -1,0 +1,59 @@
+{
+  "expectations": [
+    {
+      "text": "明确 QEDA/OpenSpec 是唯一生命周期所有者，本 skill 仅提供当前官方阶段内技术",
+      "passed": true,
+      "evidence": "明确 QEDA 是唯一生命周期 owner。"
+    },
+    {
+      "text": "实施前读取实时 status、apply instruction、权威 artifacts 和 baseline，而非重建规划",
+      "passed": true,
+      "evidence": "明确重读实时 status、artifact/apply 指令、tracker 与 Target/Source baseline。"
+    },
+    {
+      "text": "不新增第二套 phase、artifact、task ledger、任务级独立 reviewer 或完成 verdict",
+      "passed": true,
+      "evidence": "明确不新增第二套 phase、artifact、ledger 或结论。"
+    },
+    {
+      "text": "每个 Strict 实施任务使用上下文全新且边界明确的 worker assignment",
+      "passed": true,
+      "evidence": "明确 Strict 使用上下文全新、输入受限的 bounded worker。"
+    },
+    {
+      "text": "并行同时检查写入、共享资源、公共契约、未落地依赖和测试证据归属",
+      "passed": true,
+      "evidence": "完整列出写入、资源、契约、未落地依赖、证据归属五项并行条件。"
+    },
+    {
+      "text": "协调者检查真实 diff、范围和聚焦测试后才更新唯一任务状态",
+      "passed": true,
+      "evidence": "明确协调者核对真实 diff、范围和聚焦测试后逐 task 更新 tracker。"
+    },
+    {
+      "text": "不执行 Git mutation，最终验证使用项目原生 test plan 并给出 VERIFIED/BLOCKED/INCOMPLETE",
+      "passed": true,
+      "evidence": "明确无 Git mutation，并使用原生验证与 VERIFIED/BLOCKED/INCOMPLETE。"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1200,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

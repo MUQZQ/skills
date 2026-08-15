@@ -1,0 +1,54 @@
+{
+  "expectations": [
+    {
+      "text": "识别用户只授权本地 commit，不把权限扩大到 push、PR 或部署",
+      "passed": true,
+      "evidence": "明确只授权 LOCAL_COMMIT，不扩展到 push、PR 或部署。"
+    },
+    {
+      "text": "先识别并服从仓库现有 spec 生命周期与任务状态源",
+      "passed": true,
+      "evidence": "明确现有 spec 是唯一生命周期 owner。"
+    },
+    {
+      "text": "仅在当前最终状态通过审查和项目原生验证、并由官方流程归档后执行 closeout commit",
+      "passed": true,
+      "evidence": "明确最终审查、项目原生验证和官方归档成功后才 closeout commit。"
+    },
+    {
+      "text": "在 main/master 上不提交，并在暂存前展示或核对准确范围",
+      "passed": true,
+      "evidence": "明确 main/master 停止提交，并在暂存前后核对授权集合与 cached diff。"
+    },
+    {
+      "text": "使用严重度闭环而非固定五轮审查，必要失败不能降级为遗留问题后继续",
+      "passed": true,
+      "evidence": "明确 Critical/Important 清零，必要失败不能降级继续。"
+    },
+    {
+      "text": "给出明确的第一个实质动作，且不会因已授权实施而重复索要泛化编码确认",
+      "passed": true,
+      "evidence": "明确第一个动作是读取规则、实时状态、分支、HEAD、status 与 baseline。"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1200,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

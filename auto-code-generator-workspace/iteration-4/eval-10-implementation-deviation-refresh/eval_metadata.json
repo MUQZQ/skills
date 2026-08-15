@@ -1,0 +1,11 @@
+{
+  "eval_id": 10,
+  "eval_name": "implementation_deviation_refreshes_projection",
+  "prompt": "一个受维护架构视图约束的 change 已批准投影并开始 Apply。实施中发现必须新增跨包运行时依赖，超出批准投影；现有测试仍能通过。请决定 worker 与协调者如何处理投影、审批、任务状态和最终验证。评估模式：只输出偏差处理与恢复流程，不修改文件。",
+  "assertions": [
+    "识别新增跨包依赖是相对批准投影的语义偏差，测试通过不能豁免",
+    "暂停受影响任务并由协调者刷新 change 投影，重新运行结构检查和语义审批",
+    "只有投影重新获批后才恢复实施，且逐 task 状态仍由权威 tracker 管理",
+    "最终验证比较实际实现、批准 change 投影与 prospective current view，并把同步归档留给官方生命周期"
+  ]
+}

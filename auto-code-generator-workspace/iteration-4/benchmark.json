@@ -1,0 +1,1056 @@
+{
+  "metadata": {
+    "skill_name": "auto-code-generator",
+    "skill_path": "C:\\Users\\30960\\.cc-switch\\skills\\auto-code-generator",
+    "executor_model": "deepseek-v4-flash（provider 自动升级 deepseek-v4-pro）",
+    "analyzer_model": "gpt-5.6-sol inline grader",
+    "timestamp": "2026-08-15T02:59:55Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 58.057,
+        "tokens": 19234,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "将本 skill 的 fallback/当前计划作为最小编排，不创建虚构的 OpenSpec change 或持久账本",
+          "passed": true,
+          "evidence": "明确采用最小 fallback 且不创建第二账本。"
+        },
+        {
+          "text": "将任务判为 Light 或等价低风险路线，并说明根因已知、局部可逆和无跨边界影响",
+          "passed": true,
+          "evidence": "明确判为 Light，并以根因已知、局部可逆、无跨边界影响为依据。"
+        },
+        {
+          "text": "对行为修复要求有效 RED-GREEN-REFACTOR，且 RED 失败来自目标行为缺失",
+          "passed": true,
+          "evidence": "明确同一场景内执行有效 RED→GREEN→REFACTOR。"
+        },
+        {
+          "text": "最终验证使用项目原生命令或可重复方法，不硬编码语言外的通用 runner",
+          "passed": true,
+          "evidence": "明确使用项目原生测试命令并记录真实结果。"
+        },
+        {
+          "text": "尊重不要提交的边界，不 stage、commit、push、建 PR 或部署",
+          "passed": true,
+          "evidence": "明确 Git=NONE，不 stage/commit/push/PR/deploy。"
+        },
+        {
+          "text": "不要求固定五轮审查，也不以审查轮数作为完成条件",
+          "passed": true,
+          "evidence": "明确按严重度闭环，不要求固定审查轮数。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 65.187,
+        "tokens": 24890,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "识别新增跨包依赖是相对批准投影的语义偏差，测试通过不能豁免",
+          "passed": true,
+          "evidence": "明确新增跨包依赖是已批准投影的语义偏差，测试通过不能豁免。"
+        },
+        {
+          "text": "暂停受影响任务并由协调者刷新 change 投影，重新运行结构检查和语义审批",
+          "passed": true,
+          "evidence": "明确暂停任务、刷新 change 投影并重新执行结构检查与语义审批。"
+        },
+        {
+          "text": "只有投影重新获批后才恢复实施，且逐 task 状态仍由权威 tracker 管理",
+          "passed": true,
+          "evidence": "明确重新获批后才能恢复，task 状态仍由权威 tracker 逐项管理。"
+        },
+        {
+          "text": "最终验证比较实际实现、批准 change 投影与 prospective current view，并把同步归档留给官方生命周期",
+          "passed": true,
+          "evidence": "明确最终三方比较实际实现、批准投影与 prospective current view，并由官方生命周期同步归档。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 71.508,
+        "tokens": 20162,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
+          "passed": true,
+          "evidence": "明确当前会话点名 Luna 后才满足 provider 选择门禁。"
+        },
+        {
+          "text": "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
+          "passed": true,
+          "evidence": "明确完整场景组压成六字段任务卡并由同一 worker 完成 RED→GREEN→REFACTOR。"
+        },
+        {
+          "text": "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
+          "passed": true,
+          "evidence": "明确 provider 不拥有生命周期、tracker 或 Git，Sol 逐 task 核验真实 diff 与证据。"
+        },
+        {
+          "text": "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD",
+          "passed": true,
+          "evidence": "明确超限或语义无法保真时 provider 不适用并回退 Sol/原生执行，不切碎 TDD。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 66.318,
+        "tokens": 19690,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
+          "passed": true,
+          "evidence": "明确无维护视图契约时不处理、不创建、不伪造投影。"
+        },
+        {
+          "text": "持久 mode=auto 不能替代当前会话显式同意，因此不调用 Sol-Luna provider",
+          "passed": true,
+          "evidence": "明确持久 mode=auto 不能替代当前会话同意，因此不选 Luna。"
+        },
+        {
+          "text": "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
+          "passed": true,
+          "evidence": "选择 Light 协调者直做并完整执行 RED→GREEN→REFACTOR 与原生验证。"
+        },
+        {
+          "text": "不从实施请求推断 commit、push、PR 或部署权限",
+          "passed": true,
+          "evidence": "明确 Git=NONE，不 stage/commit/push/PR/deploy。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 66.264,
+        "tokens": 19495,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "明确 QEDA/OpenSpec 是唯一生命周期所有者，本 skill 仅提供当前官方阶段内技术",
+          "passed": true,
+          "evidence": "明确 QEDA 是唯一生命周期 owner。"
+        },
+        {
+          "text": "实施前读取实时 status、apply instruction、权威 artifacts 和 baseline，而非重建规划",
+          "passed": true,
+          "evidence": "明确重读实时 status、artifact/apply 指令、tracker 与 Target/Source baseline。"
+        },
+        {
+          "text": "不新增第二套 phase、artifact、task ledger、任务级独立 reviewer 或完成 verdict",
+          "passed": true,
+          "evidence": "明确不新增第二套 phase、artifact、ledger 或结论。"
+        },
+        {
+          "text": "每个 Strict 实施任务使用上下文全新且边界明确的 worker assignment",
+          "passed": true,
+          "evidence": "明确 Strict 使用上下文全新、输入受限的 bounded worker。"
+        },
+        {
+          "text": "并行同时检查写入、共享资源、公共契约、未落地依赖和测试证据归属",
+          "passed": true,
+          "evidence": "完整列出写入、资源、契约、未落地依赖、证据归属五项并行条件。"
+        },
+        {
+          "text": "协调者检查真实 diff、范围和聚焦测试后才更新唯一任务状态",
+          "passed": true,
+          "evidence": "明确协调者核对真实 diff、范围和聚焦测试后逐 task 更新 tracker。"
+        },
+        {
+          "text": "不执行 Git mutation，最终验证使用项目原生 test plan 并给出 VERIFIED/BLOCKED/INCOMPLETE",
+          "passed": true,
+          "evidence": "明确无 Git mutation，并使用原生验证与 VERIFIED/BLOCKED/INCOMPLETE。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 94.485,
+        "tokens": 25403,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "识别用户只授权本地 commit，不把权限扩大到 push、PR 或部署",
+          "passed": true,
+          "evidence": "明确只授权 LOCAL_COMMIT，不扩展到 push、PR 或部署。"
+        },
+        {
+          "text": "先识别并服从仓库现有 spec 生命周期与任务状态源",
+          "passed": true,
+          "evidence": "明确现有 spec 是唯一生命周期 owner。"
+        },
+        {
+          "text": "仅在当前最终状态通过审查和项目原生验证、并由官方流程归档后执行 closeout commit",
+          "passed": true,
+          "evidence": "明确最终审查、项目原生验证和官方归档成功后才 closeout commit。"
+        },
+        {
+          "text": "在 main/master 上不提交，并在暂存前展示或核对准确范围",
+          "passed": true,
+          "evidence": "明确 main/master 停止提交，并在暂存前后核对授权集合与 cached diff。"
+        },
+        {
+          "text": "使用严重度闭环而非固定五轮审查，必要失败不能降级为遗留问题后继续",
+          "passed": true,
+          "evidence": "明确 Critical/Important 清零，必要失败不能降级继续。"
+        },
+        {
+          "text": "给出明确的第一个实质动作，且不会因已授权实施而重复索要泛化编码确认",
+          "passed": true,
+          "evidence": "明确第一个动作是读取规则、实时状态、分支、HEAD、status 与 baseline。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 59.345,
+        "tokens": 22868,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+          "passed": true,
+          "evidence": "明确 tracker task 是持久验收单元、场景组是临时调度单元。"
+        },
+        {
+          "text": "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+          "passed": true,
+          "evidence": "明确 T1/T2/T3 因同一场景、共享模块与 fixture 合为一组。"
+        },
+        {
+          "text": "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+          "passed": true,
+          "evidence": "明确同一 worker 按 T1→T2→T3 完成 RED→GREEN→REFACTOR。"
+        },
+        {
+          "text": "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+          "passed": true,
+          "evidence": "明确协调者核对证据后逐 task 更新，不整组一键完成。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 81.084,
+        "tokens": 21399,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "将 T1 公共接口基础任务单独成组并首先执行",
+          "passed": true,
+          "evidence": "明确 T1 公共契约基础组先单独执行。"
+        },
+        {
+          "text": "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+          "passed": true,
+          "evidence": "明确只有 T1 验收后 T2/T3 才进入下一波。"
+        },
+        {
+          "text": "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+          "passed": true,
+          "evidence": "明确 T2/T3 隔离条件满足时并行。"
+        },
+        {
+          "text": "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+          "passed": true,
+          "evidence": "明确消费者失败只恢复失败组，不回退已验收基础组。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 67.468,
+        "tokens": 23149,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+          "passed": true,
+          "evidence": "明确迁移、权限与 UI 不因同一故事自动合组。"
+        },
+        {
+          "text": "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+          "passed": true,
+          "evidence": "明确迁移和权限按独立审批、回滚与专项验证拆组。"
+        },
+        {
+          "text": "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+          "passed": true,
+          "evidence": "明确比较上下文收益与并行损失、爆炸半径、协调和回滚成本。"
+        },
+        {
+          "text": "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+          "passed": true,
+          "evidence": "明确用真实依赖和五项隔离条件决定串并行。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 82.958,
+        "tokens": 23288,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+          "passed": true,
+          "evidence": "明确只创建一个可独立验收的密码重置过期与审计 task。"
+        },
+        {
+          "text": "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+          "passed": true,
+          "evidence": "明确失败测试、最小实现、审计断言和重构是同一 task 内步骤。"
+        },
+        {
+          "text": "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+          "passed": true,
+          "evidence": "明确拒绝按 TDD 阶段、文件或 Agent 拆持久任务。"
+        },
+        {
+          "text": "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+          "passed": true,
+          "evidence": "明确映射完整场景并给出聚焦与组级原生验证。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 56.556,
+        "tokens": 23790,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+          "passed": true,
+          "evidence": "明确拒绝与 UNSATISFIED/BLOCKED 矛盾的 group DONE。"
+        },
+        {
+          "text": "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+          "passed": true,
+          "evidence": "明确核验后最多只完成 T1，T2/T3 保持未完成。"
+        },
+        {
+          "text": "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+          "passed": true,
+          "evidence": "明确保留 T1 与部分 T2 改动，不清理或回退。"
+        },
+        {
+          "text": "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+          "passed": true,
+          "evidence": "明确先解决 T2 schema 决策，再按依赖调度，T3 不越过 T2。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 63.341,
+        "tokens": 19442,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A 状态复用并检查已有 change 投影，不静默覆盖",
+          "passed": true,
+          "evidence": "明确写出“复用现有投影，不静默覆盖，运行官方 check”。"
+        },
+        {
+          "text": "B 状态调用生命周期官方初始化器，以有效当前维护视图作为种子",
+          "passed": true,
+          "evidence": "明确写出调用官方 init，并以有效当前维护视图为种子。"
+        },
+        {
+          "text": "C 状态仅在当前视图确实不存在时，按 schema 模板初始化覆盖全项目的投影",
+          "passed": true,
+          "evidence": "仅在两者都不存在且 schema 有全项目模板时初始化全项目投影。"
+        },
+        {
+          "text": "D 状态因已存在但损坏的当前视图而 BLOCKED，不以空白模板降级；同时区分脚本结构检查与 Agent 语义审查",
+          "passed": true,
+          "evidence": "明确 D 为 BLOCKED、不降级空白模板，并说明结构有效不等于语义正确。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 40.29,
+        "tokens": 15675,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "将本 skill 的 fallback/当前计划作为最小编排，不创建虚构的 OpenSpec change 或持久账本",
+          "passed": true,
+          "evidence": "明确采用最小 fallback 且不创建第二账本。"
+        },
+        {
+          "text": "将任务判为 Light 或等价低风险路线，并说明根因已知、局部可逆和无跨边界影响",
+          "passed": true,
+          "evidence": "明确判为 Light，并以根因已知、局部可逆、无跨边界影响为依据。"
+        },
+        {
+          "text": "对行为修复要求有效 RED-GREEN-REFACTOR，且 RED 失败来自目标行为缺失",
+          "passed": true,
+          "evidence": "明确同一场景内执行有效 RED→GREEN→REFACTOR。"
+        },
+        {
+          "text": "最终验证使用项目原生命令或可重复方法，不硬编码语言外的通用 runner",
+          "passed": true,
+          "evidence": "明确使用项目原生测试命令并记录真实结果。"
+        },
+        {
+          "text": "尊重不要提交的边界，不 stage、commit、push、建 PR 或部署",
+          "passed": true,
+          "evidence": "明确 Git=NONE，不 stage/commit/push/PR/deploy。"
+        },
+        {
+          "text": "不要求固定五轮审查，也不以审查轮数作为完成条件",
+          "passed": true,
+          "evidence": "明确按严重度闭环，不要求固定审查轮数。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 10,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 42.704,
+        "tokens": 15322,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "识别新增跨包依赖是相对批准投影的语义偏差，测试通过不能豁免",
+          "passed": true,
+          "evidence": "将新增依赖判为投影偏差，且明确测试通过不代表授权。"
+        },
+        {
+          "text": "暂停受影响任务并由协调者刷新 change 投影，重新运行结构检查和语义审批",
+          "passed": false,
+          "evidence": "只提出正式审批请求，没有明确刷新 change 投影后重跑结构检查与 Agent 语义审批。"
+        },
+        {
+          "text": "只有投影重新获批后才恢复实施，且逐 task 状态仍由权威 tracker 管理",
+          "passed": true,
+          "evidence": "明确未获批保持 BLOCKED，获批后才恢复，并保留权威 tracker 状态。"
+        },
+        {
+          "text": "最终验证比较实际实现、批准 change 投影与 prospective current view，并把同步归档留给官方生命周期",
+          "passed": false,
+          "evidence": "没有要求最终比较实际实现、批准 change 投影和 prospective current view，也未给出同步后的三方一致性验证。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 11,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0,
+        "passed": 0,
+        "failed": 4,
+        "total": 4,
+        "time_seconds": 74.3,
+        "tokens": 18140,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
+          "passed": false,
+          "evidence": "明确承认 v4.2 不存在 Sol-Luna provider 选择规则，无法基于当前会话同意选择共享 provider。"
+        },
+        {
+          "text": "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
+          "passed": false,
+          "evidence": "虽然保持单一场景组和单 worker，但未形成 provider 六字段任务卡合同。"
+        },
+        {
+          "text": "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
+          "passed": false,
+          "evidence": "只描述 generic worker 边界，无法建立共享 provider 与 Sol 的专属责任合同。"
+        },
+        {
+          "text": "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD",
+          "passed": false,
+          "evidence": "超限时给出“停止并返回拆分建议”，且后文允许组过大拆组，没有规定 provider 不适用并回退 Sol 直做。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 12,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 115.162,
+        "tokens": 22765,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
+          "passed": true,
+          "evidence": "明确 v4.2 无投影概念，因此不发明投影。"
+        },
+        {
+          "text": "持久 mode=auto 不能替代当前会话显式同意，因此不调用 Sol-Luna provider",
+          "passed": true,
+          "evidence": "明确历史 mode=auto 不构成授权且协调者直做，不启用 worker/provider。"
+        },
+        {
+          "text": "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
+          "passed": true,
+          "evidence": "选择 Light 直做，并给出有效 RED、最小 GREEN、必要 REFACTOR。"
+        },
+        {
+          "text": "不从实施请求推断 commit、push、PR 或部署权限",
+          "passed": true,
+          "evidence": "明确 Git 默认 NONE，不执行 commit、push、PR 或部署。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 97.597,
+        "tokens": 20141,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "明确 QEDA/OpenSpec 是唯一生命周期所有者，本 skill 仅提供当前官方阶段内技术",
+          "passed": true,
+          "evidence": "明确 QEDA 是唯一生命周期 owner。"
+        },
+        {
+          "text": "实施前读取实时 status、apply instruction、权威 artifacts 和 baseline，而非重建规划",
+          "passed": true,
+          "evidence": "明确重读实时 status、artifact/apply 指令、tracker 与 Target/Source baseline。"
+        },
+        {
+          "text": "不新增第二套 phase、artifact、task ledger、任务级独立 reviewer 或完成 verdict",
+          "passed": true,
+          "evidence": "明确不新增第二套 phase、artifact、ledger 或结论。"
+        },
+        {
+          "text": "每个 Strict 实施任务使用上下文全新且边界明确的 worker assignment",
+          "passed": true,
+          "evidence": "明确 Strict 使用上下文全新、输入受限的 bounded worker。"
+        },
+        {
+          "text": "并行同时检查写入、共享资源、公共契约、未落地依赖和测试证据归属",
+          "passed": true,
+          "evidence": "完整列出写入、资源、契约、未落地依赖、证据归属五项并行条件。"
+        },
+        {
+          "text": "协调者检查真实 diff、范围和聚焦测试后才更新唯一任务状态",
+          "passed": true,
+          "evidence": "明确协调者核对真实 diff、范围和聚焦测试后逐 task 更新 tracker。"
+        },
+        {
+          "text": "不执行 Git mutation，最终验证使用项目原生 test plan 并给出 VERIFIED/BLOCKED/INCOMPLETE",
+          "passed": true,
+          "evidence": "明确无 Git mutation，并使用原生验证与 VERIFIED/BLOCKED/INCOMPLETE。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 78.966,
+        "tokens": 20127,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "识别用户只授权本地 commit，不把权限扩大到 push、PR 或部署",
+          "passed": true,
+          "evidence": "明确只授权 LOCAL_COMMIT，不扩展到 push、PR 或部署。"
+        },
+        {
+          "text": "先识别并服从仓库现有 spec 生命周期与任务状态源",
+          "passed": true,
+          "evidence": "明确现有 spec 是唯一生命周期 owner。"
+        },
+        {
+          "text": "仅在当前最终状态通过审查和项目原生验证、并由官方流程归档后执行 closeout commit",
+          "passed": true,
+          "evidence": "明确最终审查、项目原生验证和官方归档成功后才 closeout commit。"
+        },
+        {
+          "text": "在 main/master 上不提交，并在暂存前展示或核对准确范围",
+          "passed": true,
+          "evidence": "明确 main/master 停止提交，并在暂存前后核对授权集合与 cached diff。"
+        },
+        {
+          "text": "使用严重度闭环而非固定五轮审查，必要失败不能降级为遗留问题后继续",
+          "passed": true,
+          "evidence": "明确 Critical/Important 清零，必要失败不能降级继续。"
+        },
+        {
+          "text": "给出明确的第一个实质动作，且不会因已授权实施而重复索要泛化编码确认",
+          "passed": true,
+          "evidence": "明确第一个动作是读取规则、实时状态、分支、HEAD、status 与 baseline。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 54.231,
+        "tokens": 16581,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "明确 task 是持久状态与验收单元，场景组只是临时 worker 调度单元",
+          "passed": true,
+          "evidence": "明确 tracker task 是持久验收单元、场景组是临时调度单元。"
+        },
+        {
+          "text": "将 T1、T2、T3 合并为一个场景组且说明共享场景、写入范围和 fixture 带来的收益",
+          "passed": true,
+          "evidence": "明确 T1/T2/T3 因同一场景、共享模块与 fixture 合为一组。"
+        },
+        {
+          "text": "组内保持 T1 到 T2 到 T3 的依赖顺序，不将 TDD 阶段拆成不同 worker",
+          "passed": true,
+          "evidence": "明确同一 worker 按 T1→T2→T3 完成 RED→GREEN→REFACTOR。"
+        },
+        {
+          "text": "协调者依据每个 task 的独立证据逐项更新状态，而不是整组一键完成",
+          "passed": true,
+          "evidence": "明确协调者核对证据后逐 task 更新，不整组一键完成。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 5,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 58.513,
+        "tokens": 17032,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "将 T1 公共接口基础任务单独成组并首先执行",
+          "passed": true,
+          "evidence": "明确 T1 公共契约基础组先单独执行。"
+        },
+        {
+          "text": "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+          "passed": true,
+          "evidence": "明确只有 T1 验收后 T2/T3 才进入下一波。"
+        },
+        {
+          "text": "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+          "passed": true,
+          "evidence": "明确 T2/T3 隔离条件满足时并行。"
+        },
+        {
+          "text": "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+          "passed": true,
+          "evidence": "明确消费者失败只恢复失败组，不回退已验收基础组。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 6,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 85.279,
+        "tokens": 18965,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+          "passed": true,
+          "evidence": "明确迁移、权限与 UI 不因同一故事自动合组。"
+        },
+        {
+          "text": "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+          "passed": true,
+          "evidence": "明确迁移和权限按独立审批、回滚与专项验证拆组。"
+        },
+        {
+          "text": "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+          "passed": true,
+          "evidence": "明确比较上下文收益与并行损失、爆炸半径、协调和回滚成本。"
+        },
+        {
+          "text": "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+          "passed": true,
+          "evidence": "明确用真实依赖和五项隔离条件决定串并行。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 7,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 62.726,
+        "tokens": 17199,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "最终只规划一个可独立验收的密码重置过期与审计行为 task",
+          "passed": true,
+          "evidence": "明确只创建一个可独立验收的密码重置过期与审计 task。"
+        },
+        {
+          "text": "将失败测试、最小实现、审计断言和必要 REFACTOR 表达为同一 task 内的 TDD 步骤或验收项",
+          "passed": true,
+          "evidence": "明确失败测试、最小实现、审计断言和重构是同一 task 内步骤。"
+        },
+        {
+          "text": "明确拒绝按 RED/GREEN/REFACTOR、文件、函数或 Agent 机械拆分持久任务",
+          "passed": true,
+          "evidence": "明确拒绝按 TDD 阶段、文件或 Agent 拆持久任务。"
+        },
+        {
+          "text": "任务仍映射到完整可观察场景，并给出项目原生的聚焦与组级验证证据",
+          "passed": true,
+          "evidence": "明确映射完整场景并给出聚焦与组级原生验证。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 8,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 52.129,
+        "tokens": 16633,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+          "passed": true,
+          "evidence": "明确拒绝与 UNSATISFIED/BLOCKED 矛盾的 group DONE。"
+        },
+        {
+          "text": "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+          "passed": true,
+          "evidence": "明确核验后最多只完成 T1，T2/T3 保持未完成。"
+        },
+        {
+          "text": "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+          "passed": true,
+          "evidence": "明确保留 T1 与部分 T2 改动，不清理或回退。"
+        },
+        {
+          "text": "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+          "passed": true,
+          "evidence": "明确先解决 T2 schema 决策，再按依赖调度，T3 不越过 T2。"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 9,
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.75,
+        "passed": 3,
+        "failed": 1,
+        "total": 4,
+        "time_seconds": 56.708,
+        "tokens": 16626,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "A 状态复用并检查已有 change 投影，不静默覆盖",
+          "passed": true,
+          "evidence": "明确复用有效 change 投影并运行 check。"
+        },
+        {
+          "text": "B 状态调用生命周期官方初始化器，以有效当前维护视图作为种子",
+          "passed": true,
+          "evidence": "明确用官方 init 从有效维护视图生成 change 投影。"
+        },
+        {
+          "text": "C 状态仅在当前视图确实不存在时，按 schema 模板初始化覆盖全项目的投影",
+          "passed": true,
+          "evidence": "明确两者均缺时按 schema 全项目模板初始化。"
+        },
+        {
+          "text": "D 状态因已存在但损坏的当前视图而 BLOCKED，不以空白模板降级；同时区分脚本结构检查与 Agent 语义审查",
+          "passed": false,
+          "evidence": "虽将损坏状态判为 BLOCKED，但把脚本称为结构“唯一真相源”，未说明 Agent 负责语义设计审查，也未明确结构通过不能替代语义审批。"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 69.3809,
+        "stddev": 11.387,
+        "min": 56.556,
+        "max": 94.485
+      },
+      "tokens": {
+        "mean": 21900.8333,
+        "stddev": 2262.2567,
+        "min": 19234,
+        "max": 25403
+      }
+    },
+    "old_skill": {
+      "pass_rate": {
+        "mean": 0.8542,
+        "stddev": 0.31,
+        "min": 0,
+        "max": 1
+      },
+      "time_seconds": {
+        "mean": 68.2171,
+        "stddev": 22.669,
+        "min": 40.29,
+        "max": 115.162
+      },
+      "tokens": {
+        "mean": 17933.8333,
+        "stddev": 2187.518,
+        "min": 15322,
+        "max": 22765
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.15",
+      "time_seconds": "+1.2",
+      "tokens": "+3967"
+    }
+  },
+  "notes": []
+}

@@ -1,0 +1,130 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "result",
+    "group_status",
+    "task_results",
+    "files_changed",
+    "verification",
+    "concerns",
+    "coordination"
+  ],
+  "properties": {
+    "result": {
+      "type": "string",
+      "minLength": 1
+    },
+    "group_status": {
+      "type": "string",
+      "enum": [
+        "DONE",
+        "DONE_WITH_CONCERNS",
+        "NEEDS_CONTEXT",
+        "NEEDS_COORDINATION",
+        "BLOCKED"
+      ]
+    },
+    "task_results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "task",
+          "status",
+          "evidence"
+        ],
+        "properties": {
+          "task": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SATISFIED",
+              "UNSATISFIED",
+              "BLOCKED"
+            ]
+          },
+          "evidence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "files_changed": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "concerns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "coordination": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "group_status": {
+          "enum": [
+            "DONE"
+          ]
+        },
+        "concerns": {
+          "maxItems": 0
+        }
+      }
+    },
+    {
+      "properties": {
+        "group_status": {
+          "enum": [
+            "DONE_WITH_CONCERNS"
+          ]
+        },
+        "concerns": {
+          "minItems": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "group_status": {
+          "enum": [
+            "NEEDS_CONTEXT",
+            "NEEDS_COORDINATION",
+            "BLOCKED"
+          ]
+        }
+      }
+    }
+  ]
+}

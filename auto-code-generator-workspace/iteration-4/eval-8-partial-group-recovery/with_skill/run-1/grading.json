@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "拒绝接受与 UNSATISFIED/BLOCKED task_result 矛盾的 group_status=DONE，并将其视为需要协调或阻塞",
+      "passed": true,
+      "evidence": "明确拒绝与 UNSATISFIED/BLOCKED 矛盾的 group DONE。"
+    },
+    {
+      "text": "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
+      "passed": true,
+      "evidence": "明确核验后最多只完成 T1，T2/T3 保持未完成。"
+    },
+    {
+      "text": "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
+      "passed": true,
+      "evidence": "明确保留 T1 与部分 T2 改动，不清理或回退。"
+    },
+    {
+      "text": "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2",
+      "passed": true,
+      "evidence": "明确先解决 T2 schema 决策，再按依赖调度，T3 不越过 T2。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1011,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

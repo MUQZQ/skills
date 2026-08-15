@@ -6,46 +6,21 @@
       "name": "local_light_fix_without_git",
       "prompt": "一个没有 OpenSpec、没有任务系统的 TypeScript 小仓库中，src/date.ts 的 UTC 日期边界判断已确认存在单点根因。请自动实施修复，但用户明确说不要提交。评估模式：只输出你在真正修改前会采用的生命周期所有者、风险档位、TDD/验证路线、暂停条件和第一个实质动作，不修改任何文件。",
       "expected_output": "选择最小 fallback/Light 路线，不伪造 OpenSpec 工件；行为修复使用有效 RED-GREEN-REFACTOR；使用项目原生测试验证；不执行 Git mutation；不固定五轮审查。",
-      "files": [],
-      "expectations": [
-        "将本 skill 的 fallback/当前计划作为最小编排，不创建虚构的 OpenSpec change 或持久账本",
-        "将任务判为 Light 或等价低风险路线，并说明根因已知、局部可逆和无跨边界影响",
-        "对行为修复要求有效 RED-GREEN-REFACTOR，且 RED 失败来自目标行为缺失",
-        "最终验证使用项目原生命令或可重复方法，不硬编码语言外的通用 runner",
-        "尊重不要提交的边界，不 stage、commit、push、建 PR 或部署",
-        "不要求固定五轮审查，也不以审查轮数作为完成条件"
-      ]
+      "files": []
     },
     {
       "id": 2,
       "name": "existing_qeda_strict_owner",
       "prompt": "QEDAgent 仓库已有一个 qeda-subagent-driven-sdd 活动 change，exploration 已记录 PLAN_AND_APPLY 和 Target/Source baselines，当前刚到 Apply-ready。请全流程实施剩余 tasks。评估模式：只输出你会如何接管或服从生命周期、如何分派任务、如何并行、如何审查验证以及第一个实质动作，不修改任何文件，也不要提交。",
       "expected_output": "明确 QEDA/OpenSpec 是唯一生命周期所有者；读取实时状态和执行合同；不新增第二套 phase/artifact/ledger/reviewer；保留 task 状态并按场景组形成 bounded worker、执行五项安全并行、协调者逐 task 核验 diff 与证据；无 Git mutation。",
-      "files": [],
-      "expectations": [
-        "明确 QEDA/OpenSpec 是唯一生命周期所有者，本 skill 仅提供当前官方阶段内技术",
-        "实施前读取实时 status、apply instruction、权威 artifacts 和 baseline，而非重建规划",
-        "不新增第二套 phase、artifact、task ledger、任务级独立 reviewer 或完成 verdict",
-        "每个 Strict 实施任务使用上下文全新且边界明确的 worker assignment",
-        "并行同时检查写入、共享资源、公共契约、未落地依赖和测试证据归属",
-        "协调者检查真实 diff、范围和聚焦测试后才更新唯一任务状态",
-        "不执行 Git mutation，最终验证使用项目原生 test plan 并给出 VERIFIED/BLOCKED/INCOMPLETE"
-      ]
+      "files": []
     },
     {
       "id": 3,
       "name": "implementation_with_explicit_local_commit",
       "prompt": "请按仓库现有 spec 实施一个跨两个 package 的普通功能，完成验证和归档后帮我做一个本地 commit；不要 push、不要建 PR、不要部署。评估模式：只输出权限解释、实施到提交的门禁、分支保护、验证结论和第一个实质动作，不修改任何文件。",
       "expected_output": "识别显式 LOCAL_COMMIT 权限但不扩大到 push/PR/deploy；服从项目 spec 生命周期；仅在最终验证与官方归档成功后提交；禁止主干提交；不以固定轮数或自动提交代替门禁。",
-      "files": [],
-      "expectations": [
-        "识别用户只授权本地 commit，不把权限扩大到 push、PR 或部署",
-        "先识别并服从仓库现有 spec 生命周期与任务状态源",
-        "仅在当前最终状态通过审查和项目原生验证、并由官方流程归档后执行 closeout commit",
-        "在 main/master 上不提交，并在暂存前展示或核对准确范围",
-        "使用严重度闭环而非固定五轮审查，必要失败不能降级为遗留问题后继续",
-        "给出明确的第一个实质动作，且不会因已授权实施而重复索要泛化编码确认"
-      ]
+      "files": []
     },
     {
       "id": 4,
@@ -110,58 +85,6 @@
         "协调者核对真实 diff、范围和证据后最多只逐项完成 T1，T2 与 T3 保持未完成",
         "保留完整 T1 与部分 T2 改动，不覆盖、清理或自动回退共享工作树",
         "先解决 T2 的 schema 决策，再按实时依赖重新调度；T3 不得越过 T2"
-      ]
-    },
-    {
-      "id": 9,
-      "name": "maintained_view_projection_initialization_states",
-      "prompt": "一个规格生命周期声明其维护架构投影视图，并提供官方 init/check 脚本。请决定四种 Apply-ready 初始化状态：A 已有该 change 的有效投影；B change 投影缺失但当前维护视图有效；C change 投影和当前维护视图都不存在但 schema 有全项目模板；D 当前维护视图存在但结构损坏。评估模式：只输出每种状态的初始化动作、阻塞条件、脚本与 Agent 的职责边界，不修改文件。",
-      "expected_output": "复用并检查已有有效投影；缺失时优先由官方脚本从有效当前视图初始化；两者都缺失时才按 schema 全项目模板 bootstrap；损坏的当前视图必须阻塞且不能降级为空白模板；脚本负责确定性初始化和结构检查，Agent 负责语义设计与审查，结构有效不代表语义正确。",
-      "files": [],
-      "expectations": [
-        "A 状态复用并检查已有 change 投影，不静默覆盖",
-        "B 状态调用生命周期官方初始化器，以有效当前维护视图作为种子",
-        "C 状态仅在当前视图确实不存在时，按 schema 模板初始化覆盖全项目的投影",
-        "D 状态因已存在但损坏的当前视图而 BLOCKED，不以空白模板降级；同时区分脚本结构检查与 Agent 语义审查"
-      ]
-    },
-    {
-      "id": 10,
-      "name": "implementation_deviation_refreshes_projection",
-      "prompt": "一个受维护架构视图约束的 change 已批准投影并开始 Apply。实施中发现必须新增跨包运行时依赖，超出批准投影；现有测试仍能通过。请决定 worker 与协调者如何处理投影、审批、任务状态和最终验证。评估模式：只输出偏差处理与恢复流程，不修改文件。",
-      "expected_output": "worker 立即报告语义偏差而非只凭测试继续；协调者暂停受影响任务，更新 change 投影并重新执行结构检查和语义审批；获批后才能继续；最终验证同时比较实际实现、批准的 change 投影和 prospective current view，官方生命周期负责同步或归档。",
-      "files": [],
-      "expectations": [
-        "识别新增跨包依赖是相对批准投影的语义偏差，测试通过不能豁免",
-        "暂停受影响任务并由协调者刷新 change 投影，重新运行结构检查和语义审批",
-        "只有投影重新获批后才恢复实施，且逐 task 状态仍由权威 tracker 管理",
-        "最终验证比较实际实现、批准 change 投影与 prospective current view，并把同步归档留给官方生命周期"
-      ]
-    },
-    {
-      "id": 11,
-      "name": "luna_explicit_full_group_without_tdd_split",
-      "prompt": "用户在本会话明确要求使用 Luna。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡压缩后可放入 provider 限额。请说明 auto-code-generator 如何选择 Sol-Luna provider、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
-      "expected_output": "本会话显式同意后才选择 provider；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若完整场景组无法在限额内表达则 provider 不适用并回退直接执行，而不是切碎 TDD。",
-      "files": [],
-      "expectations": [
-        "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
-        "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
-        "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
-        "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD"
-      ]
-    },
-    {
-      "id": 12,
-      "name": "no_view_and_unauthorized_luna_do_not_invent",
-      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，但全局配置曾保存 mode=auto。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行 provider 选择、TDD 和权限边界，不修改文件。",
-      "expected_output": "没有维护视图契约时不创建或伪造投影；没有当前会话显式 Luna 同意时忽略持久 mode=auto，不调用共享 Sol-Luna provider；按风险匹配的直接 TDD 路线实施；不推断 commit、push、PR 或部署权限。",
-      "files": [],
-      "expectations": [
-        "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
-        "持久 mode=auto 不能替代当前会话显式同意，因此不调用 Sol-Luna provider",
-        "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
-        "不从实施请求推断 commit、push、PR 或部署权限"
       ]
     }
   ]

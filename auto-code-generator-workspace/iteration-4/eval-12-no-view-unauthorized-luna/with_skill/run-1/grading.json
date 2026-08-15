@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
+      "passed": true,
+      "evidence": "明确无维护视图契约时不处理、不创建、不伪造投影。"
+    },
+    {
+      "text": "持久 mode=auto 不能替代当前会话显式同意，因此不调用 Sol-Luna provider",
+      "passed": true,
+      "evidence": "明确持久 mode=auto 不能替代当前会话同意，因此不选 Luna。"
+    },
+    {
+      "text": "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
+      "passed": true,
+      "evidence": "选择 Light 协调者直做并完整执行 RED→GREEN→REFACTOR 与原生验证。"
+    },
+    {
+      "text": "不从实施请求推断 commit、push、PR 或部署权限",
+      "passed": true,
+      "evidence": "明确 Git=NONE，不 stage/commit/push/PR/deploy。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1037,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "断言与输出证据对应，未发现需要立即调整的明显缺口。"
+  }
+}

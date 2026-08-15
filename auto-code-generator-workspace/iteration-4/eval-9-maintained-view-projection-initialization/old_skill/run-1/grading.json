@@ -1,0 +1,48 @@
+{
+  "expectations": [
+    {
+      "text": "A 状态复用并检查已有 change 投影，不静默覆盖",
+      "passed": true,
+      "evidence": "明确复用有效 change 投影并运行 check。"
+    },
+    {
+      "text": "B 状态调用生命周期官方初始化器，以有效当前维护视图作为种子",
+      "passed": true,
+      "evidence": "明确用官方 init 从有效维护视图生成 change 投影。"
+    },
+    {
+      "text": "C 状态仅在当前视图确实不存在时，按 schema 模板初始化覆盖全项目的投影",
+      "passed": true,
+      "evidence": "明确两者均缺时按 schema 全项目模板初始化。"
+    },
+    {
+      "text": "D 状态因已存在但损坏的当前视图而 BLOCKED，不以空白模板降级；同时区分脚本结构检查与 Agent 语义审查",
+      "passed": false,
+      "evidence": "虽将损坏状态判为 BLOCKED，但把脚本称为结构“唯一真相源”，未说明 Agent 负责语义设计审查，也未明确结构通过不能替代语义审批。"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 1,
+    "total": 4,
+    "pass_rate": 0.75
+  },
+  "execution_metrics": {
+    "output_chars": 889,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "reason": "场景 prompt 已直接枚举 A/B/C/D 状态和可用官方脚本，旧版可凭常识推导前三项；后续可增加一个未命名状态或冲突输入，提升对初始化优先级的区分度。"
+      }
+    ],
+    "overall": "断言能覆盖目标规则，但前三项对旧版的区分度有限；结构检查与语义审查边界仍有区分力。"
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
+      "passed": false,
+      "evidence": "明确承认 v4.2 不存在 Sol-Luna provider 选择规则，无法基于当前会话同意选择共享 provider。"
+    },
+    {
+      "text": "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
+      "passed": false,
+      "evidence": "虽然保持单一场景组和单 worker，但未形成 provider 六字段任务卡合同。"
+    },
+    {
+      "text": "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
+      "passed": false,
+      "evidence": "只描述 generic worker 边界，无法建立共享 provider 与 Sol 的专属责任合同。"
+    },
+    {
+      "text": "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD",
+      "passed": false,
+      "evidence": "超限时给出“停止并返回拆分建议”，且后文允许组过大拆组，没有规定 provider 不适用并回退 Sol 直做。"
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 4,
+    "total": 4,
+    "pass_rate": 0
+  },
+  "execution_metrics": {
+    "output_chars": 1032,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "断言与输出证据对应，未发现需要立即调整的明显缺口。"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "total_tokens": 16581,
+  "duration_ms": 54231,
+  "input_tokens": 12860,
+  "output_tokens": 3721,
+  "model_usage": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro"
+  ],
+  "total_duration_seconds": 54.231
+}

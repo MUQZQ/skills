@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "迁移、权限和 UI 不因同一用户场景而被无条件合并",
+      "passed": true,
+      "evidence": "明确迁移、权限与 UI 不因同一故事自动合组。"
+    },
+    {
+      "text": "迁移与权限因独立审批、回滚、风险和专项验证保持独立执行与验收边界",
+      "passed": true,
+      "evidence": "明确迁移和权限按独立审批、回滚与专项验证拆组。"
+    },
+    {
+      "text": "明确只有分组节省的上下文、准备和重复测试成本大于并行损失、失败爆炸半径、协调与回滚成本时才合组",
+      "passed": true,
+      "evidence": "明确比较上下文收益与并行损失、爆炸半径、协调和回滚成本。"
+    },
+    {
+      "text": "用真实依赖和隔离条件决定串并行，而不是按任务数量或固定每任务一个 worker",
+      "passed": true,
+      "evidence": "明确用真实依赖和五项隔离条件决定串并行。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1134,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

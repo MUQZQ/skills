@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "将 T1 公共接口基础任务单独成组并首先执行",
+      "passed": true,
+      "evidence": "明确 T1 公共契约基础组先单独执行。"
+    },
+    {
+      "text": "只有 T1 被协调者验收后，T2 与 T3 才进入下一波",
+      "passed": true,
+      "evidence": "明确只有 T1 验收后 T2/T3 才进入下一波。"
+    },
+    {
+      "text": "T2 与 T3 因写入、资源、契约演进和测试证据可隔离而分别并行",
+      "passed": true,
+      "evidence": "明确 T2/T3 隔离条件满足时并行。"
+    },
+    {
+      "text": "说明任一消费者失败时只冻结或恢复其场景组，不回退已验收的基础组",
+      "passed": true,
+      "evidence": "明确消费者失败只恢复失败组，不回退已验收基础组。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1200,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

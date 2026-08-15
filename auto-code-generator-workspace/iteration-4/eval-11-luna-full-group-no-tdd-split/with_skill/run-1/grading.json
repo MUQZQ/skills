@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
+      "passed": true,
+      "evidence": "明确当前会话点名 Luna 后才满足 provider 选择门禁。"
+    },
+    {
+      "text": "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
+      "passed": true,
+      "evidence": "明确完整场景组压成六字段任务卡并由同一 worker 完成 RED→GREEN→REFACTOR。"
+    },
+    {
+      "text": "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
+      "passed": true,
+      "evidence": "明确 provider 不拥有生命周期、tracker 或 Git，Sol 逐 task 核验真实 diff 与证据。"
+    },
+    {
+      "text": "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD",
+      "passed": true,
+      "evidence": "明确超限或语义无法保真时 provider 不适用并回退 Sol/原生执行，不切碎 TDD。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1147,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "断言与输出证据对应，未发现需要立即调整的明显缺口。"
+  }
+}

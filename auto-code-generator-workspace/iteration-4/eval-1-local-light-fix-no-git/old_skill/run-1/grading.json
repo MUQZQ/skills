@@ -1,0 +1,54 @@
+{
+  "expectations": [
+    {
+      "text": "将本 skill 的 fallback/当前计划作为最小编排，不创建虚构的 OpenSpec change 或持久账本",
+      "passed": true,
+      "evidence": "明确采用最小 fallback 且不创建第二账本。"
+    },
+    {
+      "text": "将任务判为 Light 或等价低风险路线，并说明根因已知、局部可逆和无跨边界影响",
+      "passed": true,
+      "evidence": "明确判为 Light，并以根因已知、局部可逆、无跨边界影响为依据。"
+    },
+    {
+      "text": "对行为修复要求有效 RED-GREEN-REFACTOR，且 RED 失败来自目标行为缺失",
+      "passed": true,
+      "evidence": "明确同一场景内执行有效 RED→GREEN→REFACTOR。"
+    },
+    {
+      "text": "最终验证使用项目原生命令或可重复方法，不硬编码语言外的通用 runner",
+      "passed": true,
+      "evidence": "明确使用项目原生测试命令并记录真实结果。"
+    },
+    {
+      "text": "尊重不要提交的边界，不 stage、commit、push、建 PR 或部署",
+      "passed": true,
+      "evidence": "明确 Git=NONE，不 stage/commit/push/PR/deploy。"
+    },
+    {
+      "text": "不要求固定五轮审查，也不以审查轮数作为完成条件",
+      "passed": true,
+      "evidence": "明确按严重度闭环，不要求固定审查轮数。"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 792,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "回归断言均有直接证据，未发现需要立即调整的缺口。"
+  }
+}

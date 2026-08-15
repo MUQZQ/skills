@@ -1,0 +1,11 @@
+{
+  "eval_id": 9,
+  "eval_name": "maintained_view_projection_initialization_states",
+  "prompt": "一个规格生命周期声明其维护架构投影视图，并提供官方 init/check 脚本。请决定四种 Apply-ready 初始化状态：A 已有该 change 的有效投影；B change 投影缺失但当前维护视图有效；C change 投影和当前维护视图都不存在但 schema 有全项目模板；D 当前维护视图存在但结构损坏。评估模式：只输出每种状态的初始化动作、阻塞条件、脚本与 Agent 的职责边界，不修改文件。",
+  "assertions": [
+    "A 状态复用并检查已有 change 投影，不静默覆盖",
+    "B 状态调用生命周期官方初始化器，以有效当前维护视图作为种子",
+    "C 状态仅在当前视图确实不存在时，按 schema 模板初始化覆盖全项目的投影",
+    "D 状态因已存在但损坏的当前视图而 BLOCKED，不以空白模板降级；同时区分脚本结构检查与 Agent 语义审查"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "expectations": [
+    {
+      "text": "识别新增跨包依赖是相对批准投影的语义偏差，测试通过不能豁免",
+      "passed": true,
+      "evidence": "明确新增跨包依赖是已批准投影的语义偏差，测试通过不能豁免。"
+    },
+    {
+      "text": "暂停受影响任务并由协调者刷新 change 投影，重新运行结构检查和语义审批",
+      "passed": true,
+      "evidence": "明确暂停任务、刷新 change 投影并重新执行结构检查与语义审批。"
+    },
+    {
+      "text": "只有投影重新获批后才恢复实施，且逐 task 状态仍由权威 tracker 管理",
+      "passed": true,
+      "evidence": "明确重新获批后才能恢复，task 状态仍由权威 tracker 逐项管理。"
+    },
+    {
+      "text": "最终验证比较实际实现、批准 change 投影与 prospective current view，并把同步归档留给官方生命周期",
+      "passed": true,
+      "evidence": "明确最终三方比较实际实现、批准投影与 prospective current view，并由官方生命周期同步归档。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1
+  },
+  "execution_metrics": {
+    "output_chars": 1095,
+    "errors_encountered": 0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "断言与输出证据对应，未发现需要立即调整的明显缺口。"
+  }
+}
