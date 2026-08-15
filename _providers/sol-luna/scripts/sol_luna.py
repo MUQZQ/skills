@@ -598,7 +598,7 @@ def resolve_cli_executable(
     command: str,
     disallowed_root: Path | None = None,
 ) -> str:
-    suffixes = (".exe", ".cmd", ".bat", "") if os.name == "nt" else ("",)
+    suffixes = (".cmd", ".bat", ".exe", "") if os.name == "nt" else ("",)
     candidates = tuple(f"{command}{suffix}" for suffix in suffixes)
     disallowed_roots = {Path.cwd().resolve()}
     if disallowed_root is not None:

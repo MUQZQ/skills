@@ -640,6 +640,23 @@ class SolLunaConfigTests(unittest.TestCase):
 
         self.assertEqual(str(safe), resolved)
 
+    def test_windows_codex_executable_prefers_spawnable_cmd_over_windowsapps_exe(self):
+        windowsapps = (
+            r"C:\Program Files\WindowsApps\OpenAI.Codex_26.810.4967.0_x64__2p2nqsd0c76g0"
+            r"\app\resources\codex.exe"
+        )
+        npm_wrapper = r"C:\Users\tester\AppData\Roaming\npm\codex.cmd"
+
+        with patch.object(sol_luna.os, "name", "nt"):
+            with patch.object(sol_luna.shutil, "which") as which:
+                which.side_effect = lambda name: {
+                    "codex.exe": windowsapps,
+                    "codex.cmd": npm_wrapper,
+                }.get(name)
+                resolved = sol_luna.resolve_codex_executable()
+
+        self.assertEqual(npm_wrapper, resolved)
+
     def test_claude_executable_skips_workspace_candidate(self):
         unsafe = self.project / "claude.exe"
         safe = Path(r"C:\Program Files\Claude Code\claude.exe")
