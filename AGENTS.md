@@ -9,8 +9,13 @@
 | R2 | **如无必要勿增实体** — 优先复用现有代码和模块，不创建任务未要求的文件、抽象层或依赖 |
 | R3 | **先想清楚再做** — 编码前必须理解需求、设计思路和影响范围 |
 | R4 | **高内聚低耦合** — 模块内部紧密相关，模块之间依赖最小化 |
-| R5 | **禁止操作主干分支** — 不在 `main`/`master` 上直接 commit；合入由人工完成 |
-| R6 | **禁止 force push** — 永远不使用 `git push --force`，rebase 后使用 `--force-with-lease` |
+
+## 建议规则
+
+| 规则 | 内容 |
+|------|------|
+| R5 | **建议避免直接操作主干分支** — 默认使用工作分支；用户明确授权具体 Git 动作及目标仓库/ref 时，才可在 `main`/`master` 上执行该动作 |
+| R6 | **建议避免 force push** — 默认不使用 `git push --force`，优先使用 `--force-with-lease`；仅当用户明确指定 remote/ref、确认远端旧 tip，且目标不是公共或受保护分支时才可执行 `--force` |
 
 ## 执行约束原则
 
@@ -109,7 +114,7 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 - **分支命名** — 新功能 `feat/<name>`，修复 `fix/<name>`，重构 `refactor/<name>`；Codex 自动分支使用 `codex/<name>`
 - **提交信息** — conventional commit 格式：`<type>(<scope>): <description>`
 - **提交前** — 运行 `code-review` 审查；禁止提交未审查的代码
-- **合入主干** — 由人工完成，agent 仅做本地提交
+- **合入主干** — 默认由人工完成；用户明确授权具体提交、合入或推送动作及目标仓库/ref 后，agent 才可执行该动作
 - **换行符** — 不改变文件既有换行风格；读取文件时 Python 使用默认 `newline=None`
 
 ## 下载约定
