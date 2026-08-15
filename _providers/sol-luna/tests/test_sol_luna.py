@@ -54,11 +54,11 @@ class SolLunaConfigTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(value), encoding="utf-8")
 
-    def test_default_config_keeps_luna_off_and_uses_auto_model(self) -> None:
+    def test_default_config_enables_luna_auto_and_uses_first_model(self) -> None:
         config = sol_luna.resolve_config(self.project, self.home, {})
         models = sol_luna.load_luna_models()
 
-        self.assertEqual("off", config["mode"])
+        self.assertEqual("auto", config["mode"])
         self.assertEqual("auto", config["model"])
         self.assertEqual("gpt-5.6-luna", models[0].id)
         self.assertEqual("gpt-5.3-codex-spark", models[1].id)
@@ -66,7 +66,7 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual(1200, config["max_result_chars"])
 
     @patch("sol_luna.run_luna", return_value={"result": "完成"})
-    def test_user_triggered_run_enables_luna_for_session_without_persisting(
+    def test_default_auto_run_does_not_require_user_triggered_or_persist(
         self, run_luna: MagicMock
     ) -> None:
         with patch("sys.stdout", new_callable=StringIO):
@@ -78,7 +78,6 @@ class SolLunaConfigTests(unittest.TestCase):
                     str(self.home),
                     "run",
                     "scout",
-                    "--user-triggered",
                     VALID_TASK_BRIEF,
                 ]
             )
@@ -90,11 +89,11 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
 
     @patch("sol_luna.run_luna", return_value={"result": "不应执行"})
-    def test_run_requires_user_trigger_even_when_persistent_mode_is_auto(
+    def test_explicit_off_run_rejects_without_one_shot_override(
         self, run_luna: MagicMock
     ) -> None:
         self.write_json(
-            self.project / ".codex" / "sol-luna.json", {"mode": "auto"}
+            self.project / ".codex" / "sol-luna.json", {"mode": "off"}
         )
 
         with (
@@ -114,21 +113,17 @@ class SolLunaConfigTests(unittest.TestCase):
             )
 
         self.assertEqual(2, result)
-        self.assertIn("当前会话", stderr.getvalue())
+        self.assertIn("显式关闭", stderr.getvalue())
         run_luna.assert_not_called()
 
-    @patch("sol_luna.run_luna", return_value={"result": "不应执行"})
-    def test_smoke_requires_user_trigger_even_when_persistent_mode_is_auto(
+    @patch(
+        "sol_luna.run_luna",
+        return_value={"modelUsage": {}, "result": "LUNA_FLASH_SMOKE_OK"},
+    )
+    def test_default_auto_smoke_does_not_require_user_triggered(
         self, run_luna: MagicMock
     ) -> None:
-        self.write_json(
-            self.project / ".codex" / "sol-luna.json", {"mode": "auto"}
-        )
-
-        with (
-            patch("sys.stdout", new_callable=StringIO),
-            patch("sys.stderr", new_callable=StringIO) as stderr,
-        ):
+        with patch("sys.stdout", new_callable=StringIO):
             result = sol_luna.main(
                 [
                     "--project-root",
@@ -141,17 +136,58 @@ class SolLunaConfigTests(unittest.TestCase):
                 ]
             )
 
-        self.assertEqual(2, result)
-        self.assertIn("当前会话", stderr.getvalue())
-        run_luna.assert_not_called()
+        self.assertEqual(0, result)
+        self.assertEqual("auto", run_luna.call_args.args[2]["mode"])
+        for field in sol_luna.TASK_BRIEF_FIELDS:
+            self.assertIn(f"{field}：", run_luna.call_args.args[1])
+        self.assertFalse((self.project / ".codex" / "sol-luna.json").exists())
+        self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
+
+    @patch("sol_luna.run_luna", return_value={"result": "完成"})
+    def test_user_triggered_run_overrides_explicit_off_without_persisting(
+        self, run_luna: MagicMock
+    ) -> None:
+        self.write_json(
+            self.project / ".codex" / "sol-luna.json", {"mode": "off"}
+        )
+        with patch("sys.stdout", new_callable=StringIO):
+            result = sol_luna.main(
+                [
+                    "--project-root",
+                    str(self.project),
+                    "--home",
+                    str(self.home),
+                    "run",
+                    "scout",
+                    "--user-triggered",
+                    VALID_TASK_BRIEF,
+                ]
+            )
+
+        self.assertEqual(0, result)
+        self.assertEqual("auto", run_luna.call_args.args[2]["mode"])
+        for field in sol_luna.TASK_BRIEF_FIELDS:
+            self.assertIn(f"{field}：", run_luna.call_args.args[1])
+        self.assertEqual(
+            "off",
+            json.loads(
+                (self.project / ".codex" / "sol-luna.json").read_text(
+                    encoding="utf-8"
+                )
+            )["mode"],
+        )
+        self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
 
     @patch(
         "sol_luna.run_luna",
         return_value={"modelUsage": {}, "result": "LUNA_FLASH_SMOKE_OK"},
     )
-    def test_user_triggered_smoke_runs_without_persisting(
+    def test_user_triggered_smoke_overrides_explicit_off_without_persisting(
         self, run_luna: MagicMock
     ) -> None:
+        self.write_json(
+            self.project / ".codex" / "sol-luna.json", {"mode": "off"}
+        )
         with patch("sys.stdout", new_callable=StringIO):
             result = sol_luna.main(
                 [
@@ -170,7 +206,14 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual("auto", run_luna.call_args.args[2]["mode"])
         for field in sol_luna.TASK_BRIEF_FIELDS:
             self.assertIn(f"{field}：", run_luna.call_args.args[1])
-        self.assertFalse((self.project / ".codex" / "sol-luna.json").exists())
+        self.assertEqual(
+            "off",
+            json.loads(
+                (self.project / ".codex" / "sol-luna.json").read_text(
+                    encoding="utf-8"
+                )
+            )["mode"],
+        )
         self.assertFalse((self.home / ".codex" / "sol-luna.json").exists())
 
     @patch(
@@ -1208,7 +1251,7 @@ class SolLunaConfigTests(unittest.TestCase):
         tester = (template_dir / "luna-tester.md").read_text(encoding="utf-8")
         self.assertIn("tools: Read, Grep, Glob, Bash", tester)
 
-    def test_project_policy_requires_user_triggered_session_opt_in(self) -> None:
+    def test_project_policy_enables_luna_by_default_with_explicit_off_override(self) -> None:
         provider_root = Path(__file__).resolve().parents[1]
         skills_root = provider_root.parents[1]
         policy = (
@@ -1226,21 +1269,23 @@ class SolLunaConfigTests(unittest.TestCase):
             / "sol-luna.md"
         ).read_text(encoding="utf-8")
 
-        self.assertIn("Luna 默认关闭", policy)
-        self.assertIn("当前会话", policy)
+        self.assertIn("Luna 默认开启", policy)
+        self.assertIn("mode=auto", policy)
+        self.assertIn("只用 Sol", policy)
         self.assertIn("luna-models.json", policy)
         self.assertNotIn("--user-triggered", policy)
         self.assertNotIn("字段：非空内容", policy)
         self.assertNotIn("推荐闭环", policy)
 
         for content in (claude_policy, contract):
-            self.assertIn("Luna 默认关闭", content)
+            self.assertIn("Luna 默认开启", content)
             self.assertIn("--user-triggered", content)
             self.assertIn("字段：非空内容", content)
             for field in sol_luna.TASK_BRIEF_FIELDS:
                 self.assertIn(field, content)
 
-        self.assertIn("当前会话", adapter)
+        self.assertIn("Luna 默认开启", adapter)
+        self.assertIn("mode=off", adapter)
         self.assertIn("--user-triggered", adapter)
         self.assertIn("backend=codex", adapter)
         self.assertIn("backend=claude", adapter)

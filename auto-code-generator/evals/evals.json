@@ -140,12 +140,12 @@
     },
     {
       "id": 11,
-      "name": "luna_explicit_full_group_without_tdd_split",
-      "prompt": "用户在本会话明确要求使用 Luna。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡压缩后可放入 provider 限额。请说明 auto-code-generator 如何选择 Sol-Luna provider、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
-      "expected_output": "本会话显式同意后才选择 provider；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若完整场景组无法在限额内表达则 provider 不适用并回退直接执行，而不是切碎 TDD。",
+      "name": "luna_default_auto_full_group_without_tdd_split",
+      "prompt": "Luna 使用默认 mode=auto。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡压缩后可放入 provider 限额。请说明 auto-code-generator 如何选择 Sol-Luna provider、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
+      "expected_output": "默认 mode=auto 时可选择 provider；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若完整场景组无法在限额内表达则 provider 不适用并回退直接执行，而不是切碎 TDD。",
       "files": [],
       "expectations": [
-        "仅在当前会话有用户显式 Luna 同意时选择共享 provider",
+        "默认 mode=auto 且当前任务未显式关闭时可选择共享 provider",
         "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
         "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
         "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD"
@@ -153,13 +153,13 @@
     },
     {
       "id": 12,
-      "name": "no_view_and_unauthorized_luna_do_not_invent",
-      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，但全局配置曾保存 mode=auto。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行 provider 选择、TDD 和权限边界，不修改文件。",
-      "expected_output": "没有维护视图契约时不创建或伪造投影；没有当前会话显式 Luna 同意时忽略持久 mode=auto，不调用 native_spawn 或 codex_exec；按风险匹配的直接 TDD 路线实施；不推断 commit、push、PR 或部署权限。",
+      "name": "no_view_and_default_auto_luna",
+      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，也没有显式关闭，默认 mode=auto。当前 spawn_agent 原生支持默认 Luna 精确模型及所需权限。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行 provider 选择、TDD 和权限边界，不修改文件。",
+      "expected_output": "没有维护视图契约时不创建或伪造投影；默认 mode=auto 且未显式关闭时选择 Luna，精确模型与权限受原生支持时使用 native_spawn；保持直接 RED-GREEN-REFACTOR；不推断 commit、push、PR 或部署权限。",
       "files": [],
       "expectations": [
         "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
-        "持久 mode=auto 不能替代当前会话显式同意，因此 native_spawn 与 codex_exec 均不调用",
+        "默认 mode=auto 且未显式关闭时选择 Luna，精确模型与权限匹配时优先 native_spawn",
         "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
         "不从实施请求推断 commit、push、PR 或部署权限"
       ]
@@ -167,12 +167,12 @@
     {
       "id": 13,
       "name": "codex_native_first_runner",
-      "prompt": "用户在当前会话明确要求使用 Luna，并分别给出三个选择：默认 gpt-5.6-luna 在当前原生 allowlist；gpt-5.3-codex-spark 不在 allowlist；以及对 Spark 额外要求 native only。请说明 backend 与 runner 的选择、权限门禁和失败处理。评估模式：只输出路由决策，不执行任务。",
-      "expected_output": "backend 与 runner 分离。Sol 只从当前用户消息确认会话授权，并从当前 spawn_agent 工具说明读取 allowlist 与权限边界。默认 Luna 的精确模型受原生支持且权限满足时使用 native_spawn；Spark 不在原生 allowlist或权限边界无法证明时，仅在启动前保持同一模型走 codex_exec，不静默换模；Spark 加 native only 时返回 BLOCKED 并展示原生可选模型。spawn_agent 返回 Agent 标识后，任何失败都升级给 Sol 检查共享工作树，不自动跨 runner 重跑。",
+      "prompt": "Luna 默认 mode=auto，用户分别给出三个选择：默认 gpt-5.6-luna 在当前原生 allowlist；gpt-5.3-codex-spark 不在 allowlist；以及对 Spark 额外要求 native only。请说明 backend 与 runner 的选择、权限门禁和失败处理。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "backend 与 runner 分离。默认 mode=auto 时，Sol 从当前 spawn_agent 工具说明读取 allowlist 与权限边界。默认 Luna 的精确模型受原生支持且权限满足时使用 native_spawn；Spark 不在原生 allowlist或权限边界无法证明时，仅在启动前保持同一模型走 codex_exec，不静默换模；Spark 加 native only 时返回 BLOCKED 并展示原生可选模型。spawn_agent 返回 Agent 标识后，任何失败都升级给 Sol 检查共享工作树，不自动跨 runner 重跑。",
       "files": [],
       "expectations": [
         "Codex 精确模型受原生 allowlist 支持且权限满足时优先 native_spawn",
-        "授权只来自当前用户消息，allowlist 与权限边界只来自当前 spawn_agent 工具说明",
+        "默认 mode=auto，allowlist 与权限边界只来自当前 spawn_agent 工具说明",
         "原生不支持 Spark 时保持 gpt-5.3-codex-spark 并在启动前选择 codex_exec，不替换模型",
         "native only 与原生不支持冲突时返回 BLOCKED",
         "原生任务启动后失败不自动回退 CLI，避免重复副作用"
@@ -202,6 +202,18 @@
         "模型在 allowlist 但权限无法证明时不启动 native_spawn",
         "任务未启动时通过 codex_exec 执行同一精确模型",
         "native only 时返回 BLOCKED，不静默换模"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "explicit_sol_only_disables_luna",
+      "prompt": "Luna 默认 mode=auto，但用户在当前任务明确要求只用 Sol。请说明本任务的 provider 选择，以及是否修改持久配置。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "当前任务的显式只用 Sol 优先于默认 auto；本任务不调用 native_spawn 或 codex_exec，由 Sol 直接执行；不修改项目或全局持久配置，后续任务仍按其各自输入和有效配置决定。",
+      "files": [],
+      "expectations": [
+        "当前任务显式只用 Sol 时不调用 native_spawn 或 codex_exec",
+        "由 Sol 直接执行当前任务",
+        "不修改项目或全局持久配置"
       ]
     }
   ]

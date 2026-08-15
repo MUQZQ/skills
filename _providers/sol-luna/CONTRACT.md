@@ -11,17 +11,18 @@
 
 ## 运行时范围
 
-- **Luna 默认关闭**：只有当前会话用户明确同意后，才可用 `--user-triggered` 单次启用，不写持久配置；
-  持久 `auto` / `force` 只描述触发后的委派策略，不能替代当前会话显式同意。编排层走原生委派时也必须
-  从当前用户消息确认同一会话授权；`--user-triggered` 是 CLI runner 的审计声明，不是可绕过授权的安全凭据。
-- 外部 runner 仅通过 `scripts/sol_luna.py` 的 `run` / `smoke` 命令执行，且必须携带
-  `--user-triggered`；原生 runner 由编排层直接调用宿主 `spawn_agent`。
+- **Luna 默认开启**：默认有效配置为 `mode=auto`。有效配置为 `off`，或用户在当前任务明确说“不用 Luna”
+  “只用 Sol”时关闭自动委派。
+- 外部 runner 仅通过 `scripts/sol_luna.py` 的 `run` / `smoke` 命令执行；`auto` / `force` 无需额外标志。
+  `--user-triggered` 仅用于当前用户明确要求 Luna 时单次覆盖有效 `off`，且不写持久配置。它是受信任编排
+  层传递的当前请求声明，不是操作系统级凭据或安全边界；能直接执行本地控制器的调用者本身已经拥有
+  启动 runner 的权限。原生 runner 由编排层直接调用宿主 `spawn_agent`。
 - 任务卡六项各占一行，严格使用 `字段：非空内容`：目标、允许范围、禁止范围、约束、预期输出、验证证据；
   任一项缺失或为空时拒绝委派。
 - `auto-code-generator` 必须把完整内聚场景组作为一个可观察目标写入任务卡；不得为了满足长度限制拆分
   `RED → GREEN → REFACTOR`。完整场景组无法保真表达时，provider 不适用并回退 Sol 或项目原生执行。
 - scout/critic 保持 plan-only；tester 只被预授权 Bash 以运行 Sol 指定的测试，worker 被预授权工作区编辑与
-  Bash 以完成同一场景的 TDD。所有角色仍受六字段任务卡和 `--user-triggered` 门禁约束，禁止 bypass 权限。
+  Bash 以完成同一场景的 TDD。所有角色仍受六字段任务卡和权限边界约束，禁止 bypass 权限。
 
 ## Luna 模型列表
 
@@ -43,8 +44,9 @@
   CLI，以免重复副作用。
 - `backend=claude` 由 `claude_code` runner 执行；用户调整 Claude 条目后应运行 `configure-claude` 合并映射，
   并通过 `modelUsage` 核验实际 provider 模型。`configure-claude` 不处理 Codex 条目。
-- `models` 和 `status` 是只读查看命令，不代表当前会话已授权 Luna；真正的 `run` / `smoke` 仍需
-  `--user-triggered`。`smoke` 默认只验证第一项；只有显式指定 `--model all` 才遍历整个列表。
+- `models` 和 `status` 是只读查看命令。`run` / `smoke` 在 `auto` / `force` 下直接执行；有效 `off` 下只有
+  当前用户明确要求 Luna 时才可用 `--user-triggered` 单次覆盖。`smoke` 默认只验证第一项；只有显式指定
+  `--model all` 才遍历整个列表。
 
 ## 管理资产
 

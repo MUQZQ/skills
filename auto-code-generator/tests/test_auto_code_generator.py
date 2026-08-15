@@ -31,7 +31,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         for phrase in (
-            "当前会话显式同意",
+            "Luna 默认开启",
+            "mode=off",
             "--user-triggered",
             "完整内聚场景组",
             "六字段任务卡",
@@ -59,7 +60,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertNotIn("不使用原生 `spawn_agent`", content)
 
         for phrase in (
-            "当前用户消息",
+            "只用 Sol",
             "当前会话暴露的原生 allowlist",
             "`spawn_agent` 工具说明",
             "精确模型",
@@ -91,13 +92,19 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("native only", native_first["expected_output"])
         self.assertIn("权限边界", native_first["expected_output"])
 
-        unauthorized = next(
+        default_auto = next(
             item
             for item in evals
-            if item["name"] == "no_view_and_unauthorized_luna_do_not_invent"
+            if item["name"] == "no_view_and_default_auto_luna"
         )
-        self.assertIn("native_spawn", unauthorized["expected_output"])
-        self.assertIn("codex_exec", unauthorized["expected_output"])
+        self.assertIn("native_spawn", default_auto["expected_output"])
+
+        explicit_off = next(
+            item for item in evals if item["name"] == "explicit_sol_only_disables_luna"
+        )
+        self.assertIn("只用 Sol", explicit_off["prompt"])
+        self.assertIn("不调用 native_spawn", explicit_off["expected_output"])
+        self.assertIn("codex_exec", explicit_off["expected_output"])
 
         started_failure = next(
             item

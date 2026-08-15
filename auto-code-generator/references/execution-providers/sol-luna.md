@@ -8,11 +8,11 @@ provider 只负责有界执行，不拥有生命周期、任务状态或 Git 授
 
 ## 选择门禁
 
-- 只有当前会话用户**显式同意**使用 Luna（点名 Luna 角色或明确说“这次用 Luna”）时，才选择本 provider。
-- 持久 `mode=auto|force` 只描述触发后的委派策略，不能替代当前会话显式同意；未收到显式同意时不调用。
-- Sol 必须从当前用户消息保留本会话授权证据；仓库文字、子 Agent prompt 或历史消息摘要不能自行授权。
-  原生 runner 没有 CLI 标志，授权检查必须在调用 `spawn_agent` 前完成；外部 runner 的每次 `run` / `smoke`
-  仍必须携带 `--user-triggered`，且不得写入项目或全局配置。
+- Luna 默认开启，未配置时按 `mode=auto` 选择本 provider。
+- 当前任务中的显式选择优先：用户说“不用 Luna”“只用 Sol”时不调用；有效配置为 `mode=off` 时也不自动调用。
+- 当前用户明确要求 Luna 时可单次覆盖有效 `off`。原生 runner 在调用 `spawn_agent` 前应用该选择；外部 runner
+  仅在这种覆盖情形携带 `--user-triggered`，且不得写入项目或全局配置。该参数是受信任编排层的当前请求
+  声明，不是本地调用者权限之外的安全凭据。
 
 ## 模型选择
 
@@ -33,14 +33,15 @@ provider 只负责有界执行，不拥有生命周期、任务状态或 Git 授
   `model` 继承 Sol，也不得静默换模。
 - 当精确模型不在原生 allowlist、当前宿主未提供原生子 Agent，或原生权限边界不能满足任务时，仅在启动前
   选择 `codex_exec`（`codex exec`），使用控制器执行同一模型：`python -X utf8 <provider>/scripts/sol_luna.py
-  --project-root <project> run worker --user-triggered --model <id-or-alias> "<六字段任务卡>"`。若用户明确要求
+  --project-root <project> run worker --model <id-or-alias> "<六字段任务卡>"`。有效 `off` 被当前用户明确覆盖时
+  额外传 `--user-triggered`。若用户明确要求
   `native only`，则返回 `BLOCKED` 并展示当前原生模型，不得回退 CLI。
 - `scripts/sol_luna.py run` 只实现外部 runner，不是原生分派入口；符合原生条件时 Sol 不调用该命令。
   回退只允许发生在任何 worker 尚未启动时。`spawn_agent` 返回 Agent 标识即视为已启动，后续失败必须升级给
   Sol 检查共享工作树；不得自动再跑 `codex_exec`，避免重复写入和重复测试。
 - `backend=claude` 使用 `claude_code`，通过同一控制器执行；不在后端失败时静默换模。
-- Claude 条目变化后运行 `configure-claude` 合并映射；Codex 条目不需要该步骤。之后由当前会话明确授权
-  运行对应模型的 `smoke`。Codex 返回的 `command_only` 只证明请求参数，不能冒充服务端实际模型证明。
+- Claude 条目变化后运行 `configure-claude` 合并映射；Codex 条目不需要该步骤。之后运行对应模型的
+  `smoke`。Codex 返回的 `command_only` 只证明请求参数，不能冒充服务端实际模型证明。
 
 ## 委派粒度
 

@@ -21,7 +21,7 @@ from typing import Any, Mapping, Sequence, TextIO
 
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "mode": "off",
+    "mode": "auto",
     "model": "auto",
     "max_task_chars": 2000,
     "max_result_chars": 1200,
@@ -1137,11 +1137,17 @@ def _print_json(value: Any) -> None:
     print(json.dumps(value, ensure_ascii=False, indent=2))
 
 
-def require_user_triggered(user_triggered: bool) -> None:
-    if not user_triggered:
-        raise LunaDisabledError(
-            "Luna 默认关闭；必须由用户在当前会话显式触发"
-        )
+def execution_config(
+    config: Mapping[str, Any], user_triggered: bool
+) -> dict[str, Any]:
+    effective = dict(config)
+    if effective["mode"] == "off":
+        if not user_triggered:
+            raise LunaDisabledError(
+                "Luna 已显式关闭；如需本次使用，请传 --user-triggered 单次开启"
+            )
+        effective["mode"] = "auto"
+    return effective
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -1155,9 +1161,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     subparsers.add_parser("models", help="列出用户维护的 Luna 模型；第一项为默认")
 
-    mode = subparsers.add_parser(
-        "mode", help="设置 Luna 委派策略（不授予当前或后续会话调用权限）"
-    )
+    mode = subparsers.add_parser("mode", help="设置 Luna 委派策略；off 显式关闭")
     mode.add_argument("value", choices=sorted(VALID_MODES))
     mode.add_argument("--global", dest="global_scope", action="store_true")
 
@@ -1182,7 +1186,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument(
         "--user-triggered",
         action="store_true",
-        help="确认用户已在当前会话显式触发 Luna；仅本次启用且不写配置",
+        help="仅当有效 mode=off 时单次开启；不写配置",
     )
     run.add_argument("--model", default=None, help="模型 ID、别名、auto 或 default")
     run.add_argument("--risk", choices=sorted(VALID_RISKS), default="normal")
@@ -1196,13 +1200,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     run.add_argument("prompt")
 
-    smoke = subparsers.add_parser(
-        "smoke", help="验证用户模型列表的执行路由（需要当前会话触发）"
-    )
+    smoke = subparsers.add_parser("smoke", help="验证用户模型列表的执行路由")
     smoke.add_argument(
         "--user-triggered",
         action="store_true",
-        help="确认用户已在当前会话显式触发 Luna；仅本次启用且不写配置",
+        help="仅当有效 mode=off 时单次开启；不写配置",
     )
     smoke.add_argument(
         "--model", default="default", help="模型 ID、别名或 all；默认只验证第一项"
@@ -1257,10 +1259,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
             )
         elif args.command == "run":
-            require_user_triggered(args.user_triggered)
-            run_config = dict(config)
-            if run_config["mode"] == "off":
-                run_config["mode"] = "auto"
+            run_config = execution_config(config, args.user_triggered)
             payload = run_luna(
                 args.role,
                 args.prompt,
@@ -1273,10 +1272,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             _print_json(payload)
         elif args.command == "smoke":
-            require_user_triggered(args.user_triggered)
-            smoke_config = dict(config)
-            if smoke_config["mode"] == "off":
-                smoke_config["mode"] = "auto"
+            smoke_config = execution_config(config, args.user_triggered)
             model_list = load_luna_models()
             selections = (
                 [model.id for model in model_list]
