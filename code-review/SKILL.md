@@ -50,7 +50,6 @@ git diff
 | 涉及权限/角色/认证的变更 | `code-review/permissions-review/SKILL.md` | **Agent** | 权限审查 |
 | 任何包含 `*.yaml` / `*.yml` 文件的变更 | `code-review/yaml-format/SKILL.md` | **Agent** | YAML 格式检查 |
 | **数据管道/指标异常/匹配问题** | `method-router/deep-analysis/SKILL.md` | **Agent** | 5W2H 深度根因分析（当匹配率低、转化率低、数据管道异常时激活） |
-| 任何代码审查 | `code-review/qeda-integration/SKILL.md` | **Agent** | QEDA 测试集成（始终应用） |
 | **任何代码审查** | `code-review/security-review/SKILL.md` | **Agent** | 安全审查（始终应用） |
 | **任何代码审查** | `code-review/solid-principles/SKILL.md` | **Agent** | SOLID 原则（始终应用） |
 | **任何代码审查** | `code-review/code-smells/SKILL.md` | **Agent** | 代码坏味道（始终应用） |
@@ -59,6 +58,7 @@ git diff
 - 所有子 skill 统一通过 Agent 执行（条件触发或始终触发）
 - 语言规则根据文件后缀匹配（含 `lang-` 前缀）
 - 安全/SOLID/坏味道无条件执行（始终启动 Agent 审查）
+- 项目特定审查规则由目标项目提供；共享协调器不内置具体项目的测试层级、目录或门禁命令
 
 ### 3. 启动条件触发审查
 
