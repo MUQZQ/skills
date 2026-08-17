@@ -232,11 +232,11 @@
       "id": 18,
       "name": "diamond_dependency_waves",
       "prompt": "tracker 依赖为 A→B、A→C、B→D、C→D，四个任务边界独立。请给出依赖波次与并发门禁。评估模式：只输出调度方案。",
-      "expected_output": "拓扑波次为 A，然后 B/C，然后 D；B/C 同波只代表依赖就绪，只有五项隔离门禁全部通过才并行，并标识关键路径。",
+      "expected_output": "拓扑层为 A，然后 B/C，然后 D；层级只解释依赖结构，不是运行时屏障。A 验收后 B/C 进入 ready_queue，只有五项隔离门禁全部通过才并行；D 必须等 B/C 都验收后才就绪，并标识关键路径。",
       "files": [],
       "expectations": [
-        "输出 A、B/C、D 的拓扑波次",
-        "说明同波次不自动授权并行",
+        "输出 A、B/C、D 的拓扑层，并明确它不是运行时屏障",
+        "说明同层依赖就绪不自动授权并行",
         "继续执行依赖、写入、资源、契约和验证五项隔离门禁"
       ]
     },
@@ -288,6 +288,43 @@
         "图收缩后重新检查未知节点、自依赖和环",
         "识别 X 与 Y 的收缩环",
         "撤销合组并重划，无法恢复时返回 NEEDS_COORDINATION"
+      ]
+    },
+    {
+      "id": 23,
+      "name": "ready_queue_releases_successor_immediately",
+      "prompt": "场景组 A→C，场景组 B 与它们无依赖。当前两个卡槽正运行 A 和耗时较长的 B；A 已由 Sol 验收，C 的写入、资源、契约和验证均与仍在运行的 B 隔离。请决定是否等待当前拓扑层结束。评估模式：只输出调度事件和理由，不修改文件。",
+      "expected_output": "A 的验收完成事件使 C 的剩余入度变为零；将 C 加入 ready_queue，并在 A 释放的卡槽中立即释放 C 执行，不等待 B 或整个拓扑层结束。B 继续运行；若隔离门禁不通过则保持等待，而不是为填槽绕过门禁。",
+      "files": [],
+      "expectations": [
+        "以 Sol 验收作为 A 的完成事件，而不是信任 worker 自报完成",
+        "A 完成后立即更新 C 的入度并加入 ready_queue",
+        "卡槽和五项隔离门禁满足时立即调度 C，不等待 B 或整层屏障",
+        "B 独立继续运行；隔离失败时保持等待，不为提高利用率强行并行"
+      ]
+    },
+    {
+      "id": 24,
+      "name": "partial_group_acceptance_does_not_release_successor",
+      "prompt": "场景组 G 包含 task A1 和 A2，场景组 C 依赖整个 G。worker 自报 G 完成，但 Sol 仅验收 A1 满足，A2 仍失败。请决定是否释放 C。评估模式：只输出调度事件和恢复动作，不修改文件。",
+      "expected_output": "G 未产生场景组完成事件，不能释放 C 或递减 C 的剩余入度。只把 A1 的真实验收结果更新到权威 tracker，保留 A2 未完成，再从 tracker 重算 task DAG、场景组边界和 ready_queue。",
+      "files": [],
+      "expectations": [
+        "不把 worker 自报完成或单个 task 合格当作场景组完成事件",
+        "部分 task 合格时不能释放依赖整个场景组的后继",
+        "逐项更新已验收 task，并从权威 tracker 重算 DAG 与 ready_queue"
+      ]
+    },
+    {
+      "id": 25,
+      "name": "running_reservation_blocks_newly_ready_successor",
+      "prompt": "场景组 A→C，B 与它们没有依赖。A 和 B 正在运行，B 已预留共享 manifest；A 经 Sol 验收后使 C 依赖就绪，但 C 也需要修改该 manifest。此时 A 释放了一个卡槽。请决定是否立即调度 C。评估模式：只输出调度事件和理由，不修改文件。",
+      "expected_output": "C 的依赖已就绪，但与仍在运行的 B 的 manifest 预留冲突，因此不能通过 eligible(C, running, reservations)，必须继续等待。空闲卡槽保持空闲；B 经 Sol 验收并由负责人释放预留后，重新判断 C，不能为填槽绕过隔离门禁。",
+      "files": [],
+      "expectations": [
+        "区分依赖就绪与相对 running/reservations 的安全准入",
+        "C 与 B 的 manifest 预留冲突时继续等待",
+        "只有负责人验收并释放预留后才重新判断 C"
       ]
     }
   ]

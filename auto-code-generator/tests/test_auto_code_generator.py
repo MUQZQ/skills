@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import json
@@ -184,7 +185,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         for status in (*group_statuses, *task_statuses):
             self.assertIn(f"`{status}`", skill)
 
-    def test_dag_routing_and_scheduling_contract_is_explicit(self) -> None:
+    def test_shared_dag_method_and_auto_code_projection_are_explicit(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
         router = (SKILLS_ROOT / "method-router" / "SKILL.md").read_text(
             encoding="utf-8"
@@ -195,35 +196,51 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         management = (
             SKILLS_ROOT / "method-router" / "management-collaboration" / "SKILL.md"
         ).read_text(encoding="utf-8")
-        eval_names = {
-            item["name"]
-            for item in json.loads(
-                (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
-            )["evals"]
-        }
+        dag_method_path = (
+            SKILLS_ROOT
+            / "method-router"
+            / "management-collaboration"
+            / "references"
+            / "dag-scheduling.md"
+        )
+        self.assertTrue(dag_method_path.is_file())
+        dag_method = dag_method_path.read_text(encoding="utf-8")
+        evals = json.loads(
+            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+        )["evals"]
+        eval_by_name = {item["name"]: item for item in evals}
 
         for phrase in ("DAG", "有向无环图", "依赖图", "拓扑", "关键路径"):
             self.assertIn(phrase, router)
             self.assertIn(phrase, mapping)
+        self.assertIn("references/dag-scheduling.md", management)
         for phrase in (
+            "u → v",
             "未知节点",
             "自依赖",
             "环路径",
             "NEEDS_COORDINATION",
             "图收缩",
-            "拓扑波次",
+            "ready_queue",
+            "完成事件驱动",
+            "不等待同一拓扑层",
+            "关键路径剩余长度",
+            "只阻塞失败节点的后继",
+            "eligible(node, running, reservations)",
+            "原子登记",
         ):
-            self.assertIn(phrase, management)
+            self.assertIn(phrase, dag_method)
         for phrase in (
             "task DAG",
             "场景组 DAG",
-            "组内边",
-            "跨组边",
-            "环检测",
             "五项隔离门禁",
-            "u → v 表示 u 必须先于 v 完成",
-            "收缩后再次",
-            "撤销该合组",
+            "../method-router/management-collaboration/references/dag-scheduling.md",
+            "完成事件驱动",
+            "ready_queue",
+            "不等待同一拓扑层全部结束",
+            "缩短关键路径和总执行时长",
+            "不以填满卡槽或最大化并发数为目标",
+            "部分 task 合格不能释放依赖整个场景组的后继",
         ):
             self.assertIn(phrase, skill)
         self.assertTrue(
@@ -233,8 +250,25 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
                 "scenario_group_graph_contraction",
                 "contraction_introduced_cycle_replans",
                 "same_wave_write_conflict",
-            }.issubset(eval_names)
+                "ready_queue_releases_successor_immediately",
+                "partial_group_acceptance_does_not_release_successor",
+                "running_reservation_blocks_newly_ready_successor",
+            }.issubset(eval_by_name)
         )
+        release_eval = eval_by_name["ready_queue_releases_successor_immediately"]
+        self.assertIn("A 已由 Sol 验收", release_eval["prompt"])
+        self.assertIn("立即释放 C", release_eval["expected_output"])
+        self.assertIn("不等待 B", release_eval["expected_output"])
+        partial_eval = eval_by_name[
+            "partial_group_acceptance_does_not_release_successor"
+        ]
+        self.assertIn("不能释放 C", partial_eval["expected_output"])
+        self.assertIn("重算", partial_eval["expected_output"])
+        reservation_eval = eval_by_name[
+            "running_reservation_blocks_newly_ready_successor"
+        ]
+        self.assertIn("继续等待", reservation_eval["expected_output"])
+        self.assertIn("预留", reservation_eval["expected_output"])
 
     def test_fallback_archive_not_applicable_can_reach_authorized_commit(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")

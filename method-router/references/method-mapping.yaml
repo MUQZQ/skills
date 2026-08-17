@@ -2,9 +2,9 @@
 # 新增 Skill 时在此文件添加一条记录，method-router 自动识别
 # 无需修改 SKILL.md
 
-version: "3.1"
+version: "3.2"
 last_updated: "2026-08-17"
-# Phase 4: +管理协作（RACI、委派、Kanban/WIP、升级反馈）
+# Phase 5: +DAG 完成事件驱动 ready queue
 
 classification:
   diagnose:
@@ -107,7 +107,7 @@ routes:
     chain:
       - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
       - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
-    rationale: "并行卡槽与依赖 → RACI + Kanban/WIP → 安全调度方案"
+    rationale: "并行卡槽与依赖 → RACI + DAG ready queue + Kanban/WIP → 完成事件驱动的安全调度方案"
 
   - type: manage
     condition: { sub_type: time_management }
@@ -221,6 +221,6 @@ composition_rules:
   - { rule: R_D, desc: "用户显式指定 > 路由推荐" }
   - { rule: R_E, desc: "同类型 Skill 不重复运行" }
   - { rule: R_F, desc: "管理协作先建立 RACI，再生成委派和并行计划" }
-  - { rule: R_G, desc: "仅安全隔离的工作进入并行 WIP，不为填槽拆分内聚场景" }
+  - { rule: R_G, desc: "仅依赖就绪且安全隔离的工作进入并行 WIP；验收完成后立即释放后继，不为填槽拆分内聚场景" }
   - { rule: R_H, desc: "任务不清晰时执行者先向唯一 A 提问，不得自行补全授权" }
   - { rule: R_I, desc: "时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证" }
