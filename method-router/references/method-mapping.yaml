@@ -26,7 +26,7 @@ classification:
     keywords: [总结, 汇报, 周报, 复盘, 文档, 记录, 写报告]
     examples: ["帮我写个复盘报告", "本周工作总结"]
   manage:
-    keywords: [管理, 协作, 分工, 委派, 责任, 协调, 资源, 排期, 子 Agent, 卡槽, 时间, 截止, 超时, 进度, 升级]
+    keywords: [管理, 协作, 分工, 委派, 责任, 协调, 资源, 排期, 子 Agent, 卡槽, DAG, 有向无环图, 依赖图, 拓扑, 关键路径, 时间, 截止, 超时, 进度, 升级]
     examples: ["Sol 和 Luna 怎么分工", "如何安排多个子 Agent 协作", "如何避免 Luna 超时"]
 
 urgency:

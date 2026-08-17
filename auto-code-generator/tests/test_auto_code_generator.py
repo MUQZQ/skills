@@ -184,6 +184,114 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         for status in (*group_statuses, *task_statuses):
             self.assertIn(f"`{status}`", skill)
 
+    def test_dag_routing_and_scheduling_contract_is_explicit(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        router = (SKILLS_ROOT / "method-router" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        mapping = (
+            SKILLS_ROOT / "method-router" / "references" / "method-mapping.yaml"
+        ).read_text(encoding="utf-8")
+        management = (
+            SKILLS_ROOT / "method-router" / "management-collaboration" / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        eval_names = {
+            item["name"]
+            for item in json.loads(
+                (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+            )["evals"]
+        }
+
+        for phrase in ("DAG", "有向无环图", "依赖图", "拓扑", "关键路径"):
+            self.assertIn(phrase, router)
+            self.assertIn(phrase, mapping)
+        for phrase in (
+            "未知节点",
+            "自依赖",
+            "环路径",
+            "NEEDS_COORDINATION",
+            "图收缩",
+            "拓扑波次",
+        ):
+            self.assertIn(phrase, management)
+        for phrase in (
+            "task DAG",
+            "场景组 DAG",
+            "组内边",
+            "跨组边",
+            "环检测",
+            "五项隔离门禁",
+            "u → v 表示 u 必须先于 v 完成",
+            "收缩后再次",
+            "撤销该合组",
+        ):
+            self.assertIn(phrase, skill)
+        self.assertTrue(
+            {
+                "cyclic_dependency_blocks",
+                "diamond_dependency_waves",
+                "scenario_group_graph_contraction",
+                "contraction_introduced_cycle_replans",
+                "same_wave_write_conflict",
+            }.issubset(eval_names)
+        )
+
+    def test_fallback_archive_not_applicable_can_reach_authorized_commit(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        eval_names = {
+            item["name"]
+            for item in json.loads(
+                (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+            )["evals"]
+        }
+
+        for phrase in (
+            "archive=SUCCESS | N/A | FAILED",
+            "archive=N/A",
+            "VERIFIED + archive SUCCESS/N/A + 独立 Git 授权",
+        ):
+            self.assertIn(phrase, skill)
+        self.assertIn("fallback_verified_local_commit_without_archive", eval_names)
+
+    def test_time_management_reaches_assignment_provider_and_result_contract(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        adapter = (
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
+        ).read_text(encoding="utf-8")
+        schema = json.loads(
+            (PROVIDER_ROOT / "references" / "result-schema.json").read_text(
+                encoding="utf-8"
+            )
+        )
+
+        for phrase in (
+            "time_management:",
+            "timebox:",
+            "critical_path:",
+            "checkpoints:",
+            "timeout_action:",
+        ):
+            self.assertIn(phrase, skill)
+        self.assertIn("六字段任务卡的“约束”", adapter)
+        for phrase in (
+            "runner 无关的统一返回验收规则",
+            "原生和外部",
+            "更新 tracker 前",
+            "带 timebox 的结果不得使用 `N/A`",
+        ):
+            self.assertIn(phrase, skill)
+        self.assertIn("time_management", schema["required"])
+        self.assertEqual(
+            ["status", "timebox", "checkpoints", "timeout_action"],
+            schema["properties"]["time_management"]["required"],
+        )
+        self.assertEqual(
+            ["ON_TRACK", "CHECKPOINT", "TIMEBOX_EXPIRED", "N/A"],
+            schema["properties"]["time_management"]["properties"]["status"][
+                "enum"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

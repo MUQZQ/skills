@@ -6,6 +6,7 @@ import unittest
 from io import StringIO
 from pathlib import Path
 from queue import Queue
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 
@@ -35,6 +36,12 @@ VALID_CODEX_RESULT = {
     "verification": ["python -m unittest: PASS"],
     "concerns": [],
     "coordination": [],
+    "time_management": {
+        "status": "ON_TRACK",
+        "timebox": "30m",
+        "checkpoints": ["聚焦测试完成"],
+        "timeout_action": "完成验收",
+    },
 }
 
 
@@ -599,6 +606,64 @@ class SolLunaConfigTests(unittest.TestCase):
                 with self.assertRaisesRegex(sol_luna.SolLunaError, "结构化返回契约"):
                     sol_luna.validate_result_contract(payload)
 
+    def test_result_contract_requires_auditable_time_management(self):
+        missing = json.loads(json.dumps(VALID_CODEX_RESULT))
+        del missing["time_management"]
+        invalid_status = json.loads(json.dumps(VALID_CODEX_RESULT))
+        invalid_status["time_management"]["status"] = "UNKNOWN"
+        invalid_action = json.loads(json.dumps(VALID_CODEX_RESULT))
+        invalid_action["time_management"]["timeout_action"] = "静默延长"
+        timed_na = json.loads(json.dumps(VALID_CODEX_RESULT))
+        timed_na["time_management"]["status"] = "N/A"
+        checkpoint_without_evidence = json.loads(json.dumps(VALID_CODEX_RESULT))
+        checkpoint_without_evidence["time_management"]["status"] = "CHECKPOINT"
+        checkpoint_without_evidence["time_management"]["checkpoints"] = []
+        expired_replan_done = json.loads(json.dumps(VALID_CODEX_RESULT))
+        expired_replan_done["time_management"]["status"] = "TIMEBOX_EXPIRED"
+        expired_replan_done["time_management"]["timeout_action"] = "带证据重排"
+        expired_acceptance_blocked = json.loads(json.dumps(VALID_CODEX_RESULT))
+        expired_acceptance_blocked["group_status"] = "BLOCKED"
+        expired_acceptance_blocked["task_results"][0]["status"] = "BLOCKED"
+        expired_acceptance_blocked["time_management"]["status"] = "TIMEBOX_EXPIRED"
+
+        for payload in (
+            missing,
+            invalid_status,
+            invalid_action,
+            timed_na,
+            checkpoint_without_evidence,
+            expired_replan_done,
+            expired_acceptance_blocked,
+        ):
+            with self.subTest(payload=payload):
+                with self.assertRaises(sol_luna.SolLunaError):
+                    sol_luna.validate_result_contract(payload)
+
+    def test_result_contract_accepts_valid_time_management_boundaries(self):
+        no_timebox = json.loads(json.dumps(VALID_CODEX_RESULT))
+        no_timebox["time_management"] = {
+            "status": "N/A",
+            "timebox": "N/A",
+            "checkpoints": [],
+            "timeout_action": "N/A",
+        }
+        expired_complete = json.loads(json.dumps(VALID_CODEX_RESULT))
+        expired_complete["time_management"]["status"] = "TIMEBOX_EXPIRED"
+        checkpoint = json.loads(json.dumps(VALID_CODEX_RESULT))
+        checkpoint["time_management"]["status"] = "CHECKPOINT"
+        expired_blocked = json.loads(json.dumps(VALID_CODEX_RESULT))
+        expired_blocked["group_status"] = "BLOCKED"
+        expired_blocked["task_results"][0]["status"] = "BLOCKED"
+        expired_blocked["time_management"]["status"] = "TIMEBOX_EXPIRED"
+        expired_blocked["time_management"]["timeout_action"] = "升级阻塞"
+
+        for payload in (no_timebox, checkpoint, expired_complete, expired_blocked):
+            with self.subTest(payload=payload):
+                self.assertEqual(
+                    payload["group_status"],
+                    sol_luna.validate_result_contract(payload)["group_status"],
+                )
+
     def test_result_contract_rejects_done_with_unsatisfied_task(self):
         payload = json.loads(json.dumps(VALID_CODEX_RESULT))
         payload["task_results"][0]["status"] = "UNSATISFIED"
@@ -636,23 +701,60 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertEqual(1, task_results["minItems"])
         self.assertEqual(1, evidence["minItems"])
         self.assertEqual(1, schema["properties"]["verification"]["minItems"])
-        self.assertEqual(3, len(schema["anyOf"]))
-        done_branch, concerned_branch, incomplete_branch = schema["anyOf"]
+        self.assertIn("time_management", schema["required"])
+        time_management = schema["properties"]["time_management"]
         self.assertEqual(
-            ["DONE"], done_branch["properties"]["group_status"]["enum"]
-        )
-        self.assertEqual(0, done_branch["properties"]["concerns"]["maxItems"])
-        self.assertEqual(
-            ["DONE_WITH_CONCERNS"],
-            concerned_branch["properties"]["group_status"]["enum"],
+            ["status", "timebox", "checkpoints", "timeout_action"],
+            time_management["required"],
         )
         self.assertEqual(
-            1, concerned_branch["properties"]["concerns"]["minItems"]
+            ["ON_TRACK", "CHECKPOINT", "TIMEBOX_EXPIRED", "N/A"],
+            time_management["properties"]["status"]["enum"],
         )
+        timeout_actions = time_management["properties"]["timeout_action"]["enum"]
         self.assertEqual(
-            ["NEEDS_CONTEXT", "NEEDS_COORDINATION", "BLOCKED"],
-            incomplete_branch["properties"]["group_status"]["enum"],
+            ["完成验收", "带证据重排", "升级阻塞", "N/A"],
+            timeout_actions,
         )
+        self.assertEqual(sol_luna.TIMEOUT_ACTIONS, set(timeout_actions) - {"N/A"})
+        unsupported_keywords = {
+            "allOf",
+            "not",
+            "dependentRequired",
+            "dependentSchemas",
+            "if",
+            "then",
+            "else",
+        }
+
+        def collect_unsupported(value: Any) -> set[str]:
+            if isinstance(value, dict):
+                return unsupported_keywords.intersection(value) | set().union(
+                    *(collect_unsupported(item) for item in value.values())
+                )
+            if isinstance(value, list):
+                return set().union(*(collect_unsupported(item) for item in value))
+            return set()
+
+        self.assertEqual(set(), collect_unsupported(schema))
+        self.assertEqual("object", schema["type"])
+        self.assertNotIn("anyOf", schema)
+
+        def assert_supported_objects(value: Any) -> None:
+            if isinstance(value, dict):
+                if value.get("type") == "object":
+                    self.assertFalse(value.get("additionalProperties", True))
+                    self.assertEqual(
+                        set(value.get("properties", {})),
+                        set(value.get("required", [])),
+                    )
+                for item in value.values():
+                    assert_supported_objects(item)
+            elif isinstance(value, list):
+                for item in value:
+                    assert_supported_objects(item)
+
+        assert_supported_objects(schema)
 
     def test_claude_output_is_normalized_to_shared_result_contract(self):
         route = sol_luna.resolve_model(

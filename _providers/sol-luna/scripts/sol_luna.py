@@ -53,6 +53,8 @@ GROUP_STATUSES = {
     "BLOCKED",
 }
 TASK_STATUSES = {"SATISFIED", "UNSATISFIED", "BLOCKED"}
+TIME_MANAGEMENT_STATUSES = {"ON_TRACK", "CHECKPOINT", "TIMEBOX_EXPIRED", "N/A"}
+TIMEOUT_ACTIONS = {"完成验收", "带证据重排", "升级阻塞"}
 
 
 class SolLunaError(RuntimeError):
@@ -559,9 +561,15 @@ def bound_task_prompt(prompt: str, config: Mapping[str, Any]) -> str:
         "执行契约：只完成该单一目标，不要顺带扩展范围。"
         f"最终答复的 result 不超过 {max_result_chars} 个字符。"
         "最终只输出一个 JSON 对象，字段必须是 result、group_status、task_results、files_changed、"
-        "verification、concerns、coordination；task_results 的每项必须包含非空 task、status 和 evidence。"
+        "verification、concerns、coordination、time_management；task_results 的每项必须包含非空 task、status 和 evidence。"
         "group_status 只可取 DONE、DONE_WITH_CONCERNS、NEEDS_CONTEXT、NEEDS_COORDINATION、BLOCKED；"
         "task status 只可取 SATISFIED、UNSATISFIED、BLOCKED。DONE 或 DONE_WITH_CONCERNS 时所有 task 必须 SATISFIED。"
+        "DONE 时 concerns 必须为空；DONE_WITH_CONCERNS 时 concerns 必须非空。"
+        "time_management 必须包含 status、timebox、checkpoints、timeout_action；status 只可取 ON_TRACK、CHECKPOINT、"
+        "TIMEBOX_EXPIRED、N/A。TIMEBOX_EXPIRED + 完成验收必须返回 DONE 或 DONE_WITH_CONCERNS；"
+        "TIMEBOX_EXPIRED + 带证据重排/升级阻塞不得返回完成态。"
+        "带 timebox 时 status 不得为 N/A；timeout_action 只可取完成验收、带证据重排、升级阻塞，"
+        "无 timebox 时四项分别使用 N/A、N/A、空数组、N/A。CHECKPOINT 或 TIMEBOX_EXPIRED 必须附检查点证据。"
         "如果当前任务无法形成一次可独立验证的小闭环，停止执行并返回拆分建议，不要自行扩大任务。"
     )
 
@@ -750,6 +758,42 @@ def parse_codex_output(stdout: str, route: ModelRoute) -> dict[str, Any]:
     return payload
 
 
+def _validate_time_management_contract(
+    time_management: Mapping[str, Any], group_status: str
+) -> None:
+    if set(time_management) != {"status", "timebox", "checkpoints", "timeout_action"}:
+        raise SolLunaError("最终结果不符合结构化返回契约")
+    time_status = time_management.get("status")
+    timebox = time_management.get("timebox")
+    checkpoints = time_management.get("checkpoints")
+    timeout_action = time_management.get("timeout_action")
+    if (
+        time_status not in TIME_MANAGEMENT_STATUSES
+        or not isinstance(timebox, str)
+        or not timebox.strip()
+        or not isinstance(checkpoints, list)
+        or any(
+            not isinstance(checkpoint, str) or not checkpoint.strip()
+            for checkpoint in checkpoints
+        )
+        or not isinstance(timeout_action, str)
+        or not timeout_action.strip()
+    ):
+        raise SolLunaError("最终结果不符合结构化返回契约")
+    if time_status == "N/A":
+        if timebox != "N/A" or checkpoints or timeout_action != "N/A":
+            raise SolLunaError("无时间盒状态与时间管理字段矛盾")
+    elif timebox == "N/A" or timeout_action not in TIMEOUT_ACTIONS:
+        raise SolLunaError("时间盒状态与超时动作矛盾")
+    if time_status in {"CHECKPOINT", "TIMEBOX_EXPIRED"} and not checkpoints:
+        raise SolLunaError("时间管理状态缺少检查点证据")
+    if time_status == "TIMEBOX_EXPIRED":
+        is_complete = group_status in {"DONE", "DONE_WITH_CONCERNS"}
+        accepts_at_deadline = timeout_action == "完成验收"
+        if is_complete != accepts_at_deadline:
+            raise SolLunaError("时间盒状态与组状态矛盾")
+
+
 def validate_result_contract(payload: Mapping[str, Any]) -> dict[str, Any]:
     required = {
         "result": str,
@@ -759,6 +803,7 @@ def validate_result_contract(payload: Mapping[str, Any]) -> dict[str, Any]:
         "verification": list,
         "concerns": list,
         "coordination": list,
+        "time_management": dict,
     }
     if (
         not isinstance(payload, dict)
@@ -798,6 +843,9 @@ def validate_result_contract(payload: Mapping[str, Any]) -> dict[str, Any]:
             or any(not isinstance(item, str) or not item.strip() for item in evidence)
         ):
             raise SolLunaError("最终结果不符合结构化返回契约")
+    _validate_time_management_contract(
+        payload["time_management"], payload["group_status"]
+    )
     if payload["group_status"] in {"DONE", "DONE_WITH_CONCERNS"} and any(
         task_result["status"] != "SATISFIED"
         for task_result in payload["task_results"]

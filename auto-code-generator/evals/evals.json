@@ -215,6 +215,80 @@
         "由 Sol 直接执行当前任务",
         "不修改项目或全局持久配置"
       ]
+    },
+    {
+      "id": 17,
+      "name": "cyclic_dependency_blocks",
+      "prompt": "权威 tracker 中 A 依赖 B、B 依赖 C、C 依赖 A。请规划自动实施波次。评估模式：只输出调度决定，不修改文件。",
+      "expected_output": "在委派前检测到依赖环，返回完整环路径 A→B→C→A 和 NEEDS_COORDINATION，不猜测删除依赖，也不启动 worker。",
+      "files": [],
+      "expectations": [
+        "构建 task DAG 并在调度前运行环检测",
+        "返回完整环路径和 NEEDS_COORDINATION",
+        "不猜测断边、不启动 worker"
+      ]
+    },
+    {
+      "id": 18,
+      "name": "diamond_dependency_waves",
+      "prompt": "tracker 依赖为 A→B、A→C、B→D、C→D，四个任务边界独立。请给出依赖波次与并发门禁。评估模式：只输出调度方案。",
+      "expected_output": "拓扑波次为 A，然后 B/C，然后 D；B/C 同波只代表依赖就绪，只有五项隔离门禁全部通过才并行，并标识关键路径。",
+      "files": [],
+      "expectations": [
+        "输出 A、B/C、D 的拓扑波次",
+        "说明同波次不自动授权并行",
+        "继续执行依赖、写入、资源、契约和验证五项隔离门禁"
+      ]
+    },
+    {
+      "id": 19,
+      "name": "scenario_group_graph_contraction",
+      "prompt": "tracker task T1→T2→T3，其中 T1/T2 共享同一可观察场景与测试上下文，T3 是独立消费者。请形成场景组并调度。评估模式：只输出图转换和波次。",
+      "expected_output": "在成本收益门禁通过后把 T1/T2 收缩为一个场景组，组内边写入 internal_order；T2→T3 成为跨组边，先验收基础组再调度 T3。",
+      "files": [],
+      "expectations": [
+        "基于内聚场景而非任务数量决定收缩",
+        "组内边进入 internal_order",
+        "跨组边形成场景组 DAG 并决定后续波次"
+      ]
+    },
+    {
+      "id": 20,
+      "name": "same_wave_write_conflict",
+      "prompt": "两个场景组在拓扑图中同波次就绪，但都会修改同一 manifest。请决定是否并行。评估模式：只输出调度决定。",
+      "expected_output": "虽然依赖同波次就绪，但写入和公共契约隔离门禁失败，必须串行或重划边界，不能为填满卡槽并行。",
+      "files": [],
+      "expectations": [
+        "区分拓扑就绪与安全并行",
+        "识别共享 manifest 的写入或契约冲突",
+        "选择串行或重划边界"
+      ]
+    },
+    {
+      "id": 21,
+      "name": "fallback_verified_local_commit_without_archive",
+      "prompt": "普通仓库没有官方生命周期归档操作，最终审查和必要验证全部通过，用户另行明确授权在当前工作分支本地提交准确文件集。请说明归档与提交门禁。评估模式：只输出状态和动作。",
+      "expected_output": "记录 VERIFIED 与 archive=N/A，不创建伪归档；在独立 Git 授权、分支和暂存门禁均通过后允许 closeout commit，push 仍需单独授权。",
+      "files": [],
+      "expectations": [
+        "没有官方归档操作时明确记录 archive=N/A",
+        "不发明归档目录或伪造 SUCCESS",
+        "VERIFIED、archive N/A 与独立 Git 授权共同满足后才提交",
+        "不从 commit 授权推导 push"
+      ]
+    },
+    {
+      "id": 22,
+      "name": "contraction_introduced_cycle_replans",
+      "prompt": "task DAG 中只有 A→B 和 C→D，原图无环。候选合组为 X={A,D}、Y={B,C}。请执行图收缩并决定是否调度。评估模式：只输出图校验与恢复动作。",
+      "expected_output": "按 u→v 表示 u 先于 v 完成，收缩后出现 X→Y 与 Y→X。必须撤销该合组并重划边界；若无法自动得到无环分组则返回 NEEDS_COORDINATION，不计算虚假拓扑波次。",
+      "files": [],
+      "expectations": [
+        "明确依赖边方向",
+        "图收缩后重新检查未知节点、自依赖和环",
+        "识别 X 与 Y 的收缩环",
+        "撤销合组并重划，无法恢复时返回 NEEDS_COORDINATION"
+      ]
     }
   ]
 }

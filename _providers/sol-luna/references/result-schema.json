@@ -8,7 +8,8 @@
     "files_changed",
     "verification",
     "concerns",
-    "coordination"
+    "coordination",
+    "time_management"
   ],
   "properties": {
     "result": {
@@ -88,43 +89,47 @@
         "type": "string",
         "minLength": 1
       }
-    }
-  },
-  "anyOf": [
-    {
+    },
+    "time_management": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "timebox",
+        "checkpoints",
+        "timeout_action"
+      ],
       "properties": {
-        "group_status": {
+        "status": {
+          "type": "string",
           "enum": [
-            "DONE"
+            "ON_TRACK",
+            "CHECKPOINT",
+            "TIMEBOX_EXPIRED",
+            "N/A"
           ]
         },
-        "concerns": {
-          "maxItems": 0
-        }
-      }
-    },
-    {
-      "properties": {
-        "group_status": {
-          "enum": [
-            "DONE_WITH_CONCERNS"
-          ]
+        "timebox": {
+          "type": "string",
+          "minLength": 1
         },
-        "concerns": {
-          "minItems": 1
-        }
-      }
-    },
-    {
-      "properties": {
-        "group_status": {
+        "checkpoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "timeout_action": {
+          "type": "string",
           "enum": [
-            "NEEDS_CONTEXT",
-            "NEEDS_COORDINATION",
-            "BLOCKED"
+            "完成验收",
+            "带证据重排",
+            "升级阻塞",
+            "N/A"
           ]
         }
       }
     }
-  ]
+  }
 }

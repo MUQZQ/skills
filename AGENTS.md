@@ -46,7 +46,7 @@
 ## 共享执行 Provider（非 Skill）
 
 - Sol-Luna 是 `auto-code-generator` 内部可选执行模式，不是独立 skill 或第二套生命周期；自动编码只有一个用户入口。
-- Luna 默认开启并使用 `mode=auto`；有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时关闭。
+- Luna 默认开启并使用 `mode=auto`；有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时关闭。当前用户明确要求 Luna 时可单次覆盖 `off`，但不得改写持久配置。
 - Codex 模型优先使用当前宿主原生子 Agent；精确模型或权限不受支持时，才在启动前通过兼容通道执行
   同一模型。不得静默换模，已启动任务失败后不得自动跨通道重跑。
 - 委派保持完整内聚场景和同一上下文中的 `RED → GREEN → REFACTOR`；无法保真委派时回退 Sol，不为迁就 provider 切碎 TDD。

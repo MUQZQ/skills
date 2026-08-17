@@ -237,7 +237,15 @@ change 投影与 prospective current view，由官方生命周期负责同步与
 
 ### 3.3 依赖波次和安全并行
 
-场景组形成后，再决定组间并行。只有两个或更多候选组同时满足以下条件时才并行：
+先从权威 tracker 构建 `task DAG`：节点是 tracker task，边是正式依赖，`u → v 表示 u 必须先于 v 完成`。
+拒绝未知节点、自依赖并执行环检测；发现环时返回环路径和 `NEEDS_COORDINATION`，不得猜测断边。形成
+场景组后做图收缩：`组内边` 进入 `internal_order`，`跨组边` 形成临时场景组图；`收缩后再次`拒绝未知
+节点、自依赖并执行环检测。若收缩引入环，先`撤销该合组`并重划边界；无法自动恢复时返回
+`NEEDS_COORDINATION`。只有重新验证无环后才把它作为 `场景组 DAG` 计算拓扑波次：有权威时长或时间盒时
+计算加权最长路径；没有权威权重时只报告最长依赖链，不声称精确时间关键路径。拓扑同波次只表示依赖
+就绪，不代表可安全并行，也不落盘为第二状态源。
+
+场景组形成后，再决定组间并行。只有两个或更多候选组同时通过以下五项隔离门禁时才并行：
 
 - 实际写入文件和生成输出不重叠；
 - 不竞争共享独占资源；
@@ -271,6 +279,11 @@ focused_tests: 组级命令及其覆盖的底层任务/场景
 task_checkpoints: 每个 task 需要返回的 diff、测试和验收证据
 group_acceptance: 组完成所需的组合场景证据
 return_contract: group_status、逐 task 的 task_result 与证据、实际修改文件、命令结果、疑虑、协调事项
+time_management:
+  timebox: 本轮时间预算
+  critical_path: 本组在场景组 DAG 中的关键路径信息
+  checkpoints: 需要回报的中间检查点
+  timeout_action: 时间盒到期后的验收、带证据重排或升级动作
 ```
 
 `group_status` 只取：`DONE`（全部 task 与组级场景满足）、`DONE_WITH_CONCERNS`（全部满足但有非阻塞疑虑）、
@@ -321,9 +334,16 @@ Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规
    用户要求 `native only` 时直接 `BLOCKED`。
 
 模型 backend 与执行 runner 分离；不得静默换模或在已启动失败后重复执行。
-把完整内聚场景组压缩为一个六字段任务卡，由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，不得
+把完整内聚场景组压缩为一个六字段任务卡；assignment 的 `time_management` 必须进入六字段任务卡的“约束”，
+由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，不得
 拆分 TDD；provider 不拥有生命周期、任务状态或 Git 授权；完整场景组无法在限额内保持语义时 provider
 不适用，回退 Sol 或项目原生执行，不得切碎 TDD。
+
+所有 runner 使用同一套 runner 无关的统一返回验收规则：原生和外部返回都必须映射到 provider 的
+`result-schema.json`，由 Sol 在更新 tracker 前检查逐 task 证据、`time_management` 与 assignment 一致性。
+带 timebox 的结果不得使用 `N/A`；时间盒到期只能选择“完成验收”“带证据重排”或“升级阻塞”，不能
+静默延长或跳过验证。`TIMEBOX_EXPIRED + 完成验收` 必须对应 `DONE` / `DONE_WITH_CONCERNS`；重排或
+升级动作不得对应完成态。结构不完整或语义矛盾时不得验收，返回补充上下文、重排或阻塞。
 
 ## Stage 4：Review & Verify final state
 
@@ -357,10 +377,12 @@ Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规
 
 ## Stage 5：Achieve and report
 
-只有 `VERIFIED` 才能调用项目官方归档/关闭操作。归档前再次检查 baseline、最终审查、验证结论和任务状态；
-由生命周期所有者同步 spec 和移动 change，本 skill 不手工伪造归档结果。
+最终归档状态统一记录为 `archive=SUCCESS | N/A | FAILED`。项目生命周期存在官方归档/关闭操作时，只有
+`VERIFIED` 才能调用，并且成功后记录 `archive=SUCCESS`；失败记录 `archive=FAILED`，保持活动 change 并恢复。
+没有官方生命周期归档操作的 fallback 项目记录 `archive=N/A`，不得为满足流程发明归档目录或伪造结果。
+归档前再次检查 baseline、最终审查、验证结论和任务状态；由生命周期所有者同步 spec 和移动 change。
 
-归档成功后输出简洁报告：
+归档状态确定后输出简洁报告：
 
 ```text
 结果：VERIFIED / BLOCKED / INCOMPLETE
@@ -390,7 +412,8 @@ Git：未授权 / 已按独立授权提交 <hash>
 - 一个 task、worker 返回、TDD transition 或 artifact 完成不是 commit 边界；
 - delivery checkpoint 只在用户另行授权多个提交时使用；用户要求“一个本地 commit”时，只创建一个
   closeout commit；
-- closeout commit 只能在最终验证和官方归档成功后、且另有 Git 授权时执行。提交后报告 hash 和 status；
+- closeout commit 的统一门禁是 `VERIFIED + archive SUCCESS/N/A + 独立 Git 授权`；官方归档存在时必须
+  `archive=SUCCESS`，fallback 无归档操作时允许 `archive=N/A`。提交后报告 hash 和 status；
 - push、PR 和部署各自需要明确授权，不能从 commit 权限推导。
 
 ## 错误与恢复
@@ -430,6 +453,6 @@ Git：未授权 / 已按独立授权提交 <hash>
 
 ---
 
-*版本：4.3*
-*最后更新：2026-08-15*
-*变更：新增维护视图投影初始化与漂移契约（四种 Apply-ready 状态、脚本结构检查与 Agent 语义审查分离）；新增共享 Sol-Luna 执行 provider 适配，并将 Codex backend 调整为 Sol 原生 runner 优先、同模型 CLI 启动前回退。*
+*版本：4.4*
+*最后更新：2026-08-17*
+*变更：新增 task/场景组 DAG 收缩与二次验环、runner 无关的时间管理返回契约，以及 fallback `archive=N/A` 提交门禁。*
