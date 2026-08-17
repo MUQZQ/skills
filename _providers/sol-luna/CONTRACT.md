@@ -23,6 +23,16 @@
   `RED → GREEN → REFACTOR`。完整场景组无法保真表达时，provider 不适用并回退 Sol 或项目原生执行。
 - scout/critic 保持 plan-only；tester 只被预授权 Bash 以运行 Sol 指定的测试，worker 被预授权工作区编辑与
   Bash 以完成同一场景的 TDD。所有角色仍受六字段任务卡和权限边界约束，禁止 bypass 权限。
+- **建议规则：优先利用可用子 Agent 卡槽**：当当前波次存在两个或更多已通过安全并行门禁、且写入与验证
+  可隔离的独立场景组，并有空闲子 Agent 卡槽时，Sol 应优先并行填充可用卡槽，负责波次编排、边界与依赖
+  确认、证据回收、冲突处理和最终验收。不得为填满卡槽拆分内聚场景、`RED → GREEN → REFACTOR`、公共
+  契约或共享资源；无法证明安全并行时宁可串行。
+- **建议规则：任务不清晰时及时回问 Sol**：Luna 发现目标、上下文、允许范围、依赖、约束或验收证据不清晰，
+  或发现冲突、越界风险时，应立即暂停并询问 Sol，不得猜测、扩大范围或先写入；用 `NEEDS_CONTEXT` 或
+  `NEEDS_COORDINATION` 返回缺口和需要 Sol 决策的具体问题。
+- 涉及多 Agent 角色、责任、委派、卡槽、升级或协作复盘时，Sol-Luna 可参考
+  `method-router/management-collaboration/SKILL.md` 的 RACI、委派任务卡、Kanban/WIP、时间盒和检查点；该方法论只提供
+  协调建议，不替代项目生命周期、用户授权、任务状态或 Git 权限。
 
 ## Luna 模型列表
 

@@ -2,9 +2,10 @@
 name: method-router
 description: >
   方法论体系统一路由器。当用户请求涉及诊断分析、决策选型、设计规划、流程改进、
-  风险评估、总结汇报等需要方法论框架辅助的任务时触发。作为所有方法论 Skill 的
+  风险评估、管理协作、时间管理、总结汇报等需要方法论框架辅助的任务时触发。作为所有方法论 Skill 的
   统一入口，自动分类问题类型并路由到最合适的框架（5W2H/5Whys/SCQA/Pre-mortem 等）。
-  触发关键词：为什么、分析、排查、定位、选哪个、优先级、风险、复盘、用什么框架。
+  触发关键词：为什么、分析、排查、定位、选哪个、优先级、风险、管理、协作、分工、委派、责任、
+  子 Agent、卡槽、时间、截止、超时、排期、复盘、用什么框架。
   也适用于用户不确定该用哪个方法论时主动介入。不应在纯代码编写或简单查询任务中触发。
 ---
 
@@ -93,7 +94,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 ```
 == 路由器就绪 ==
-可用 Skill: 见 `references/method-mapping.yaml` skill_registry (共 13 个)
+可用 Skill: 见 `references/method-mapping.yaml` skill_registry (共 14 个)
 缺失 Skill: [Pugh Matrix, ADL Matrix, Design Thinking, ADR, A3] (5 个，走降级手动引导)
 路由模式: 完整模式（缺失 Skill 降级为建议文本或手动引导）
 ```
@@ -108,7 +109,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 | 维度 | 选项 | 判定依据 |
 |------|------|---------|
-| **类型** | `diagnose` / `decide` / `design` / `improve` / `risk` / `report` | 关键词 + 语义 |
+| **类型** | `diagnose` / `decide` / `design` / `improve` / `risk` / `manage` / `report` | 关键词 + 语义 |
 | **紧急度** | `critical` / `normal` / `planning` | 时间词 + 情绪词 + 上下文 |
 | **领域** | `code` / `data` / `architecture` / `process` / `general` | 项目上下文 + 用户输入 |
 | **数据可用性** | `has_data` / `no_data` | 用户是否提供报告/指标/日志 |
@@ -123,6 +124,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 | **improve** | 优化、提升、改进、加速、减少、自动化、太慢 | "这个接口太慢了" |
 | **risk** | 风险、安全、漏洞、事故、万一、上线、有问题吗 | "这个改动能上线吗" |
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
+| **manage** | 管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、时间、截止、超时、升级 | "Sol 和 Luna 怎么分工" |
 
 ### 分类置信度计算
 
@@ -162,6 +164,11 @@ confidence = 加权平均:
 | **decide** | 任务优先级 | **Eisenhower Matrix** | — | STAR |
 | **decide** | 多方案对比 | **Pugh Matrix** | — | ADR |
 | **decide** | 技术选型 | **ADL Matrix** | — | ADR |
+| **manage** | 角色分工、责任归属、委派 | **Management Collaboration** | — | SCQA |
+| **manage** | 多 Agent 并行、卡槽和依赖波次 | **Management Collaboration** | — | SCQA |
+| **manage** | 时间管理、截止、超时和进度检查点（`time_management`） | **Management Collaboration** → Timeboxing + Critical Path → Eisenhower | — | SCQA |
+| **manage** | 阻塞升级、冲突协调 | **Management Collaboration** → OODA | — | SCQA |
+| **manage** | 重复性协作低效 | **Management Collaboration** → PDCA | — | SCQA |
 | **design** | 新功能/系统 | **Design Thinking** | — | ADR |
 | **design** | 架构重构 | **First Principles** | — | ADR |
 | **improve** | 流程优化 | **PDCA** | — | A3 |
@@ -179,6 +186,10 @@ R_B: MECE 先于 5 Whys（先穷举维度，再逐维深入）
 R_C: Pre-mortem 先于 FMEA（方向性 → 系统性）
 R_D: 用户显式指定 > 路由推荐（R0）
 R_E: 同类型 Skill 不重复运行（R3）
+R_F: 管理协作先建立 RACI，再生成委派和并行计划
+R_G: 只有通过依赖、写入、资源、契约和验证隔离门禁的工作才进入 WIP
+R_H: 执行者发现任务不清晰时先向唯一 A 提问，不得自行补全授权
+R_I: 时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证
 ```
 
 ### 路由输出格式
@@ -366,6 +377,7 @@ route_log:
 | `fmea/SKILL.md` | FMEA 失效模式分析 |
 | `star/SKILL.md` | STAR 结构化叙事 |
 | `../pdca-tuning/SKILL.md` | PDCA 流程改进 |
+| `management-collaboration/SKILL.md` | RACI、委派任务卡、Kanban/WIP、时间盒和 Sol-Luna 协作 |
 
 ---
 

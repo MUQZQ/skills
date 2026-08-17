@@ -37,6 +37,11 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "完整内聚场景组",
             "六字段任务卡",
             "不得拆分 RED、GREEN、REFACTOR",
+            "充分利用可用卡槽",
+            "领导协调、依赖确认、证据",
+            "安全隔离证据不足时串行优先",
+            "任务不清晰先问 Sol",
+            "NEEDS_CONTEXT` / `NEEDS_COORDINATION",
             "provider 不适用",
         ):
             self.assertIn(phrase, adapter)

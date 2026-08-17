@@ -51,6 +51,12 @@
   同一模型。不得静默换模，已启动任务失败后不得自动跨通道重跑。
 - 委派保持完整内聚场景和同一上下文中的 `RED → GREEN → REFACTOR`；无法保真委派时回退 Sol，不为迁就 provider 切碎 TDD。
 - Sol 始终拥有架构决策、任务验收、冲突处理、最终结论及 Git/PR/部署权限；provider 的返回只是待核验执行证据。
+- 多 Agent 协作参考 `method-router/management-collaboration`：先用 RACI 明确唯一最终责任者，再用六字段任务卡委派；
+  Luna 对目标、范围、依赖或验收不清晰时必须及时回问 Sol，不得猜测或扩大授权。
+- 并行调度使用 Kanban/WIP 和安全卡槽规则：只有依赖、写入、资源、契约和验证均可隔离的独立场景才并行，
+  不为填满卡槽拆分内聚场景或 TDD；Sol 负责波次协调、证据回收、冲突处理和最终验收。
+- 时间管理参考 Timeboxing/Critical Path：Sol 设置时间预算、关键路径、检查点和协调缓冲；时间盒到期只能
+  验收、带证据重排或升级阻塞，不能静默延长、跳过测试或制造虚假完成。
 - 维护视图投影只服从项目生命周期已经声明的契约；没有契约时不发明投影，结构有效也不能替代语义审查。
 
 ## 代码质量
@@ -70,13 +76,13 @@
 
 ## 方法论体系
 
-由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、风险评估、总结汇报等任务时，优先经过 method-router 路由。
+由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、管理协作、时间管理、风险评估、总结汇报等任务时，优先经过 method-router 路由。
 
 ```
 用户请求
     │
     ▼
-method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/report）
+method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/manage/report）
     │
     ├── 路由到单个 Skill
     ├── 编排 Skill 链
@@ -98,6 +104,7 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 | `dmaic` | 改进 | 数据驱动的六西格玛改进 |
 | `star` | 报告 | 情境→任务→行动→结果叙事 |
 | `pdca-tuning` | 改进 | PDCA 循环流程优化 |
+| `management-collaboration` | 管理 | RACI、委派、Kanban/WIP、时间盒、升级与 Sol-Luna 协作 |
 
 **触发规则**：
 - 用户显式指定 > 路由推荐（用户说"用 5W2H"则直接执行，不经过路由器）

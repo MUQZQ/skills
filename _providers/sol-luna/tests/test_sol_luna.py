@@ -1293,6 +1293,20 @@ class SolLunaConfigTests(unittest.TestCase):
         for field in sol_luna.TASK_BRIEF_FIELDS:
             self.assertIn(field, adapter)
 
+        for content, marker in (
+            (contract, "优先利用"),
+            (policy, "优先利用"),
+            (claude_policy, "优先利用"),
+            (adapter, "充分利用"),
+        ):
+            self.assertIn(marker, content)
+            self.assertIn("空闲", content)
+            self.assertIn("卡槽", content)
+            self.assertIn("最终", content)
+            self.assertIn("不得为", content)
+            self.assertIn("不清晰", content)
+            self.assertIn("Sol", content)
+
     def test_provider_contract_names_real_administration_entrypoints(self) -> None:
         provider_root = Path(__file__).resolve().parents[1]
         contract = (provider_root / "CONTRACT.md").read_text(encoding="utf-8")
@@ -1314,6 +1328,59 @@ class SolLunaConfigTests(unittest.TestCase):
         self.assertIn("第一项是默认模型", contract)
         self.assertIn("`gpt-5.6-luna`", contract)
         self.assertIn("`gpt-5.3-codex-spark`", contract)
+
+    def test_management_method_router_guides_sol_luna_collaboration(self) -> None:
+        provider_root = Path(__file__).resolve().parents[1]
+        skills_root = provider_root.parents[1]
+        router = (skills_root / "method-router" / "SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        mapping = (
+            skills_root / "method-router" / "references" / "method-mapping.yaml"
+        ).read_text(encoding="utf-8")
+        management = (
+            skills_root
+            / "method-router"
+            / "management-collaboration"
+            / "SKILL.md"
+        ).read_text(encoding="utf-8")
+        contract = (provider_root / "CONTRACT.md").read_text(encoding="utf-8")
+        adapter = (
+            skills_root
+            / "auto-code-generator"
+            / "references"
+            / "execution-providers"
+            / "sol-luna.md"
+        ).read_text(encoding="utf-8")
+
+        for content in (router, mapping, management):
+            self.assertIn("RACI", content)
+            self.assertIn("Kanban", content)
+            self.assertIn("WIP", content)
+            self.assertIn("Timeboxing", content)
+            self.assertIn("Critical Path", content)
+            self.assertIn("时间盒", content)
+            self.assertIn("time_management", content)
+            self.assertIn("management-collaboration", content)
+
+        for content in (contract, adapter):
+            self.assertIn("management-collaboration", content)
+            self.assertIn("Sol", content)
+            self.assertIn("Luna", content)
+            self.assertIn("RACI", content)
+            self.assertIn("时间盒", content)
+            self.assertIn("检查点", content)
+
+        self.assertIn(
+            "problem_type: role_split | delegation | parallel_scheduling | "
+            "time_management | escalation | improvement",
+            management,
+        )
+        self.assertIn("method_chain: [按已选路由填写]", management)
+        self.assertIn("RACI → OODA → 升级", management)
+        self.assertIn("RACI → PDCA → 复盘", management)
+        self.assertNotIn("OODA → RACI → 升级", management)
+        self.assertNotIn("PDCA → RACI → 复盘", management)
 
     def test_project_template_does_not_pin_sol_or_native_subagent_model(self):
         provider_root = Path(__file__).resolve().parents[1]
