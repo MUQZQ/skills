@@ -287,6 +287,81 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, skill)
         self.assertIn("fallback_verified_local_commit_without_archive", eval_names)
 
+    def test_incremental_delivery_checkpoint_commit_contract(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        evals = json.loads(
+            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+        )["evals"]
+        eval_by_name = {item["name"]: item for item in evals}
+
+        for phrase in (
+            "INCREMENTAL_CHECKPOINT",
+            "AUTHORIZED_COMMIT_SET",
+            "完整验收的交付切片",
+            "混合未完成任务",
+            "精确暂存快照",
+            "reviewed_tree",
+            "COMMIT_TREE_MISMATCH",
+            "恰好一个 parent",
+            "Apply 内 checkpoint",
+            "最终 closeout",
+            "更新完整 Target baseline",
+            "不触发归档",
+            "无剩余授权内 diff",
+            "提交失败 <状态/原因>",
+        ):
+            self.assertIn(phrase, skill)
+
+        positive = eval_by_name["incremental_checkpoint_after_accepted_slice"]
+        self.assertIn("做完一部分", positive["prompt"])
+        for phrase in (
+            "LOCAL_COMMIT + INCREMENTAL_CHECKPOINT",
+            "AUTHORIZED_COMMIT_SET",
+            "staged snapshot",
+            "Target baseline",
+            "Change base",
+            "不归档",
+            "不推导 push",
+        ):
+            self.assertIn(phrase, positive["expected_output"])
+
+        mixed = eval_by_name["incremental_checkpoint_rejects_mixed_unfinished_file"]
+        for phrase in (
+            "不能把混合 A/B 改动的 manifest",
+            "不能默认用补丁暂存",
+            "精确暂存快照",
+            "不提交",
+            "不创建空提交",
+        ):
+            self.assertIn(phrase, mixed["expected_output"])
+
+        drift = eval_by_name["incremental_checkpoint_rejects_index_drift"]
+        for phrase in (
+            "reviewed_tree",
+            "紧邻 commit 前",
+            "拒绝进行中的 merge/rebase/cherry-pick/revert",
+            "恰好一个 parent",
+            "parent 等于 pre_commit_head",
+            "COMMIT_TREE_MISMATCH",
+            "不得自动 amend",
+            "不得 push",
+        ):
+            self.assertIn(phrase, drift["expected_output"])
+
+        closeout = eval_by_name["incremental_checkpoint_finishes_with_closeout"]
+        for phrase in (
+            "Stage 4/5",
+            "最终 closeout",
+            "VERIFIED",
+            "archive=SUCCESS",
+            "不创建空 commit",
+            "checkpoint hashes",
+            "先执行最终 closeout",
+            "再输出包含最终 hash/status 的最终报告",
+            "hash/status",
+        ):
+            self.assertIn(phrase, closeout["expected_output"])
+
     def test_time_management_reaches_assignment_provider_and_result_contract(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
         adapter = (

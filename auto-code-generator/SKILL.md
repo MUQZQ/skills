@@ -8,7 +8,7 @@ description: >
   状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v4.5
+# 自动代码生成器 v4.6
 
 ## 定位
 
@@ -16,7 +16,7 @@ description: >
 第二套生命周期。项目的 AGENTS、schema、实时指令、任务状态和原生验证命令始终优先。
 
 保留的工程骨架：规格追踪、阶段门禁、行为任务 TDD、依赖调度、安全并行、严重度审查、最终验证，
-以及“验证后归档，另有 Git 授权时才提交”的顺序。
+以及独立 Git 授权下的 Apply 内 checkpoint 和归档后最终 closeout。
 
 ## 前置输入
 
@@ -25,7 +25,9 @@ description: >
 - 期望结果与明确排除项；
 - 当前项目规则、权威生命周期和活动 change；
 - 执行意图：`PLAN_ONLY` 或 `PLAN_AND_APPLY`；
-- Git 权限：默认 `NONE`，只有用户明确要求提交时才是 `LOCAL_COMMIT`；
+- Git 权限：默认 `NONE`，只有用户明确要求提交时才是 `LOCAL_COMMIT`；提交模式默认
+  `CLOSEOUT_ONCE`，只有用户明确要求“分批提交”“阶段性提交”或“做完一部分先提交”时才是
+  `INCREMENTAL_CHECKPOINT`；
 - 当前分支、HEAD、工作树和重要外部输入的基线；
 - 项目原生构建、测试、集成或人工验证入口。
 
@@ -49,6 +51,7 @@ description: >
 | R10 | OpenSpec、任务完成或归档都不授予 Git 权限；commit、push、PR、部署分别需要授权 | 自动化越过用户控制边界 |
 | R11 | 单次变更只能提出规则更新建议；未经明确请求不得自动修改项目或全局 skills | 单样本被过拟合成永久规则 |
 | R12 | tracker task 是持久状态/验收单元，worker 场景组是临时调度单元；两者不得强制一一对应 | 每个微任务启动 worker，重复上下文与测试成本吞噬收益 |
+| R13 | 增量提交只接受完整验收、文件归属可分离的交付切片；提交不等于整个 change 完成或归档 | 未完成或混合改动被冻结进历史，最终审查遗漏已提交阶段 |
 
 ## 实战反例
 
@@ -63,6 +66,8 @@ description: >
 | “五轮 review 比一轮更严格” | 轮数不证明覆盖度，最终状态和问题严重度才可审计 | R8 |
 | “归档成功就顺便提交” | 归档只证明生命周期状态，不代表用户授权 Git mutation | R10 |
 | “这次出现了新模式，自动写入项目 skill” | 一次成功不等于稳定通用规则 | R11 |
+| “一个 task 通过了，马上把当前所有改动提交掉” | worker/task 结果不是自动提交边界；只有完整验收的交付切片及其准确文件集可提交 | R13 |
+| “同一文件混合了已完成和未完成任务，用补丁暂存切一下即可” | 默认补丁暂存会削弱范围审计和恢复；混合未完成任务的文件应留到边界可分离后 | R13 |
 
 ## 工作流总览
 
@@ -70,9 +75,11 @@ description: >
 Detect & Route
   → Plan to Apply-ready
   → Apply with bounded scenario groups
+      ↳ Apply 内 checkpoint（仅 INCREMENTAL_CHECKPOINT 授权且交付切片完整时，可重复）
   → Review & Verify final state
-  → Achieve and report
-  → Commit only with separate authority
+  → Achieve and archive
+  → Final closeout only with separate authority
+  → Report final state
 ```
 
 连续推进，不在任务之间重复询问“是否继续”。只在项目规定的人类门禁、边界变化、基线漂移、
@@ -115,10 +122,13 @@ Detect & Route
 
 在规划前记录到项目指定工件或当前协调上下文中：
 
-- Target：仓库根、当前分支、HEAD、预先存在的工作树状态；
+- Target baseline：滚动记录仓库根、当前分支、HEAD，以及 staged、tracked、untracked 工作树的准确状态摘要；
+  只在协调者验收授权内的状态转换后更新，不能用“刷新基线”吞掉未知并发改动；
+- Change base：任务开始时的原始 HEAD，在整个 change 完成前保持不变，用于累计审查已提交检查点；
 - Source：实质影响方案的外部仓库 revision，或非 Git 输入的版本/摘要；
 - Execution intent：`PLAN_ONLY` 或 `PLAN_AND_APPLY`；
-- Git authority：`NONE` 或用户明确授予的具体动作。
+- Git authority：`NONE` 或用户明确授予的具体动作；Commit mode：`CLOSEOUT_ONCE` 或
+  `INCREMENTAL_CHECKPOINT`。
 
 不要另建 baseline ledger。规划前、Apply 前和 Achieve 前比较当前状态；预先存在的非流程改动、HEAD 或
 外部输入变化时，输出 `BASELINE_CHANGED`、具体差异和受影响决定，等待重新确认。
@@ -323,7 +333,31 @@ worker 返回后，协调者必须检查共享工作树中的：
 失败项保留未完成并按当前 diff、依赖和风险重划恢复组；缺上下文就补最小上下文恢复 worker；需要协调就
 重划边界；真实计划或授权问题才请求用户裁决。只要有依赖就绪任务就持续调度。
 
-### 3.7 共享执行 provider 选择
+### 3.7 增量交付检查点
+
+只有 Git authority 为 `LOCAL_COMMIT` 且 Commit mode 为 `INCREMENTAL_CHECKPOINT` 时，才在 DAG 执行中评估
+阶段提交。用户说“分批提交”“阶段性提交”“做完一部分先提交”或明确要求避免最后一次提交过多文件，表示
+授权当前任务产生多个本地提交；不推导 push、PR、部署或其他仓库权限。
+
+每次 Sol 完成 3.6 验收后，按以下门禁形成一个完整验收的交付切片：
+
+1. 切片包含一个或多个已满足的底层 task/场景组，提交后自身行为有效、可解释、可回退，不依赖未完成代码
+   才能成立；单个 worker 返回、RED/GREEN 中间态或仅部分通过的场景组不合格；
+2. 为下一次 commit 从实际 diff 重新计算准确的 `AUTHORIZED_COMMIT_SET`，其中每个文件的全部当前改动只属于
+   该切片；排除
+   预先存在、范围外、其他参与者以及混合未完成任务改动的文件，默认不使用补丁暂存绕过混合边界；
+3. 对该切片执行项目规定的聚焦审查和必要验证，Critical/Important 清零；共享契约、manifest、生成链或
+   测试证据不能独立归属时，继续累积到边界完整，不为减少文件数强行提交；
+4. 暂停会修改该切片文件或目标仓库 Git 状态的调度，把 `AUTHORIZED_COMMIT_SET` 交给“Git 与外部动作边界”
+   的统一事务协议；使用 conventional commit 记录已完成结果，不使用 `WIP:` 表示已验收交付；
+5. 统一事务成功后更新完整 Target baseline 并恢复 `ready_queue`；保留原始 Change base，确保 Stage 4 对累计
+   提交和剩余改动做 whole-change 审查。事务失败时保持冻结并按统一错误状态恢复，不复制另一套 Git 规则。
+
+阶段提交只减少安全工作树中的累计改动，不触发归档、不把整个 change 标记完成，也不替代 3.6 的验收或
+完成事件；DAG 后继是否释放仍只由真实任务/场景组验收决定。没有合格文件集时继续实施或重划边界，不创建
+空提交，不把未完成改动硬塞进本批次。
+
+### 3.8 共享执行 provider 选择
 
 默认可选用共享 Sol-Luna provider（`_providers/sol-luna`，无 `SKILL.md`；`auto-code-generator` 是唯一用户
 入口）。有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时不委派；当前用户明确要求
@@ -356,7 +390,8 @@ Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规
 
 ### 4.1 最终审查
 
-针对最终 diff，而不是每个并行组固定跑 N 轮：
+针对从原始 Change base 到当前 HEAD 的累计提交，加上尚未提交的工作树 diff，而不是只看最后一个检查点或
+为每个并行组固定跑 N 轮：
 
 - 对照确认边界、需求/场景、设计、任务、测试计划和项目规则；
 - 将问题分为当前变更相关或既有/范围外，再分为 Critical、Important、Minor；
@@ -382,14 +417,16 @@ Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规
 
 不得用“真实数据 100%”“测试数量”或“审查轮数”代替按场景验证。
 
-## Stage 5：Achieve and report
+## Stage 5：Achieve, closeout and report
 
 最终归档状态统一记录为 `archive=SUCCESS | N/A | FAILED`。项目生命周期存在官方归档/关闭操作时，只有
 `VERIFIED` 才能调用，并且成功后记录 `archive=SUCCESS`；失败记录 `archive=FAILED`，保持活动 change 并恢复。
 没有官方生命周期归档操作的 fallback 项目记录 `archive=N/A`，不得为满足流程发明归档目录或伪造结果。
 归档前再次检查 baseline、最终审查、验证结论和任务状态；由生命周期所有者同步 spec 和移动 change。
 
-归档状态确定后输出简洁报告：
+归档状态确定后，若有对应 Git authority，先按“Git 与外部动作边界”执行最终 closeout；无 Git 授权或
+`AUTHORIZED_COMMIT_SET` 为空时不创建 commit。closeout 成功、不适用或明确失败后，再输出简洁最终报告，
+确保其中的 hash/status 是当前事实：
 
 ```text
 结果：VERIFIED / BLOCKED / INCOMPLETE
@@ -399,7 +436,7 @@ Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规
 审查：Critical 0，Important 0，Minor N
 验证：命令/方法、退出状态、关键结果
 归档：位置或未归档原因
-Git：未授权 / 已按独立授权提交 <hash>
+Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <hash|N/A> / 提交失败 <状态/原因>
 范围外发现：仅列候选，不写入当前任务状态
 ```
 
@@ -409,18 +446,36 @@ Git：未授权 / 已按独立授权提交 <hash>
 ## Git 与外部动作边界
 
 - 默认不 stage、不 commit、不 push、不创建 PR、不部署；
-- 用户明确要求本地提交时，先从已确认变更的最终 diff 得到准确的 `AUTHORIZED_COMMIT_SET`，排除预先存在、
-  范围外或其他参与者的改动；
+- `AUTHORIZED_COMMIT_SET` 始终表示“下一次 commit 的准确文件及内容集合”，每次提交前重新计算：增量模式
+  从 3.7 已完整验收的切片得到，closeout 模式从最终已确认 diff 得到；两种模式都排除预先存在、范围外或
+  其他参与者的改动；
+- Commit mode 默认为 `CLOSEOUT_ONCE`；只有用户明确要求多个本地提交、分批提交或阶段性提交时才设置
+  `INCREMENTAL_CHECKPOINT`，该授权仅在当前任务和目标仓库/分支有效；
 - 紧邻暂存前重新读取 branch、HEAD 和 status，并与 Target baseline 比较；发生漂移时停止。当前分支是
   `main`/`master` 时停止提交，只有项目分支工作流或用户另行授权后才能创建或切换分支；
+- 暂存前拒绝进行中的 merge/rebase/cherry-pick/revert（`MERGE_HEAD`、rebase state、`CHERRY_PICK_HEAD`、
+  `REVERT_HEAD`）；普通本地 commit 授权不包含完成这些 Git 操作的权限；
+- 从暂存开始到 commit/tree 核验完成，目标仓库的 Git index 和当前分支必须由协调者独占；其他 Agent、hook
+  或流程造成的 HEAD/index 漂移都必须停止本次提交；
 - 只暂存 `AUTHORIZED_COMMIT_SET` 中的明确路径，不改动预先存在的 staged 状态；暂存后必须检查
   `git diff --cached --name-status` 和 `git diff --cached`，文件集合或内容不完全匹配就停止提交；
-- 提交前执行项目规定的审查与验证；不得 force push；
-- 一个 task、worker 返回、TDD transition 或 artifact 完成不是 commit 边界；
-- delivery checkpoint 只在用户另行授权多个提交时使用；用户要求“一个本地 commit”时，只创建一个
-  closeout commit；
+- 提交前执行项目规定的审查与验证，并证明结果对应精确暂存快照；剩余工作树改动参与过的测试结果不能单独
+  证明 staged tree 有效；不得 force push；
+- 记录 `pre_commit_head` 和 `reviewed_tree = git write-tree`，紧邻 commit 前复核二者及完整 cached diff；
+  提交后读取完整 parent 列表，验证新提交恰好一个 parent 且该 parent 等于 `pre_commit_head`，同时验证
+  `HEAD^{tree}` 等于 `reviewed_tree`；任一不一致时报告 `COMMIT_TREE_MISMATCH` 并停止，不自动 amend、reset
+  或 push；
+- 一个 task、worker 返回、TDD transition 或 artifact 完成不会自动成为 commit 边界；
+- `INCREMENTAL_CHECKPOINT` 按 3.7 的 `AUTHORIZED_COMMIT_SET` 提交完整验收切片，门禁是切片验收通过、
+  切片必要审查/验证通过、准确暂存集、工作分支和独立 Git 授权；它不要求整个 change 已归档；
+- 用户只要求“一个本地 commit”或未明确要求分批时使用 `CLOSEOUT_ONCE`，只创建一个 closeout commit；
 - closeout commit 的统一门禁是 `VERIFIED + archive SUCCESS/N/A + 独立 Git 授权`；官方归档存在时必须
   `archive=SUCCESS`，fallback 无归档操作时允许 `archive=N/A`。提交后报告 hash 和 status；
+- `INCREMENTAL_CHECKPOINT` 表示“零到多个 checkpoint + 一个最终 closeout”：Stage 4 修复、Stage 5 归档或
+  其他剩余授权内 diff 在上述 closeout 门禁通过后形成最终 closeout；若没有剩余 diff，不创建空 commit，
+  只报告已有 checkpoint hashes；
+- 每次增量提交后更新完整 Target baseline，但保留原始 Change base；最终审查和验证必须覆盖 Change base
+  以来的全部 checkpoint commits 与剩余 diff；
 - push、PR 和部署各自需要明确授权，不能从 commit 权限推导。
 
 ## 错误与恢复
@@ -438,6 +493,10 @@ Git：未授权 / 已按独立授权提交 <hash>
 | 验证环境不可用 | 结论写 `BLOCKED` 或 `INCOMPLETE`，不得标记通过 |
 | 归档失败 | 保持活动 change，按官方错误恢复，不手工移动目录 |
 | 无 Git 授权 | 完成到归档和报告即停止，提供提交建议但不执行 |
+| 增量切片混合未完成/他人改动 | 排除混合文件并继续实施或重划边界；不补丁暂存、不创建空提交 |
+| 存在进行中的 merge/rebase/cherry-pick/revert | 停止普通 commit；不得替用户完成或中止该 Git 操作 |
+| commit 前 HEAD/index 漂移 | 停止提交并重新取证；不得沿用旧 `reviewed_tree` |
+| commit tree 与 `reviewed_tree` 不同 | 返回 `COMMIT_TREE_MISMATCH`，保留现场并停止；不自动改写历史或 push |
 
 ## 输出质量指标
 
@@ -461,6 +520,6 @@ Git：未授权 / 已按独立授权提交 <hash>
 
 ---
 
-*版本：4.5*
-*最后更新：2026-08-17*
-*变更：抽取共享 DAG 方法，并以完成事件驱动的 ready queue 取代静态波次屏障，缩短安全并行的关键路径。*
+*版本：4.6*
+*最后更新：2026-08-18*
+*变更：新增授权式增量交付检查点，在完整验收切片后分批提交并保留累计 whole-change 审查。*

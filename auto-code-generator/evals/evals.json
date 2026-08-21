@@ -326,6 +326,61 @@
         "C 与 B 的 manifest 预留冲突时继续等待",
         "只有负责人验收并释放预留后才重新判断 C"
       ]
+    },
+    {
+      "id": 26,
+      "name": "incremental_checkpoint_after_accepted_slice",
+      "prompt": "当前任务位于工作分支，用户明确说‘做完一部分就先提交到 git，避免最后一次提交太多文件’。场景组 A 已经由 Sol 完整验收，相关文件只属于 A，聚焦审查和必要测试均通过；场景组 B、C 仍未完成且文件不重叠。请决定现在是否提交以及提交后如何继续。评估模式：只输出门禁、Git 动作与 DAG 状态，不修改文件。",
+      "expected_output": "把授权识别为当前任务的 LOCAL_COMMIT + INCREMENTAL_CHECKPOINT；从 A 的完整 diff 得到 AUTHORIZED_COMMIT_SET，复核工作分支、baseline 和精确暂存内容，并证明审查与必要测试对应 staged snapshot 后，用 conventional commit 提交 A。提交后核对 hash/status，更新滚动 Target baseline 并继续 ready_queue；保留原始 Change base 供最终累计审查，不归档整个 change，也不推导 push。",
+      "files": [],
+      "expectations": [
+        "识别用户已授权当前任务产生多个本地阶段提交",
+        "仅把完整验收且文件归属独立的 A 纳入 AUTHORIZED_COMMIT_SET",
+        "提交前复核工作分支、baseline、暂存集，并验证精确暂存快照",
+        "提交后更新 Target baseline、保留 Change base 并继续 DAG",
+        "阶段提交不触发归档、不完成整个 change、不推导 push"
+      ]
+    },
+    {
+      "id": 27,
+      "name": "incremental_checkpoint_rejects_mixed_unfinished_file",
+      "prompt": "用户已授权 DAG 分批本地提交。task A 已验收，但 A 与仍未完成的 task B 都修改了同一个 manifest；当前无法证明该文件中的改动可以按完整文件归属于 A。其他 A 文件已通过聚焦测试。请决定本轮提交范围。评估模式：只输出门禁与恢复动作，不修改文件。",
+      "expected_output": "不能把混合 A/B 改动的 manifest 纳入 AUTHORIZED_COMMIT_SET，也不能默认用补丁暂存切开。若排除 manifest 后 A 不能独立成立，或现有测试无法证明精确暂存快照有效，则本轮不提交 A，继续实施或重划边界；不创建空提交，也不提交未完成状态。",
+      "files": [],
+      "expectations": [
+        "识别混合未完成任务文件不满足增量提交边界",
+        "默认不使用补丁暂存绕过文件归属审计",
+        "排除 manifest 后重新判断 A 是否仍是完整交付切片",
+        "不能用包含未完成工作树改动的测试结果替代精确暂存快照验证",
+        "无法独立成立时不提交、不创建空提交，继续实施或重划边界"
+      ]
+    },
+    {
+      "id": 28,
+      "name": "incremental_checkpoint_rejects_index_drift",
+      "prompt": "用户已授权阶段性本地提交，A 的精确暂存快照已审查通过。记录 staged tree 后，另一个流程又执行了 git add；或者仓库仍有进行中的 merge，最终 commit 的 tree 和第一 parent 恰好都与预期相同但还带有第二 parent。请说明 commit 前后如何检测和恢复。评估模式：只输出 Git 事务门禁，不修改文件。",
+      "expected_output": "从暂存到核验完成期间独占目标仓库 index/分支，记录 pre_commit_head 与 reviewed_tree，并拒绝进行中的 merge/rebase/cherry-pick/revert。紧邻 commit 前重新检查 HEAD、完整 cached diff 和 git write-tree；发生漂移就停止，不沿用旧审查。commit 后验证新提交恰好一个 parent、该 parent 等于 pre_commit_head，且 HEAD^{tree} 等于 reviewed_tree；若不一致返回 COMMIT_TREE_MISMATCH，保留现场并停止，不得自动 amend 或 reset，且不得 push。",
+      "files": [],
+      "expectations": [
+        "暂存到 commit/tree 核验完成期间独占 index 和当前分支",
+        "记录 pre_commit_head 与 reviewed_tree，并在紧邻 commit 前复核",
+        "拒绝进行中的 merge/rebase/cherry-pick/revert",
+        "commit 后验证恰好一个 parent、parent 等于 pre_commit_head，并比较 HEAD tree 与 reviewed_tree",
+        "不一致时返回 COMMIT_TREE_MISMATCH，不自动 amend、reset 或 push"
+      ]
+    },
+    {
+      "id": 29,
+      "name": "incremental_checkpoint_finishes_with_closeout",
+      "prompt": "当前 change 已有两个通过门禁的 checkpoint commits。随后 Stage 4 修复了一项审查问题，Stage 5 官方归档又更新了工件；现在结果 VERIFIED、archive=SUCCESS，用户此前授权的是分批本地提交。请决定剩余 diff 和最终提交。评估模式：只输出 closeout 门禁与动作，不修改文件。",
+      "expected_output": "INCREMENTAL_CHECKPOINT 仍要求在 Stage 4/5 完成后处理最终 closeout。对剩余授权内 diff 重新计算 AUTHORIZED_COMMIT_SET，并在 VERIFIED、archive=SUCCESS、独立 Git 授权以及统一暂存快照事务门禁通过后创建最终 closeout；若没有剩余 diff，则不创建空 commit，只报告已有 checkpoint hashes。先执行最终 closeout，再输出包含最终 hash/status 的最终报告；任何本地 commit 授权都不推导 push。",
+      "files": [],
+      "expectations": [
+        "增量模式是多个 checkpoints 加最终 closeout，而不是只提交 Stage 3",
+        "最终 closeout 仍要求 VERIFIED、archive SUCCESS 和独立 Git 授权",
+        "剩余 diff 使用同一 AUTHORIZED_COMMIT_SET 和暂存快照事务门禁",
+        "没有剩余 diff 时不创建空 commit，只报告 checkpoint hashes"
+      ]
     }
   ]
 }
