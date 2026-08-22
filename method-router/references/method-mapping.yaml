@@ -2,9 +2,10 @@
 # 新增 Skill 时在此文件添加一条记录，method-router 自动识别
 # 无需修改 SKILL.md
 
-version: "3.2"
-last_updated: "2026-08-17"
+version: "3.3"
+last_updated: "2026-08-22"
 # Phase 5: +DAG 完成事件驱动 ready queue
+# v3.3: +Pugh/ADR/ADL/DesignThinking/A3/KPT/RICE 七个新框架（补齐 decide/design/improve/report 链）
 
 classification:
   diagnose:
@@ -80,6 +81,12 @@ routes:
       - { skill: Eisenhower, order: 1, mandatory: true, path: "method-router/eisenhower/SKILL.md" }
       - { skill: STAR, order: 2, mandatory: false, path: "method-router/star/SKILL.md" }
     rationale: "任务优先级 → Eisenhower 四象限 → STAR 结构化输出"
+
+  - type: decide
+    condition: { sub_type: priority_quant }
+    chain:
+      - { skill: RICE, order: 1, mandatory: true, path: "method-router/rice/SKILL.md" }
+    rationale: "需求/功能优先级量化 → RICE 四参数打分排序"
 
   - type: decide
     condition: { sub_type: comparison }
@@ -190,6 +197,12 @@ routes:
     rationale: "复盘 → STAR 结构化 → SCQA 格式化"
 
   - type: report
+    condition: { sub_type: kpt }
+    chain:
+      - { skill: KPT, order: 1, mandatory: true, path: "method-router/kpt/SKILL.md" }
+    rationale: "高频轻量复盘 → KPT 三栏（Keep/Problem/Try）→ 行动项"
+
+  - type: report
     condition: {}
     chain:
       - { skill: SCQA, order: 1, mandatory: true, path: "method-router/scqa/SKILL.md" }
@@ -212,6 +225,13 @@ skill_registry:
     - { name: FMEA, path: "method-router/fmea/SKILL.md", category: risk }
     - { name: STAR, path: "method-router/star/SKILL.md", category: report }
     - { name: ManagementCollaboration, path: "method-router/management-collaboration/SKILL.md", category: manage }
+    - { name: PughMatrix, path: "method-router/pugh/SKILL.md", category: decide }
+    - { name: ADR, path: "method-router/adr/SKILL.md", category: decide }
+    - { name: ADLMatrix, path: "method-router/adl/SKILL.md", category: decide }
+    - { name: RICE, path: "method-router/rice/SKILL.md", category: decide }
+    - { name: DesignThinking, path: "method-router/design-thinking/SKILL.md", category: design }
+    - { name: A3, path: "method-router/a3/SKILL.md", category: improve }
+    - { name: KPT, path: "method-router/kpt/SKILL.md", category: report }
   planned: []
 
 composition_rules:
