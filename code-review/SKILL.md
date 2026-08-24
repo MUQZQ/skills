@@ -234,7 +234,7 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 | `code-review/solid-principles/SKILL.md` | SOLID 原则：SRP/OCP/LSP/ISP/DIP |
 | `code-review/code-smells/SKILL.md` | 代码坏味道：长函数、重复代码、God Class |
 | `code-review/lang-python/SKILL.md` | Python 编码规范 |
-| `python-coding-standards/SKILL.md` | 通用 Python 编码规范 27 条（lang-python 审查时强制逐条核对） |
+| `coding-standards/SKILL.md` | 跨语言通用编码规范（核心条款+各语言小节，lang-* 审查时按对应小节核对） |
 | `code-review/lang-go/SKILL.md` | Go 编码规范 |
 | `code-review/lang-js/SKILL.md` | JavaScript 编码规范 |
 | `code-review/lang-ts/SKILL.md` | TypeScript 编码规范 |
