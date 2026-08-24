@@ -9,13 +9,10 @@
 | R2 | **如无必要勿增实体** — 优先复用现有代码和模块，不创建任务未要求的文件、抽象层或依赖 |
 | R3 | **先想清楚再做** — 编码前必须理解需求、设计思路和影响范围 |
 | R4 | **高内聚低耦合** — 模块内部紧密相关，模块之间依赖最小化 |
-
-## 建议规则
-
-| 规则 | 内容 |
-|------|------|
-| R5 | **建议避免直接操作主干分支** — 默认使用工作分支；用户明确授权具体 Git 动作及目标仓库/ref 时，才可在 `main`/`master` 上执行该动作 |
-| R6 | **建议避免 force push** — 默认不使用 `git push --force`，优先使用 `--force-with-lease`；仅当用户明确指定 remote/ref、确认远端旧 tip，且目标不是公共或受保护分支时才可执行 `--force` |
+| R5 | **禁止操作主干分支** — 不在 `main`/`master` 上直接 commit；合入由人工完成 |
+| R6 | **禁止 force push** — 永远不使用 `git push --force`，rebase 后使用 `--force-with-lease` |
+| R7 | **节省token** 简单任务优先并行使用luna,更便宜更高效 |
+| R8 | **编码规范** — 所有 Python 编码须遵守 `python-coding-standards`（27 条通用规范：异常/日志/外部数据防御/安全红线/行为验证）；审查时由 `code-review` 的 lang-python 强制核对 |
 
 ## 执行约束原则
 
@@ -44,26 +41,20 @@
 | `auto-code-generator` | spec 驱动的自适应实施编排：风险路由→规划/维护视图投影→TDD 实施→审查验证→归档；默认自动使用共享 Sol-Luna provider，Git 动作另行授权 | "自动生成代码""全流程实施""一键实施变更" |
 
 ## 共享执行 Provider（非 Skill）
-
+-为了提高执行效率，大任务执行时luna卡槽建议拉满。spawn_agent并发上限是 6 个子subAgent ,已经实际验证过
 - Sol-Luna 是 `auto-code-generator` 内部可选执行模式，不是独立 skill 或第二套生命周期；自动编码只有一个用户入口。
 - Luna 默认开启并使用 `mode=auto`；有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时关闭。当前用户明确要求 Luna 时可单次覆盖 `off`，但不得改写持久配置。
-- Codex 模型优先使用当前宿主原生子 Agent；精确模型或权限不受支持时，才在启动前通过兼容通道执行
-  同一模型。不得静默换模，已启动任务失败后不得自动跨通道重跑。
 - 委派保持完整内聚场景和同一上下文中的 `RED → GREEN → REFACTOR`；无法保真委派时回退 Sol，不为迁就 provider 切碎 TDD。
 - Sol 始终拥有架构决策、任务验收、冲突处理、最终结论及 Git/PR/部署权限；provider 的返回只是待核验执行证据。
-- 多 Agent 协作参考 `method-router/management-collaboration`：先用 RACI 明确唯一最终责任者，再用六字段任务卡委派；
-  Luna 对目标、范围、依赖或验收不清晰时必须及时回问 Sol，不得猜测或扩大授权。
-- 并行调度使用 Kanban/WIP 和安全卡槽规则：只有依赖、写入、资源、契约和验证均可隔离的独立场景才并行，
-  不为填满卡槽拆分内聚场景或 TDD；Sol 负责波次协调、证据回收、冲突处理和最终验收。
-- 时间管理参考 Timeboxing/Critical Path：Sol 设置时间预算、关键路径、检查点和协调缓冲；时间盒到期只能
-  验收、带证据重排或升级阻塞，不能静默延长、跳过测试或制造虚假完成。
 - 维护视图投影只服从项目生命周期已经声明的契约；没有契约时不发明投影，结构有效也不能替代语义审查。
+
 
 ## 代码质量
 
 | Skill | 用途 | 触发 |
 |-------|------|------|
 | `code-review` | 审查路由协调者，按文件类型分派子审查 | 提交前、"review""审查" |
+| `python-coding-standards` | 通用 Python 编码规范 27 条（编码时遵守，审查时由 lang-python 核对） | "编码规范""按规范写""代码风格" |
 | `code-review-before-commit` | 5 轮审查循环 + 用户确认 + git commit | 提交前审查 |
 | `refactor-tdd` | TDD 驱动的安全重构流程 | "重构""refactor""重写""整理代码" |
 
@@ -72,17 +63,17 @@
 | Skill | 用途 | 触发 |
 |-------|------|------|
 | `branch-manager` | Git 分支管理工作流 | "创建分支""stash""checkpoint""rebase" |
-| `usb-git-manager` | U 盘 Git 仓库同步 | "同步 U 盘""USB 同步" |
+
 
 ## 方法论体系
 
-由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、管理协作、时间管理、风险评估、总结汇报等任务时，优先经过 method-router 路由。
+由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、风险评估、总结汇报等任务时，优先经过 method-router 路由。
 
 ```
 用户请求
     │
     ▼
-method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/manage/report）
+method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/report）
     │
     ├── 路由到单个 Skill
     ├── 编排 Skill 链
@@ -104,7 +95,6 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/manag
 | `dmaic` | 改进 | 数据驱动的六西格玛改进 |
 | `star` | 报告 | 情境→任务→行动→结果叙事 |
 | `pdca-tuning` | 改进 | PDCA 循环流程优化 |
-| `management-collaboration` | 管理 | RACI、委派、Kanban/WIP、时间盒、升级与 Sol-Luna 协作 |
 
 **触发规则**：
 - 用户显式指定 > 路由推荐（用户说"用 5W2H"则直接执行，不经过路由器）
@@ -121,7 +111,7 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/manag
 - **分支命名** — 新功能 `feat/<name>`，修复 `fix/<name>`，重构 `refactor/<name>`；Codex 自动分支使用 `codex/<name>`
 - **提交信息** — conventional commit 格式：`<type>(<scope>): <description>`
 - **提交前** — 运行 `code-review` 审查；禁止提交未审查的代码
-- **合入主干** — 默认由人工完成；用户明确授权具体提交、合入或推送动作及目标仓库/ref 后，agent 才可执行该动作
+- **合入主干** — 由人工完成，agent 仅做本地提交
 - **换行符** — 不改变文件既有换行风格；读取文件时 Python 使用默认 `newline=None`
 
 ## 下载约定

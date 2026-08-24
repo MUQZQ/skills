@@ -11,6 +11,15 @@ description: Python 编码规范：命名、错误处理、类型提示、文件
 - 新增或修改 Python 脚本
 - 编写 Python 工具或数据处理脚本
 
+## 核心规范（强制，始终执行）
+
+审查前先加载 `python-coding-standards`（权威路径 `.cc-switch/skills/python-coding-standards/SKILL.md`）的 27 条规范，逐条核对变更代码。命名、异常处理、日志、外部数据、安全红线以该规范为准，本文件下方清单为补充细节（工程单位、文件操作等）。
+
+**冲突处理**：下方清单与本规范不一致时，以 27 条核心规范为准。已知对齐点：
+- 日志使用懒格式化 `"%s", val`，禁止 f-string 拼日志（f-string 仅限普通字符串）
+- 命名统一 `snake_case`（变量/函数/方法）
+- 文件头编码声明为旧式约定，Python 3 默认 UTF-8，不作硬性要求
+
 ## 审查检查清单
 
 ### 编码与导入
@@ -67,12 +76,13 @@ except:  # 裸 except，捕获所有异常
 # ✅ 正确
 import logging
 logger = logging.getLogger(__name__)
-logger.info(f"处理文件: {file_path}")
-logger.error(f"处理失败: {file_path}, 原因: {e}")
+logger.info("处理文件: %s", file_path)  # 懒格式化，避免无谓的字符串拼接
+logger.error("处理失败: %s, 原因: %s", file_path, e)
 
 # ❌ 错误
 print(f"处理文件: {file_path}")
 print(f"API Key: {api_key}")  # 泄露敏感信息
+logger.info(f"处理文件: {file_path}")  # f-string 拼日志（懒格式化反模式）
 ```
 
 ### 文件操作
@@ -97,7 +107,7 @@ f.close()  # 忘记关闭
 
 ### 常量命名
 - [ ] 常量使用 UPPER_SNAKE_CASE
-- [ ] 变量/函数/方法使用 camelCase 或 snake_case (项目统一)
+- [ ] 变量/函数/方法使用 snake_case
 - [ ] 类名使用 PascalCase
 
 ```python
