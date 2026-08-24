@@ -54,9 +54,8 @@
 | Skill | 用途 | 触发 |
 |-------|------|------|
 | `code-review` | 审查路由协调者，按文件类型分派子审查 | 提交前、"review""审查" |
-| `coding-standards` | 跨语言通用编码规范（通用核心条款，编码时遵守，检视时全局审查统一核对） | "编码规范""按规范写""代码风格" |
+| `coding-standards` | 跨语言通用编码规范（通用核心条款，编码时遵守，检视时全局审查统一核对；子技能 refactor-tdd 重构流程） | "编码规范""按规范写""代码风格""重构""refactor" |
 | `code-review-before-commit` | 5 轮审查循环 + 用户确认 + git commit | 提交前审查 |
-| `refactor-tdd` | TDD 驱动的安全重构流程 | "重构""refactor""重写""整理代码" |
 
 ## 分支与同步
 
