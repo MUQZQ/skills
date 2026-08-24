@@ -11,10 +11,6 @@ description: Python 编码规范：命名、错误处理、类型提示、文件
 - 新增或修改 Python 脚本
 - 编写 Python 工具或数据处理脚本
 
-## 核心规范（强制，始终执行）
-
-审查前加载**关联文档** `coding-standards`（Python 小节 + 通用核心条款，位于 `.cc-switch/skills/coding-standards/SKILL.md`）逐条核对变更代码。冲突仲裁与对齐说明均以该文档为准（本文件不复制规范细节）。本文件下方清单仅为领域补充（工程单位、文件操作等）。
-
 ## 审查检查清单
 
 ### 编码与导入

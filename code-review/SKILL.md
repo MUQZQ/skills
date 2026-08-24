@@ -53,6 +53,7 @@ git diff
 | **任何代码审查** | `code-review/security-review/SKILL.md` | **Agent** | 安全审查（始终应用） |
 | **任何代码审查** | `code-review/solid-principles/SKILL.md` | **Agent** | SOLID 原则（始终应用） |
 | **任何代码审查** | `code-review/code-smells/SKILL.md` | **Agent** | 代码坏味道（始终应用） |
+| **任何代码审查** | `coding-standards/SKILL.md` | **Agent** | 通用编码规范（始终应用） |
 
 **路由规则**：
 - 所有子 skill 统一通过 Agent 执行（条件触发或始终触发）
@@ -82,7 +83,7 @@ Task:
 
 ### 4. 执行全局审查
 
-协调者通过 Agent 执行安全审查、SOLID 原则、代码坏味道审查（这三项为始终触发）：
+协调者通过 Agent 执行安全审查、SOLID 原则、代码坏味道、通用编码规范审查（这四项为始终触发）。注意：通用编码规范审查加载 `coding-standards/SKILL.md`（与 code-review 同级的权威源目录，路径 `.cc-switch/skills/coding-standards/SKILL.md`），加载通用核心条款逐条核对：
 
 ```
 Task:
@@ -201,7 +202,7 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 
 | 规则 | 内容 | 违反后果 |
 |------|------|:------:|
-| R0 | 任何代码审查必须同时执行安全审查、SOLID 原则、代码坏味道三项全局审查 | 安全漏洞或结构性缺陷被遗漏 |
+| R0 | 任何代码审查必须同时执行安全审查、SOLID 原则、代码坏味道、通用编码规范（coding-standards）四项全局审查 | 安全漏洞或结构性缺陷被遗漏 |
 | R1 | 语言规则必须根据文件后缀自动路由，不得手动选择 | 审查维度不完整，特定领域问题被忽略 |
 | R2 | 所有子 skill 统一通过 Agent 执行，禁止协调者内联处理审查内容 | 审查上下文过大，质量下降 |
 | R3 | 审查结果必须按 P0/P1/P2 三级分类输出 | 优先级混乱，无法区分紧急和可选问题 |
@@ -234,7 +235,7 @@ P0 X/Y 已修复，P1 X/Y 已修复，P2 X/Y 已修复。
 | `code-review/solid-principles/SKILL.md` | SOLID 原则：SRP/OCP/LSP/ISP/DIP |
 | `code-review/code-smells/SKILL.md` | 代码坏味道：长函数、重复代码、God Class |
 | `code-review/lang-python/SKILL.md` | Python 编码规范 |
-| `coding-standards/SKILL.md` | 跨语言通用编码规范（核心条款+各语言小节，lang-* 审查时按对应小节核对） |
+| `coding-standards/SKILL.md` | 跨语言通用编码规范（通用核心条款，全局审查始终应用） |
 | `code-review/lang-go/SKILL.md` | Go 编码规范 |
 | `code-review/lang-js/SKILL.md` | JavaScript 编码规范 |
 | `code-review/lang-ts/SKILL.md` | TypeScript 编码规范 |

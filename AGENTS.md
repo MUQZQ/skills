@@ -12,7 +12,7 @@
 | R5 | **禁止操作主干分支** — 不在 `main`/`master` 上直接 commit；合入由人工完成 |
 | R6 | **禁止 force push** — 永远不使用 `git push --force`，rebase 后使用 `--force-with-lease` |
 | R7 | **节省token** 简单任务优先并行使用luna,更便宜更高效 |
-| R8 | **编码规范** — 所有编码须遵守 `coding-standards`（通用核心条款 + Python/Go/JS-TS/Java/Rust 小节：异常/日志/外部数据防御/安全红线/行为验证）；审查时由 `code-review` 各 lang-* 子技能按对应小节强制核对 |
+| R8 | **编码规范** — 所有编码须遵守 `coding-standards` 通用核心条款（错误处理/外部数据防御/安全红线/行为验证等）；检视时由 `code-review` 全局审查项统一核对，语言细则以 lang-* 为准 |
 
 ## 执行约束原则
 
@@ -54,7 +54,7 @@
 | Skill | 用途 | 触发 |
 |-------|------|------|
 | `code-review` | 审查路由协调者，按文件类型分派子审查 | 提交前、"review""审查" |
-| `coding-standards` | 跨语言通用编码规范（核心条款+各语言小节，编码时遵守，审查时按语言核对） | "编码规范""按规范写""代码风格" |
+| `coding-standards` | 跨语言通用编码规范（通用核心条款，编码时遵守，检视时全局审查统一核对） | "编码规范""按规范写""代码风格" |
 | `code-review-before-commit` | 5 轮审查循环 + 用户确认 + git commit | 提交前审查 |
 | `refactor-tdd` | TDD 驱动的安全重构流程 | "重构""refactor""重写""整理代码" |
 
