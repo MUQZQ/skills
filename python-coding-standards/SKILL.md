@@ -23,14 +23,15 @@ description: 通用 Python 编码规范模板（27 条），融合大厂规约�
 
 ## 使用方式
 
-1. **写代码时**：遵守本规范全部条款；与项目已有约定冲突时，以项目 superset 为准（本项目缺省项才用本规范补）
+1. **写代码时**：遵守本规范全部条款；与项目已有约定冲突时，以项目 superset 为准（项目缺省项才用本规范补）
 2. **配项目规范时**：复制正文，删除与项目无关条目，补充项目特有红线（安全/工具链/检查命令）
 3. **审查代码时**：按「四→五→六→七」重点核对（异常/日志/外部数据/安全），其余条款工具化（ruff 已强制）
+4. **参数化原则**：条款中的版本/行宽/工具（py312、100、mypy）均为默认值，项目 pyproject.toml 有配置时以项目为准；本规范只约束"必须有"而非"必须用某版本"
 
 ## 规范正文
 
 ### 一、语言与风格
-1. Python 3.12+，新模块头加 `from __future__ import annotations`
+1. Python 遵循项目支持的最低稳定版本（默认 3.12+），新模块头加 `from __future__ import annotations`
 2. 类型注解：新代码必须完整注解（含 `x | None` 语义），公开 API 必须有类型
 3. docstring 遵循摘要 + Args/Returns 结构（Google 风格），全项目统一语言
 4. 代码、注释、日志、commit 不使用 emoji 字符
@@ -41,9 +42,9 @@ description: 通用 Python 编码规范模板（27 条），融合大厂规约�
 7. 配置类用 @dataclass + 默认值，参数集中管理，禁止魔法值散落
 
 ### 三、格式与静态检查（工具强制）
-8. ruff format + isort 为准：行宽 100、py312；提交前必须通过 ruff check
+8. ruff format + isort 为准：行宽与 target-version 遵循项目 pyproject.toml（默认 100 / py312）；提交前必须通过 ruff check
 9. import 分组：标准库 → 第三方 → 项目内，组内字母序
-10. 类型改动不得新增 mypy 错误
+10. 若项目启用 mypy，类型改动不得新增 mypy 错误
 
 ### 四、异常处理（大厂规约精华）
 11. 禁止裸 except / except Exception 吞异常：被捕获的异常必须记日志（含上下文）后重抛或返回错误
