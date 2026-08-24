@@ -13,12 +13,7 @@ description: Python 编码规范：命名、错误处理、类型提示、文件
 
 ## 核心规范（强制，始终执行）
 
-审查前先加载 `python-coding-standards`（权威路径 `.cc-switch/skills/python-coding-standards/SKILL.md`）的 27 条规范，逐条核对变更代码。命名、异常处理、日志、外部数据、安全红线以该规范为准，本文件下方清单为补充细节（工程单位、文件操作等）。
-
-**冲突处理**：下方清单与本规范不一致时，以 27 条核心规范为准。已知对齐点：
-- 日志使用懒格式化 `"%s", val`，禁止 f-string 拼日志（f-string 仅限普通字符串）
-- 命名统一 `snake_case`（变量/函数/方法）
-- 文件头编码声明为旧式约定，Python 3 默认 UTF-8，不作硬性要求
+审查前加载**关联文档** `python-coding-standards`（27 条通用规范，位于 `.cc-switch/skills/python-coding-standards/SKILL.md`）逐条核对变更代码。冲突仲裁与对齐说明均以该文档为准（本文件不复制规范细节）。本文件下方清单仅为领域补充（工程单位、文件操作等）。
 
 ## 审查检查清单
 
