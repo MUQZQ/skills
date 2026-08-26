@@ -41,7 +41,7 @@
 | `auto-code-generator` | spec 驱动的自适应实施编排：风险路由→规划/维护视图投影→TDD 实施→审查验证→归档；默认自动使用共享 Sol-Luna provider，Git 动作另行授权 | "自动生成代码""全流程实施""一键实施变更" |
 
 ## 共享执行 Provider（非 Skill）
--为了提高执行效率，大任务执行时luna卡槽建议拉满。spawn_agent并发上限是 6 个子subAgent ,已经实际验证过
+- 为了提高执行效率，大任务执行时luna卡槽建议拉满。spawn_agent并发上限是 6 个子subAgent ,已经实际验证过
 - Sol-Luna 是 `auto-code-generator` 内部可选执行模式，不是独立 skill 或第二套生命周期；自动编码只有一个用户入口。
 - Luna 默认开启并使用 `mode=auto`；有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时关闭。当前用户明确要求 Luna 时可单次覆盖 `off`，但不得改写持久配置。
 - 委派保持完整内聚场景和同一上下文中的 `RED → GREEN → REFACTOR`；无法保真委派时回退 Sol，不为迁就 provider 切碎 TDD。
@@ -57,6 +57,13 @@
 | `coding-standards` | 跨语言通用编码规范（通用核心条款，编码时遵守，检视时全局审查统一核对；子技能 refactor-tdd 重构流程） | "编码规范""按规范写""代码风格""重构""refactor" |
 | `code-review-before-commit` | 5 轮审查循环 + 用户确认 + git commit | 提交前审查 |
 
+## 设计能力
+
+| 领域入口 | 用途 | 触发 |
+|----------|------|------|
+| `design` | 设计领域统一入口；按产物和阶段路由到具体 Skill | UI/UX、页面视觉、前端交互、设计系统、流程图、架构图、UML、数据可视化与办公文档设计 |
+
+系统或产品问题定义、架构决策与重构方法进入 `method-router`；视觉、交互、图示或办公文档产物明确时进入 `design`。
 ## 分支与同步
 
 | Skill | 用途 | 触发 |
@@ -66,7 +73,7 @@
 
 ## 方法论体系
 
-由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、设计规划、风险评估、总结汇报等任务时，优先经过 method-router 路由。
+由 `method-router` 元 Skill 统一调度。遇到诊断分析、决策选型、需求尚未定义的问题探索、风险评估、总结汇报等任务时，优先经过 method-router 路由。
 
 ```
 用户请求
@@ -111,7 +118,7 @@ method-router ──▶ 意图分类（diagnose/decide/design/improve/risk/repor
 - **提交信息** — conventional commit 格式：`<type>(<scope>): <description>`
 - **提交前** — 运行 `code-review` 审查；禁止提交未审查的代码
 - **合入主干** — 由人工完成，agent 仅做本地提交
-- **换行符** — 不改变文件既有换行风格；读取文件时 Python 使用默认 `newline=None`
+- **换行符** — 不改变文件既有换行风格；读取文件时 Python 使用默认 `newline=''`
 
 ## 下载约定
 
