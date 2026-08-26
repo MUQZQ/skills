@@ -1,4 +1,6 @@
 version: "1.0"
+authority_scope: domain_intent_routing
+registry_source: ../../skill-domain-mapping.yaml
 domain: design
 source_of_truth: true
 description: 设计领域从产物意图和实施阶段路由到一个主 Skill。
@@ -40,24 +42,28 @@ routes:
     artifacts: [interactive_chart, simulator, explainer, visual_tool]
     stages: [prototype, implementation]
     primary_skill: visualize:visualize
+    resolution: platform_skill_registry
     keywords: [交互式可视化, 模拟器, 图表工具, 可视化讲解]
 
   presentation:
     artifacts: [slides, ppt, pptx, presentation]
     stages: [design, implementation, revision]
     primary_skill: presentations:Presentations
+    resolution: platform_skill_registry
     keywords: [演示文稿, 幻灯片, PPT, PPTX]
 
   document:
     artifacts: [document, docx, word]
     stages: [design, implementation, revision]
     primary_skill: documents:documents
+    resolution: platform_skill_registry
     keywords: [文档, Word, DOCX]
 
   pdf:
     artifacts: [pdf, fillable_pdf]
     stages: [design, implementation, revision]
     primary_skill: pdf:pdf
+    resolution: platform_skill_registry
     keywords: [PDF, 可填写表单]
 
 conflict_rules:

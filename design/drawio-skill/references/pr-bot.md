@@ -26,7 +26,7 @@ review for a repo.
 
 ## Adopting it in your own repo
 
-1. Copy `.github/actions/drawio-diff/` and `skills/drawio-skill/` (or at
+1. Copy `.github/actions/drawio-diff/` and `skills/design/drawio-skill/` (or at
    least `scripts/prdiff.py`, `scripts/drawiodiff.py`, `scripts/autolayout.py`)
    into your repo.
 2. Copy `.github/workflows/drawio-pr-diff.example.yml` to
@@ -64,7 +64,7 @@ instead of a new comment on every push.
 ## Running it locally
 
 ```
-python3 skills/drawio-skill/scripts/prdiff.py --base origin/main --head HEAD \
+python3 skills/design/drawio-skill/scripts/prdiff.py --base origin/main --head HEAD \
   --out-dir drawio-pr -o drawio-pr/report.md
 ```
 

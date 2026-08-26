@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DESIGN_SKILL = ROOT / "design" / "SKILL.md"
 AGENTS = ROOT / "AGENTS.md"
-UI_UX_SKILL = ROOT / "ui-ux-pro-max" / "SKILL.md"
+UI_UX_SKILL = ROOT / "design" / "ui-ux-pro-max" / "SKILL.md"
 
 
 def section(text: str, heading: str, next_heading: str) -> str:
@@ -52,18 +52,11 @@ class DesignSkillContractTest(unittest.TestCase):
 
     def test_agents_routes_design_domain_only_to_parent(self) -> None:
         content = AGENTS.read_text(encoding="utf-8")
-        design_section = section(content, "## 设计能力", "## 方法论体系")
-        self.assertIn(
-            "| `design` | 设计领域统一入口；按产物和阶段路由到具体 Skill |",
-            design_section,
-        )
+        self.assertIn("`skill-domain-mapping.yaml`", content)
+        self.assertNotIn("## 设计能力", content)
         for leaf in ("ui-ux-pro-max", "frontend-design", "drawio-skill"):
             with self.subTest(leaf=leaf):
-                self.assertNotIn(f"| `{leaf}` |", design_section)
-        self.assertIn(
-            "系统或产品问题定义、架构决策与重构方法进入 `method-router`；视觉、交互、图示或办公文档产物明确时进入 `design`。",
-            design_section,
-        )
+                self.assertNotIn(leaf, content)
 
     def test_ui_ux_leaf_is_guidance_only_and_uses_portable_script_path(self) -> None:
         content = UI_UX_SKILL.read_text(encoding="utf-8")
@@ -89,11 +82,11 @@ class DesignSkillContractTest(unittest.TestCase):
         without_crlf = data.replace(b"\r\n", b"")
         self.assertNotIn(b"\n", without_crlf)
 
-    def test_leaf_skills_remain_top_level_compatibility_entries(self) -> None:
+    def test_repository_owned_leaf_skills_are_nested_under_design(self) -> None:
         for name in ("ui-ux-pro-max", "frontend-design", "drawio-skill"):
             with self.subTest(name=name):
-                self.assertTrue((ROOT / name / "SKILL.md").is_file())
-                self.assertFalse((ROOT / "design" / name).exists())
+                self.assertTrue((ROOT / "design" / name / "SKILL.md").is_file())
+                self.assertFalse((ROOT / name).exists())
 
 
 if __name__ == "__main__":

@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 
 
-SKILLS_ROOT = Path(__file__).resolve().parents[2]
-AUTO_ROOT = SKILLS_ROOT / "auto-code-generator"
+SKILLS_ROOT = Path(__file__).resolve().parents[3]
+AUTO_ROOT = SKILLS_ROOT / "orchestration" / "auto-code-generator"
 PROVIDER_ROOT = SKILLS_ROOT / "_providers" / "sol-luna"
 
 
@@ -234,7 +234,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "task DAG",
             "场景组 DAG",
             "五项隔离门禁",
-            "../method-router/management-collaboration/references/dag-scheduling.md",
+            "../../method-router/management-collaboration/references/dag-scheduling.md",
             "完成事件驱动",
             "ready_queue",
             "不等待同一拓扑层全部结束",

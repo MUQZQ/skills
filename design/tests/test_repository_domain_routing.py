@@ -12,25 +12,19 @@ DESIGN_MAPPING = ROOT / "design" / "references" / "design-mapping.yaml"
 
 
 class RepositoryDomainRoutingContractTest(unittest.TestCase):
-    def test_agents_exposes_only_natural_domain_entries(self) -> None:
+    def test_agents_references_repository_mapping_without_domain_duplication(self) -> None:
         content = AGENTS.read_text(encoding="utf-8")
-        expected = {
-            "自动化实施": "auto-code-generator",
-            "代码质量": "code-review",
-            "设计产物": "design",
-            "方法论": "method-router",
-            "Git 分支": "branch-manager",
-        }
         self.assertIn("AGENTS.md → 领域模块 → 具体 Skill", content)
-        for domain, router in expected.items():
-            self.assertIn(f"| {domain} | `{router}` |", content)
-        self.assertIn("专业单用途 Skill", content)
+        self.assertIn("`skill-domain-mapping.yaml`", content)
+        self.assertNotIn("| 设计与视觉 | `design` |", content)
 
     def test_design_mapping_is_v1_source_of_truth(self) -> None:
         content = DESIGN_MAPPING.read_text(encoding="utf-8")
         self.assertIn('version: "1.0"', content)
         self.assertIn("domain: design", content)
         self.assertIn("source_of_truth: true", content)
+        self.assertIn("registry_source: ../../skill-domain-mapping.yaml", content)
+        self.assertIn("resolution: platform_skill_registry", content)
         for route, skill in {
             "ui_ux_guidance": "ui-ux-pro-max",
             "frontend_implementation": "frontend-design",

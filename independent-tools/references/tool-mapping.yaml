@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "domain": "independent-tools",
+  "source_of_truth": true,
+  "routes": {
+    "bilibili-convert": {
+      "intent": [
+        "合并 Bilibili 音视频"
+      ],
+      "skill_name": "bilibili-convert"
+    },
+    "branch-manager": {
+      "intent": [
+        "Git 分支与历史管理"
+      ],
+      "skill_name": "branch-manager"
+    },
+    "dida-task-manager": {
+      "intent": [
+        "滴答任务管理"
+      ],
+      "skill_name": "dida-task-manager"
+    },
+    "playwright-testing": {
+      "intent": [
+        "ParamCompare 浏览器端到端测试"
+      ],
+      "skill_name": "playwright-testing"
+    },
+    "usb-git-manager": {
+      "intent": [
+        "U 盘 Git 双向同步"
+      ],
+      "skill_name": "usb-git-manager"
+    },
+    "uv-env": {
+      "intent": [
+        "uv Python 环境与依赖管理"
+      ],
+      "skill_name": "uv-env"
+    }
+  },
+  "authority_scope": "domain_intent_routing",
+  "registry_source": "../../skill-domain-mapping.yaml"
+}

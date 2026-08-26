@@ -1,4 +1,4 @@
-﻿---
+---
 name: yaml-format
 description: YAML 格式检查：语法正确性、缩进规范、键名规范、类型一致性、配置文件专项检查
 ---

@@ -1,8 +1,12 @@
-# 方法论路由映射表 v1.0
-# 新增 Skill 时在此文件添加一条记录，method-router 自动识别
+version: "3.3"
+# 方法论路由映射表 v3.3
+# 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
 
-version: "3.3"
+
+authority_scope: domain_intent_routing
+source_of_truth: true
+registry_source: ../../skill-domain-mapping.yaml
 last_updated: "2026-08-22"
 # Phase 5: +DAG 完成事件驱动 ready queue
 # v3.3: +Pugh/ADR/ADL/DesignThinking/A3/KPT/RICE 七个新框架（补齐 decide/design/improve/report 链）
@@ -43,195 +47,195 @@ routes:
   - type: meta
     condition: { cynefin_pre: true }
     chain:
-      - { skill: Cynefin, order: 0, mandatory: false, path: "method-router/cynefin/SKILL.md" }
+      - { skill_name: cynefin, order: 0, mandatory: false }
     rationale: "先判断问题域(Simple/Complicated/Complex/Chaotic)，再选方法"
 
   - type: diagnose
     condition: { has_data: true }
     chain:
-      - { skill: 5W2H, order: 1, mandatory: true, path: "method-router/deep-analysis/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: deep-analysis, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: true }
     rationale: "有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式"
 
   - type: diagnose
     condition: { has_data: false }
     chain:
-      - { skill: 5Whys, order: 1, mandatory: true, path: "method-router/5whys/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: 5whys, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: true }
     rationale: "无量化数据 → 5 Whys 层层追问 → SCQA 统一格式"
 
   - type: diagnose
     condition: { complexity: high }
     chain:
-      - { skill: MECE, order: 1, mandatory: true, path: "method-router/mece/SKILL.md" }
-      - { skill: 5Whys, order: 2, mandatory: true, path: "method-router/5whys/SKILL.md" }
-      - { skill: SCQA, order: 3, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: mece, order: 1, mandatory: true }
+      - { skill_name: 5whys, order: 2, mandatory: true }
+      - { skill_name: scqa, order: 3, mandatory: true }
     rationale: "多因素交织 → MECE 先穷举 → 5 Whys 逐维深入"
 
   - type: diagnose
     condition: { urgency: critical }
     chain:
-      - { skill: OODA, order: 1, mandatory: true, path: "method-router/ooda/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: ooda-loop, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: false }
     rationale: "线上故障 → OODA 快速闭环 → 事后 SCQA 复盘"
 
   - type: decide
     condition: { sub_type: priority }
     chain:
-      - { skill: Eisenhower, order: 1, mandatory: true, path: "method-router/eisenhower/SKILL.md" }
-      - { skill: STAR, order: 2, mandatory: false, path: "method-router/star/SKILL.md" }
+      - { skill_name: eisenhower-matrix, order: 1, mandatory: true }
+      - { skill_name: star, order: 2, mandatory: false }
     rationale: "任务优先级 → Eisenhower 四象限 → STAR 结构化输出"
 
   - type: decide
     condition: { sub_type: priority_quant }
     chain:
-      - { skill: RICE, order: 1, mandatory: true, path: "method-router/rice/SKILL.md" }
+      - { skill_name: rice, order: 1, mandatory: true }
     rationale: "需求/功能优先级量化 → RICE 四参数打分排序"
 
   - type: decide
     condition: { sub_type: comparison }
     chain:
-      - { skill: PughMatrix, order: 1, mandatory: true, path: "method-router/pugh/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
+      - { skill_name: pugh-matrix, order: 1, mandatory: true }
+      - { skill_name: adr, order: 2, mandatory: false }
     rationale: "多方案对比 → Pugh 量化矩阵 → ADR 记录决策"
 
   - type: decide
     condition: { sub_type: tech_selection }
     chain:
-      - { skill: ADLMatrix, order: 1, mandatory: true, path: "method-router/adl/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
+      - { skill_name: adl-matrix, order: 1, mandatory: true }
+      - { skill_name: adr, order: 2, mandatory: false }
     rationale: "技术选型 → ADL 生命周期评估 → ADR 记录决策"
 
   - type: manage
     condition: { sub_type: role_split }
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: false }
     rationale: "角色分工与委派 → RACI 和六字段任务卡 → 结构化协作方案"
 
   - type: manage
     condition: { sub_type: parallel_scheduling }
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: false }
     rationale: "并行卡槽与依赖 → RACI + DAG ready queue + Kanban/WIP → 完成事件驱动的安全调度方案"
 
   - type: manage
     condition: { sub_type: time_management }
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: Eisenhower, order: 2, mandatory: false, path: "method-router/eisenhower/SKILL.md" }
-      - { skill: SCQA, order: 3, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: eisenhower-matrix, order: 2, mandatory: false }
+      - { skill_name: scqa, order: 3, mandatory: false }
     rationale: "时间管理 → Timeboxing（时间盒） + Critical Path + 优先级排序 → 检查点与超时动作"
 
   - type: manage
     condition: { sub_type: escalation }
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: OODA, order: 2, mandatory: true, path: "method-router/ooda/SKILL.md" }
-      - { skill: SCQA, order: 3, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: ooda-loop, order: 2, mandatory: true }
+      - { skill_name: scqa, order: 3, mandatory: false }
     rationale: "阻塞或冲突 → RACI 明确决策者 + OODA 快速协调 → 结构化恢复方案"
 
   - type: manage
     condition: { sub_type: improvement }
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: PDCA, order: 2, mandatory: true, path: "pdca-tuning/SKILL.md" }
-      - { skill: SCQA, order: 3, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: pdca-tuning, order: 2, mandatory: true }
+      - { skill_name: scqa, order: 3, mandatory: false }
     rationale: "协作低效 → RACI 明确责任 + PDCA 持续改进 → 结构化改进方案"
 
   - type: manage
     condition: {}
     chain:
-      - { skill: ManagementCollaboration, order: 1, mandatory: true, path: "method-router/management-collaboration/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: management-collaboration, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: false }
     rationale: "管理协作 → RACI、委派任务卡和 Kanban/WIP → 结构化协作方案"
 
   - type: design
     condition: { scope: new_system }
     chain:
-      - { skill: DesignThinking, order: 1, mandatory: true, path: "method-router/design-thinking/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
+      - { skill_name: design-thinking, order: 1, mandatory: true }
+      - { skill_name: adr, order: 2, mandatory: false }
     rationale: "新系统 → Design Thinking 5 步法 → ADR 记录决策"
 
   - type: design
     condition: { scope: refactor }
     chain:
-      - { skill: FirstPrinciples, order: 1, mandatory: true, path: "method-router/first-principles/SKILL.md" }
-      - { skill: ADR, order: 2, mandatory: false, path: "method-router/adr/SKILL.md" }
+      - { skill_name: first-principles, order: 1, mandatory: true }
+      - { skill_name: adr, order: 2, mandatory: false }
     rationale: "重构 → First Principles 拆解 → ADR 记录决策"
 
   - type: improve
     condition: { domain: process }
     chain:
-      - { skill: PDCA, order: 1, mandatory: true, path: "pdca-tuning/SKILL.md" }
-      - { skill: A3, order: 2, mandatory: false, path: "method-router/a3/SKILL.md" }
+      - { skill_name: pdca-tuning, order: 1, mandatory: true }
+      - { skill_name: a3-report, order: 2, mandatory: false }
     rationale: "流程优化 → PDCA 循环 → A3 一页纸报告"
 
   - type: improve
     condition: { domain: data }
     chain:
-      - { skill: DMAIC, order: 1, mandatory: true, path: "method-router/dmaic/SKILL.md" }
-      - { skill: A3, order: 2, mandatory: false, path: "method-router/a3/SKILL.md" }
+      - { skill_name: dmaic, order: 1, mandatory: true }
+      - { skill_name: a3-report, order: 2, mandatory: false }
     rationale: "数据驱动优化 → DMAIC 六西格玛 → A3 报告"
 
   - type: risk
     condition: { scope: code_change }
     chain:
-      - { skill: PreMortem, order: 1, mandatory: true, path: "method-router/pre-mortem/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: pre-mortem, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: true }
     rationale: "代码变更 → Pre-mortem 假想失败 → SCQA 格式化"
 
   - type: risk
     condition: { scope: systematic }
     chain:
-      - { skill: FMEA, order: 1, mandatory: true, path: "method-router/fmea/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: fmea, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: true }
     rationale: "系统性评估 → FMEA 失效模式分析 → SCQA 格式化"
 
   - type: report
     condition: { sub_type: retrospective }
     chain:
-      - { skill: STAR, order: 1, mandatory: true, path: "method-router/star/SKILL.md" }
-      - { skill: SCQA, order: 2, mandatory: false, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: star, order: 1, mandatory: true }
+      - { skill_name: scqa, order: 2, mandatory: false }
     rationale: "复盘 → STAR 结构化 → SCQA 格式化"
 
   - type: report
     condition: { sub_type: kpt }
     chain:
-      - { skill: KPT, order: 1, mandatory: true, path: "method-router/kpt/SKILL.md" }
+      - { skill_name: kpt-review, order: 1, mandatory: true }
     rationale: "高频轻量复盘 → KPT 三栏（Keep/Problem/Try）→ 行动项"
 
   - type: report
     condition: {}
     chain:
-      - { skill: SCQA, order: 1, mandatory: true, path: "method-router/scqa/SKILL.md" }
+      - { skill_name: scqa, order: 1, mandatory: true }
     rationale: "通用汇报 → SCQA 叙事框架"
 
 skill_registry:
   available:
-    - { name: 5W2H, path: "method-router/deep-analysis/SKILL.md", category: diagnose }
-    - { name: PDCA, path: "pdca-tuning/SKILL.md", category: improve }
+    - { skill_name: deep-analysis, category: diagnose }
+    - { skill_name: pdca-tuning, category: improve }
     # method-router 自身为元层入口，不注册为可路由目标
-    - { name: SCQA, path: "method-router/scqa/SKILL.md", category: report }
-    - { name: 5Whys, path: "method-router/5whys/SKILL.md", category: diagnose }
-    - { name: PreMortem, path: "method-router/pre-mortem/SKILL.md", category: risk }
-    - { name: Cynefin, path: "method-router/cynefin/SKILL.md", category: meta }
-    - { name: OODA, path: "method-router/ooda/SKILL.md", category: diagnose }
-    - { name: FirstPrinciples, path: "method-router/first-principles/SKILL.md", category: design }
-    - { name: Eisenhower, path: "method-router/eisenhower/SKILL.md", category: decide }
-    - { name: MECE, path: "method-router/mece/SKILL.md", category: analysis }
-    - { name: DMAIC, path: "method-router/dmaic/SKILL.md", category: improve }
-    - { name: FMEA, path: "method-router/fmea/SKILL.md", category: risk }
-    - { name: STAR, path: "method-router/star/SKILL.md", category: report }
-    - { name: ManagementCollaboration, path: "method-router/management-collaboration/SKILL.md", category: manage }
-    - { name: PughMatrix, path: "method-router/pugh/SKILL.md", category: decide }
-    - { name: ADR, path: "method-router/adr/SKILL.md", category: decide }
-    - { name: ADLMatrix, path: "method-router/adl/SKILL.md", category: decide }
-    - { name: RICE, path: "method-router/rice/SKILL.md", category: decide }
-    - { name: DesignThinking, path: "method-router/design-thinking/SKILL.md", category: design }
-    - { name: A3, path: "method-router/a3/SKILL.md", category: improve }
-    - { name: KPT, path: "method-router/kpt/SKILL.md", category: report }
+    - { skill_name: scqa, category: report }
+    - { skill_name: 5whys, category: diagnose }
+    - { skill_name: pre-mortem, category: risk }
+    - { skill_name: cynefin, category: meta }
+    - { skill_name: ooda-loop, category: diagnose }
+    - { skill_name: first-principles, category: design }
+    - { skill_name: eisenhower-matrix, category: decide }
+    - { skill_name: mece, category: analysis }
+    - { skill_name: dmaic, category: improve }
+    - { skill_name: fmea, category: risk }
+    - { skill_name: star, category: report }
+    - { skill_name: management-collaboration, category: manage }
+    - { skill_name: pugh-matrix, category: decide }
+    - { skill_name: adr, category: decide }
+    - { skill_name: adl-matrix, category: decide }
+    - { skill_name: rice, category: decide }
+    - { skill_name: design-thinking, category: design }
+    - { skill_name: a3-report, category: improve }
+    - { skill_name: kpt-review, category: report }
   planned: []
 
 composition_rules:

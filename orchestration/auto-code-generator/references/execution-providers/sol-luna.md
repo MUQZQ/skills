@@ -1,7 +1,7 @@
 # Sol-Luna 执行 Provider 适配
 
 本文件描述 `auto-code-generator` 如何把场景组委派给共享 Sol-Luna provider。先解析当前
-`auto-code-generator/SKILL.md` 的真实路径（consumer 入口可能是 Junction），以其父级 skills 权威目录为根，
+`orchestration/auto-code-generator/SKILL.md` 的真实路径（consumer 入口可能是 Junction），从该文件所在 Skill 目录向上三级定位 skills 权威根目录，
 再定位同级 `_providers/sol-luna`；不要假定 consumer skills root 本地存在 `_providers`。provider 无
 `SKILL.md`，唯一用户入口是 `auto-code-generator`。
 provider 只负责有界执行，不拥有生命周期、任务状态或 Git 授权。

@@ -1,0 +1,337 @@
+{
+  "version": "1.0",
+  "scope": "repository-domain-registry",
+  "source_of_truth": true,
+  "hierarchy": "AGENTS.md -> skill-domain-mapping.yaml -> domain -> skill",
+  "update_policy": {
+    "agents_md": "reference_only",
+    "add_or_move_skill": "Always update this root registry; update the owning domain mapping only when intent routing changes."
+  },
+  "domains": {
+    "code-review": {
+      "display_name": "代码审查",
+      "responsibility": "按文件和风险类型路由审查规则并汇总结论",
+      "intents": [
+        "代码审查",
+        "提交前质量检查",
+        "安全与权限审查"
+      ],
+      "entry_path": "code-review/SKILL.md",
+      "routing_source": "code-review/SKILL.md",
+      "skills": {
+        "code-smells": {
+          "skill_name": "code-smells",
+          "description": "代码坏味道检查：长函数、重复代码、God Class、过长参数、魔法数字等经典坏味道检测",
+          "path": "code-review/code-smells/SKILL.md"
+        },
+        "lang-go": {
+          "skill_name": "lang-go",
+          "description": "Go 编码规范：命名、错误处理、接口、并发、代码格式化",
+          "path": "code-review/lang-go/SKILL.md"
+        },
+        "lang-js": {
+          "skill_name": "lang-js",
+          "description": "JavaScript 编码规范：命名、模块化、异步处理、错误处理、代码格式化",
+          "path": "code-review/lang-js/SKILL.md"
+        },
+        "lang-python": {
+          "skill_name": "lang-python",
+          "description": "Python 编码规范：命名、错误处理、类型提示、文件操作",
+          "path": "code-review/lang-python/SKILL.md"
+        },
+        "lang-react": {
+          "skill_name": "lang-react",
+          "description": "React 前端编码规范：组件、Hooks、i18n、状态管理、错误处理",
+          "path": "code-review/lang-react/SKILL.md"
+        },
+        "lang-ts": {
+          "skill_name": "lang-ts",
+          "description": "TypeScript 编码规范：类型定义、泛型、接口、枚举、装饰器、工具类型",
+          "path": "code-review/lang-ts/SKILL.md"
+        },
+        "openspec-docs": {
+          "skill_name": "openspec-docs",
+          "description": "OpenSpec 文档审查规则：proposal.md、design.md、tasks.md 审查标准",
+          "path": "code-review/openspec-docs/SKILL.md"
+        },
+        "permissions-review": {
+          "skill_name": "permissions-review",
+          "description": "权限审查规则：角色定义、访问控制、权限升级、权限隔离",
+          "path": "code-review/permissions-review/SKILL.md"
+        },
+        "security-review": {
+          "skill_name": "security-review",
+          "description": "安全审查规则：密钥管理、输入验证、SQL 注入防护、XSS/CSRF、限流",
+          "path": "code-review/security-review/SKILL.md"
+        },
+        "solid-principles": {
+          "skill_name": "solid-principles",
+          "description": "SOLID 五大原则审查：单一职责(SRP)、开闭(OCP)、里氏替换(LSP)、接口隔离(ISP)、依赖倒置(DIP) + 常见设计模式误用检测",
+          "path": "code-review/solid-principles/SKILL.md"
+        },
+        "yaml-format": {
+          "skill_name": "yaml-format",
+          "description": "YAML 格式检查：语法正确性、缩进规范、键名规范、类型一致性、配置文件专项检查",
+          "path": "code-review/yaml-format/SKILL.md"
+        }
+      }
+    },
+    "coding-standards": {
+      "display_name": "编码规范与重构",
+      "responsibility": "通用编码约束与安全重构流程路由",
+      "intents": [
+        "编码规范",
+        "代码风格",
+        "重构"
+      ],
+      "entry_path": "coding-standards/SKILL.md",
+      "routing_source": "coding-standards/SKILL.md",
+      "skills": {
+        "refactor-tdd": {
+          "skill_name": "refactor-tdd",
+          "description": "TDD 驱动的安全重构流程：先写特征测试锁定旧行为 → 旁路实现新方法 → 逐个替换调用点 → 测试通过后删除旧方法。当用户提到\"重构\"、\"refactor\"、\"重写\"、\"整理代码\"、\"优化结构\"、\"改架构\"、\"替换实现\"、\"安全重构\"、\"改这个方法\"、\"这个函数太重了\"、\"拆一下\"、\"提取函数\"、\"extract\"、\"抽出方法\"、\"内联\"、\"inline\"、\"重命名\"、\"rename\"、\"移动\"、\"move\"、\"简化\"、\"simplify\"、\"消除重复\"、\"deduplicate\"、\"拆分\"、\"split\"、\"合并函数\"、\"clean up the code\"、\"pull up\"、\"push down\"、\"把这段代码重新实现一下\"、\"换个方式实现\"、\"整理一下这个模块\"时触发。注意：纯格式化（ruff format）、简单变量重命名等原子操作不触发本 skill—仅在表达了结构性改动意图时才触发。",
+          "path": "coding-standards/refactor-tdd/SKILL.md"
+        }
+      }
+    },
+    "design": {
+      "display_name": "设计与视觉",
+      "responsibility": "UI/UX、前端界面、图示、可视化和办公文档设计路由",
+      "intents": [
+        "UI/UX",
+        "前端视觉",
+        "图表与架构图",
+        "办公文档设计"
+      ],
+      "entry_path": "design/SKILL.md",
+      "routing_source": "design/references/design-mapping.yaml",
+      "skills": {
+        "drawio-skill": {
+          "skill_name": "drawio-skill",
+          "description": "Use when the user requests diagrams, flowcharts, architecture diagrams, ER diagrams, UML / sequence / class diagrams, SysML / MBSE diagrams (block definition, internal block, requirement, parametric), BPMN business process diagrams, swimlane / cross-functional flowcharts, network topology, cloud architecture from Terraform or Kubernetes manifests, ML/DL model figures (Transformer/CNN/LSTM), mind maps, or any visualization. Also use proactively when explaining systems with 3+ components, complex data flows, or relationships that benefit from visual representation. Best suited when the diagram needs custom styling, rich shape vocabulary, swimlanes, or exportable images (PNG/SVG/PDF/JPG). Generates .drawio XML and exports locally via the native draw.io desktop CLI.",
+          "path": "design/drawio-skill/SKILL.md"
+        },
+        "frontend-design": {
+          "skill_name": "frontend-design",
+          "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+          "path": "design/frontend-design/SKILL.md"
+        },
+        "ui-ux-pro-max": {
+          "skill_name": "ui-ux-pro-max",
+          "description": "UI/UX design intelligence for web, mobile, and desktop. Use for UI/UX research, visual specifications, design-system guidance, accessibility and consistency review, interaction recommendations, responsive-layout guidance, typography, color, charts, and stack-specific implementation guidance. Actual UI code creation or modification is owned by frontend-design.",
+          "path": "design/ui-ux-pro-max/SKILL.md"
+        }
+      }
+    },
+    "method-router": {
+      "display_name": "方法论",
+      "responsibility": "诊断、决策、问题探索、改进、风险与报告方法路由",
+      "intents": [
+        "分析诊断",
+        "决策选型",
+        "设计规划",
+        "流程改进",
+        "风险评估",
+        "总结汇报"
+      ],
+      "entry_path": "method-router/SKILL.md",
+      "routing_source": "method-router/references/method-mapping.yaml",
+      "skills": {
+        "5whys": {
+          "skill_name": "5whys",
+          "description": "5 Whys 根因追问：通过连续 5 层\"为什么\"从表象深挖到根本原因。适用于症状模糊、 无量化数据、需要快速定位根因的诊断场景。由 method-router 路由触发，或用户直接说 \"5 Whys\"\"追问根因\"\"为什么为什么\"\"帮我深挖一下\"时触发。与 5W2H 互补—— 5W2H 用于数据驱动分析，5 Whys 用于逻辑追问。",
+          "path": "method-router/5whys/SKILL.md"
+        },
+        "a3": {
+          "skill_name": "a3-report",
+          "description": "A3 一页纸报告：把一个问题从背景、现状、根因、对策到效果浓缩到一页 A3 纸（物理一页）的结构化呈现，是改进项目的单页载体。适用于流程优化、 质量改进、事故复盘等\"改进类\"场景的输出收口。由 method-router 路由触发 （improve 链的输出），或用户直接说\"A3\"\"一页纸报告\"\"改进报告\"时触发。 与 PDCA/DMAIC 搭配使用（循环过程 → A3 呈现）。",
+          "path": "method-router/a3/SKILL.md"
+        },
+        "adl": {
+          "skill_name": "adl-matrix",
+          "description": "ADL 矩阵（Arthur D. Little）：技术生命周期 × 竞争地位双维评估框架。 技术分引入/增长/成熟/衰退四阶段，结合团队/产品定位判断\"该采用、观望还是 弃用\"。适用于技术选型中的\"新技术评估\"场景。由 method-router 路由触发 （decide 类型 + 技术选型/新技术评估），或用户直接说\"ADL\"\"技术生命周期\" \"新技术要不要用\"时触发。与 Pugh 互补：ADL 先定生命周期阶段，Pugh 再 同阶段内量化对比。",
+          "path": "method-router/adl/SKILL.md"
+        },
+        "adr": {
+          "skill_name": "adr",
+          "description": "ADR 架构决策记录（Architecture Decision Record）：把重大决策的背景、选项、 结论、理由、后果固化为一页结构化记录，可检索、可追溯、可演进。适用于 架构选型、方案定案、规则变更等\"决定后需要沉淀\"的场景。由 method-router 路由触发（decide/design 链的输出收口），或用户直接说\"记录决策\"\"写 ADR\" \"决策归档\"时触发。与 Pugh/ADL/Design Thinking 搭配使用。",
+          "path": "method-router/adr/SKILL.md"
+        },
+        "cynefin": {
+          "skill_name": "cynefin",
+          "description": "Cynefin 问题域分类框架。在执行任何方法论分析之前，先判断问题属于哪个域—— 简单(Clear)/繁杂(Complicated)/复杂(Complex)/混沌(Chaotic)/失序(Disorder)， 不同域适用完全不同的策略。作为 method-router 的元认知增强层，提升分类路由准确率。 触发关键词：复杂度判断、问题分类、cynefin、用哪个方法不确定、这类问题怎么解。",
+          "path": "method-router/cynefin/SKILL.md"
+        },
+        "deep-analysis": {
+          "skill_name": "deep-analysis",
+          "description": "5W2H 深度根因分析：对数据/指标/匹配异常进行系统性根因分析，通过 WHAT-WHY-WHERE-WHEN-WHO-HOW-HOWMUCH 七维度定位代码级根因，输出结构化分析报告和可执行修复方案（含成本/资源/ROI 量化）",
+          "path": "method-router/deep-analysis/SKILL.md"
+        },
+        "design-thinking": {
+          "skill_name": "design-thinking",
+          "description": "Design Thinking 设计思维：以用户为中心的 5 步设计流程（共情→定义→构思→ 原型→测试）。适用于新系统/新功能设计、产品方案设计、\"从零设计一个 X\"的 场景。由 method-router 路由触发（design 类型 + 新系统/新功能），或用户 直接说\"设计思维\"\"Design Thinking\"\"从用户角度设计\"时触发。 与 First Principles 互补：Design Thinking 用户驱动（外部验证）、 First Principles 原理驱动（内部推导）。",
+          "path": "method-router/design-thinking/SKILL.md"
+        },
+        "dmaic": {
+          "skill_name": "dmaic",
+          "description": "DMAIC 六西格玛改进循环：定义(Define)→测量(Measure)→分析(Analyze)→改进(Improve) →控制(Control)。适用于数据驱动的流程优化、质量改进、性能调优场景。比 PDCA 更量化 更工程化。触发关键词：DMAIC、六西格玛、数据驱动改进、流程优化、质量提升、 持续改进、基线测量。",
+          "path": "method-router/dmaic/SKILL.md"
+        },
+        "eisenhower": {
+          "skill_name": "eisenhower-matrix",
+          "description": "Eisenhower 矩阵：按紧急度 × 重要度四象限分类任务——Do(紧急重要)/ Decide(重要不紧急)/Delegate(紧急不重要)/Delete(不紧急不重要)。 适用于任务优先级排序、Sprint 规划、bug 优先级决策、个人工作排期。 由 method-router 路由触发，或用户提到\"优先级\"\"先做哪个\"\"排个序\" \"Eisenhower\"\"四象限\"时触发。这是最轻量的方法论 Skill，< 30 秒出结果。",
+          "path": "method-router/eisenhower/SKILL.md"
+        },
+        "first-principles": {
+          "skill_name": "first-principles",
+          "description": "第一性原理思维：将问题拆解到不可再分的基本真理/物理约束，抛弃类比和惯例， 从零重建解决方案。适用于架构重构、技术选型、性能极限优化、创新设计场景。 由 method-router 路由触发，或用户提到\"第一性原理\"\"从零思考\"\"first principles\" \"回归本质\"\"马斯克思维\"时触发。",
+          "path": "method-router/first-principles/SKILL.md"
+        },
+        "fmea": {
+          "skill_name": "fmea",
+          "description": "FMEA 失效模式与影响分析：对系统/流程的每个环节做系统性风险评估， 识别失效模式、失效影响、失效原因，用 S(严重度)×O(发生度)×D(检测度) 计算 RPN 并输出缓解行动。适用于上线前系统评估、架构审查、流程风险盘点。 由 method-router 路由触发（risk 类型 + 系统性评估），或用户直接说 \"FMEA\"、\"失效模式\"、\"系统性风险评估\"、\"全面盘风险\"时触发。 Pre-mortem 是方向性头脑风暴，FMEA 是逐环节结构化打分，二者互补不重复。",
+          "path": "method-router/fmea/SKILL.md"
+        },
+        "kpt": {
+          "skill_name": "kpt-review",
+          "description": "KPT 复盘（Keep/Problem/Try）：轻量高频复盘框架，三栏记录\"继续做什么/ 问题是什么/尝试做什么\"。适用于日T收盘复盘、内容运营复盘、每日/每周小结 等高频轻量场景。由 method-router 路由触发（report 类型 + 轻量复盘）， 或用户直接说\"复盘\"\"KPT\"\"今日小结\"\"这周怎么样\"时触发。 与 STAR（深度复盘）互补：KPT 高频轻量，STAR 低频深度。",
+          "path": "method-router/kpt/SKILL.md"
+        },
+        "management-collaboration": {
+          "skill_name": "management-collaboration",
+          "description": "管理与协作方法论。用于多 Agent 或多人任务中的角色分工、责任归属、任务委派、并行卡槽、依赖波次、 阻塞升级、反馈闭环和复盘改进。当用户提到管理、协作、分工、委派、协调、责任、资源、排期、 子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径或团队效率时使用；不替代项目自身的 生命周期、授权和 Git 规则。",
+          "path": "method-router/management-collaboration/SKILL.md"
+        },
+        "mece": {
+          "skill_name": "mece",
+          "description": "MECE 结构化思维检查：验证分析维度是否相互独立(Mutually Exclusive)、完全穷尽 (Collectively Exhaustive)。作为分析质量闸门，在 5W2H/5Whys 等诊断 Skill 的 根因分类阶段介入，确保不遗漏、不重叠。触发关键词：维度完整吗、有没有遗漏、 MECE、分类检查、穷举验证。",
+          "path": "method-router/mece/SKILL.md"
+        },
+        "ooda": {
+          "skill_name": "ooda-loop",
+          "description": "OODA Loop 快速闭环：观察(Observe)→判断(Orient)→决策(Decide)→行动(Act)。 适用于线上故障响应、紧急问题处理、需要快速迭代的不确定场景。单轮 < 1 分钟， 比 PDCA 更敏捷，比 5W2H 更轻量。触发关键词：线上故障、挂了、紧急、马上、 快看看、OODA、快速响应、应急。",
+          "path": "method-router/ooda/SKILL.md"
+        },
+        "pdca-tuning": {
+          "skill_name": "pdca-tuning",
+          "description": "PDCA 戴明环持续改进方法论：当用户要求进行系统性调优、多轮迭代优化或流程级改进时， 引导用户通过 Plan→Do→Check→Act 四阶段循环完成结构化优化，输出阶段性分析记录和量化对比报告。 当用户提到\"调优\"、\"PDCA\"、\"戴明环\"、\"持续改进\"、\"多轮优化\"、\"流程改善\"、 \"根因分析后怎么改\"、\"效果验证\"、\"系统性能调优\"、\"工作流优化\"、\"代码质量持续提升\"时触发。 也适用于表达了\"分析现状→制定方案→执行→验证效果\"的闭环改进意图、 或已尝试单次修复但效果不明显的场景。 对于单次 bug 修复或一次性配置调整，不触发此 skill，直接给出修复方案。",
+          "path": "method-router/pdca-tuning/SKILL.md"
+        },
+        "pre-mortem": {
+          "skill_name": "pre-mortem",
+          "description": "Pre-mortem 事前验尸：在变更执行前假想\"项目/功能已经失败\"，反向推导所有可能的失败原因， 按概率×影响排序，输出风险清单和缓解措施。适用于代码变更、架构调整、上线前的风险审查。 由 method-router 路由触发，或用户直接说\"能上线吗\"\"有什么风险\"\"pre-mortem\"\"事前验尸\" \"万一失败了\"\"帮我找风险点\"时触发。",
+          "path": "method-router/pre-mortem/SKILL.md"
+        },
+        "pugh": {
+          "skill_name": "pugh-matrix",
+          "description": "Pugh 决策矩阵：多方案量化对比（加权评分）。以基准方案为参照，对每个方案按 多个加权标准逐项打分，输出可排序的量化结论。适用于技术选型、方案对比、 供应商评估等\"2 个以上方案选 1\"的场景。由 method-router 路由触发 （decide 类型 + 多方案对比），或用户直接说\"方案对比\"\"哪个方案好\" \"Pugh 矩阵\"\"决策矩阵\"时触发。与 ADR 搭配使用（Pugh 出结论 → ADR 落记录）。",
+          "path": "method-router/pugh/SKILL.md"
+        },
+        "rice": {
+          "skill_name": "rice",
+          "description": "RICE 评分：需求/功能优先级量化排序。用 Reach(影响人数)×Impact(影响度)× Confidence(置信度)÷Effort(成本) 计算单一分数排序。适用于需求列表排序、 功能 backlog 优先级、待办排期等\"多个候选排先后\"的场景。由 method-router 路由触发（decide 类型 + 优先级排序，与 Eisenhower 互补：RICE 量化打分、 Eisenhower 定性分象限），或用户直接说\"排优先级\"\"RICE\"\"需求排序\"时触发。",
+          "path": "method-router/rice/SKILL.md"
+        },
+        "scqa": {
+          "skill_name": "scqa",
+          "description": "SCQA 叙事框架：将所有分析/审查/诊断输出统一格式化为情境(Situation)→冲突(Complication) →问题(Question)→答案(Answer)的金字塔结构。作为 method-router 的输出层 Skill， 自动衔接上游分析结果。也适用于用户直接要求\"写报告\"\"格式化输出\"\"用 SCQA 模板\"时触发。",
+          "path": "method-router/scqa/SKILL.md"
+        },
+        "star": {
+          "skill_name": "star",
+          "description": "STAR 结构化叙事：情境(Situation)→任务(Task)→行动(Action)→结果(Result)。 适用于复盘总结、面试回答、周报/月报、项目汇报、事故报告。 由 method-router 在 report 类场景下路由触发，或用户提到\"复盘\"\"总结\" \"STAR\"\"写周报\"\"面试准备\"时触发。最轻量的输出框架，< 2 分钟生成。",
+          "path": "method-router/star/SKILL.md"
+        }
+      }
+    },
+    "meta-skills": {
+      "display_name": "元技能",
+      "responsibility": "Skill 创建、优化、评估与多客户端同步路由",
+      "intents": [
+        "创建或优化 Skill",
+        "同步 AGENTS 与 Junction"
+      ],
+      "entry_path": "meta-skills/SKILL.md",
+      "routing_source": "meta-skills/references/meta-skill-mapping.yaml",
+      "skills": {
+        "agents-sync": {
+          "skill_name": "agents-sync",
+          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"时触发。",
+          "path": "meta-skills/agents-sync/SKILL.md"
+        },
+        "skill-creator": {
+          "skill_name": "skill-creator",
+          "description": "创建新 skill、修改和优化现有 skill、评估 skill 性能。当用户想要从零创建 skill、编辑或优化现有 skill、通过 eval 测试 skill、用方差分析对比 skill 性能、或优化 skill 描述以提高触发准确率时使用。",
+          "path": "meta-skills/skill-creator/SKILL.md"
+        }
+      }
+    },
+    "independent-tools": {
+      "display_name": "独立工具",
+      "responsibility": "边界清晰的专业工具能力路由",
+      "intents": [
+        "专业单用途工具",
+        "媒体转换",
+        "任务与环境管理"
+      ],
+      "entry_path": "independent-tools/SKILL.md",
+      "routing_source": "independent-tools/references/tool-mapping.yaml",
+      "skills": {
+        "bilibili-convert": {
+          "skill_name": "bilibili-convert",
+          "description": "将 Bilibili 客户端下载的分离音视频 m4s 文件无损合并为通用 MP4 格式",
+          "path": "independent-tools/bilibili-convert/SKILL.md"
+        },
+        "branch-manager": {
+          "skill_name": "branch-manager",
+          "description": "Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、 hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、 交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理。 当用户提到\"创建分支\"、\"切换分支\"、\"stash\"、\"暂存\"、\"checkpoint\"、 \"工作区检查\"、\"回退点\"、\"feature 分支\"、\"hotfix\"、\"cherry-pick\"、 \"整理提交\"、\"rebase\"、\"merge 冲突\"、\"bisect\"时触发。",
+          "path": "independent-tools/branch-manager/SKILL.md"
+        },
+        "dida-task-manager": {
+          "skill_name": "dida-task-manager",
+          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
+          "path": "independent-tools/dida-task-manager/SKILL.md"
+        },
+        "playwright-testing": {
+          "skill_name": "playwright-testing",
+          "description": "ParamCompare 项目 Playwright 浏览器端到端测试。当用户提到\"浏览器测试\"、\"UI自动化测试\"、\"E2E测试\"、\"页面测试\"、\"Playwright测试\"、\"端到端\"、\"端对端\"、\"测试页面操作\"、\"操作浏览器\"、\"写UI测试\"、\"截图验证\"、\"browser test\"时必须使用。用于编写、运行和调试基于 Playwright 的 NiceGUI 应用浏览器测试，包括 Monaco Editor、AG Grid、Quasar 组件的交互测试。",
+          "path": "independent-tools/playwright-testing/SKILL.md"
+        },
+        "usb-git-manager": {
+          "skill_name": "usb-git-manager",
+          "description": "本地硬盘与 U 盘之间的 git 仓库双向同步。当用户提到\"推到 U 盘\"、\"从 U 盘拉代码\"、\"U 盘同步\"、\"usb git\"、\"U盘备份\"、\"U盘git\"时必须使用。处理 FAT32/exFAT 文件系统的 safe.directory 权限问题，支持裸仓库和非裸仓库两种模式。",
+          "path": "independent-tools/usb-git-manager/SKILL.md"
+        },
+        "uv-env": {
+          "skill_name": "uv-env",
+          "description": "Python 虚拟环境管理（uv）。当用户提到\"安装依赖\"、\"添加包\"、\"移除包\"、\"创建虚拟环境\"、\"Python版本\"、\"uv sync\"、\"pip install\"、\"package\"、\"依赖\"、\"venv\"、\"环境管理\"、\"uv add\"、\"uv remove\"、\"uv run\"、\"uv lock\"时必须使用。用于使用 uv 管理 Python 项目依赖和虚拟环境。",
+          "path": "independent-tools/uv-env/SKILL.md"
+        }
+      }
+    },
+    "orchestration": {
+      "display_name": "编排",
+      "responsibility": "跨领域、跨阶段和授权边界的工作流编排路由",
+      "intents": [
+        "规格驱动实施",
+        "提交前循环审查",
+        "跨域生命周期编排"
+      ],
+      "entry_path": "orchestration/SKILL.md",
+      "routing_source": "orchestration/references/orchestration-mapping.yaml",
+      "skills": {
+        "auto-code-generator": {
+          "skill_name": "auto-code-generator",
+          "description": "规格驱动的自动代码实施编排器。用户提到“自动生成代码”“全流程实施”“一键实施变更” “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用。先识别项目已有的 生命周期所有者和风险档位；有 OpenSpec、QEDA 或其他权威流程时服从其实时状态与指令，只提供 场景组内 TDD、按场景组粒度调度、安全并行、审查和验证等阶段内能力，不建立第二套流程、 状态账本或 Git 授权。",
+          "path": "orchestration/auto-code-generator/SKILL.md"
+        },
+        "code-review-before-commit": {
+          "skill_name": "code-review-before-commit",
+          "description": "提交代码前的自动化审查工作流：5 轮循环 + 路由 + 用户确认",
+          "path": "orchestration/code-review-before-commit/SKILL.md"
+        }
+      }
+    }
+  },
+  "authority_scope": "repository_registry_and_paths"
+}

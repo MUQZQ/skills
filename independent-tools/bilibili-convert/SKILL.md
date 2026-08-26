@@ -105,7 +105,7 @@ winget install FFmpeg
 脚本已内置在 skill 目录中，直接运行即可：
 
 ```powershell
-python "C:\Users\Admin\.config\opencode\skills\bilibili-convert\convert_bilibili.py" "目标目录路径"
+python "<bilibili-convert-skill-dir>\convert_bilibili.py" "目标目录路径"
 ```
 
 不指定路径则使用当前工作目录。

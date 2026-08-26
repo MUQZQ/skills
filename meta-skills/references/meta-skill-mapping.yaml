@@ -1,0 +1,23 @@
+{
+  "version": "1.0",
+  "domain": "meta-skills",
+  "source_of_truth": true,
+  "routes": {
+    "agents-sync": {
+      "intent": [
+        "同步 AGENTS.md",
+        "检查或修复 Skill Junction"
+      ],
+      "skill_name": "agents-sync"
+    },
+    "skill-creator": {
+      "intent": [
+        "创建 Skill",
+        "修改或评估 Skill"
+      ],
+      "skill_name": "skill-creator"
+    }
+  },
+  "authority_scope": "domain_intent_routing",
+  "registry_source": "../../skill-domain-mapping.yaml"
+}

@@ -21,6 +21,7 @@ description: >
 `references/design-mapping.yaml` 是设计领域唯一权威路由映射，版本为 v1.0。
 未显式指定叶子 Skill 时，先读取映射，再选择一个主 Skill；本文件中的表格仅用于人工速查，必须与映射保持一致。
 映射负责意图、产物、阶段、主 Skill 和冲突优先级，本 Skill 只执行路由流程。
+仓库自有叶子 Skill 物理存放在 `design/<skill-name>/`；外部插件能力仅保留映射引用。
 
 ## 路由规则
 

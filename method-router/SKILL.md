@@ -94,9 +94,9 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 ```
 == 路由器就绪 ==
-可用 Skill: 见 `references/method-mapping.yaml` skill_registry (共 14 个)
-缺失 Skill: [Pugh Matrix, ADL Matrix, Design Thinking, ADR, A3] (5 个，走降级手动引导)
-路由模式: 完整模式（缺失 Skill 降级为建议文本或手动引导）
+可用 Skill: 运行时读取 `references/method-mapping.yaml` 的 `skill_registry`
+缺失 Skill: 运行时校验映射引用与根注册表，不在本文维护静态清单
+路由模式: 映射优先；仅对运行时确认不可用的 Skill 执行降级
 ```
 
 ---
@@ -272,10 +272,10 @@ SCQA 将自动格式化最终报告。
 
 自动调用 SCQA Skill 格式化所有输出。
 
-### 如果 ADR / A3 输出 Skill 不可用
+### 如果映射指定的输出 Skill 在运行时不可用
 
-decide / design 链的输出 Skill 为 ADR（缺失），improve 链为 A3（缺失）。
-降级为 Markdown 决策记录（背景 / 选项 / 决策 / 理由）或 A3 一页纸摘要（问题 / 现状 / 对策 / 效果），无需强制依赖 SCQA。
+先根据根注册表解析并确认映射指定的输出 Skill。只有确认不可用时，才降级为 Markdown 决策记录
+（背景 / 选项 / 决策 / 理由）或 A3 一页纸摘要（问题 / 现状 / 对策 / 效果）。
 
 ### 如果 SCQA Skill 不可用
 
@@ -376,7 +376,7 @@ route_log:
 | `dmaic/SKILL.md` | DMAIC 六西格玛改进 |
 | `fmea/SKILL.md` | FMEA 失效模式分析 |
 | `star/SKILL.md` | STAR 结构化叙事 |
-| `../pdca-tuning/SKILL.md` | PDCA 流程改进 |
+| `pdca-tuning/SKILL.md` | PDCA 流程改进 |
 | `management-collaboration/SKILL.md` | RACI、委派任务卡、Kanban/WIP、时间盒和 Sol-Luna 协作 |
 
 ---

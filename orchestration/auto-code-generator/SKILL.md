@@ -248,7 +248,7 @@ change 投影与 prospective current view，由官方生命周期负责同步与
 ### 3.3 DAG 方法投影和安全并行
 
 并行调度前完整读取并执行共享方法
-`../method-router/management-collaboration/references/dag-scheduling.md`。共享方法拥有节点/边校验、环检测、
+`../../method-router/management-collaboration/references/dag-scheduling.md`。共享方法拥有节点/边校验、环检测、
 图收缩、拓扑层、关键路径、`ready_queue`、完成事件驱动释放和失败后继隔离；本阶段只负责自动编码领域投影：
 
 - 从权威 tracker 构建 `task DAG`，节点保持 tracker task 的正式依赖和验收身份；

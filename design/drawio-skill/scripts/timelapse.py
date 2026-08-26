@@ -8,7 +8,7 @@ single self-contained HTML player (frames embedded as base64, play / step
 controls, no external files or CDNs). Open it in any browser to watch the
 modules and edges appear over time.
 
-  python3 timelapse.py skills/drawio-skill/scripts --importer pyimports
+  python3 timelapse.py skills/design/drawio-skill/scripts --importer pyimports
   # -> architecture-evolution.html
 
 The importer is any of the bundled graph extractors (pyimports, jsimports,

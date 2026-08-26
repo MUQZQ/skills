@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "domain": "orchestration",
+  "source_of_truth": true,
+  "routes": {
+    "auto-code-generator": {
+      "intent": [
+        "规格驱动实施",
+        "跨阶段自动化开发管线"
+      ],
+      "skill_name": "auto-code-generator"
+    },
+    "code-review-before-commit": {
+      "intent": [
+        "提交前循环审查与本地提交"
+      ],
+      "skill_name": "code-review-before-commit"
+    }
+  },
+  "authority_scope": "domain_intent_routing",
+  "registry_source": "../../skill-domain-mapping.yaml"
+}

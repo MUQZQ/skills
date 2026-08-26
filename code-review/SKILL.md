@@ -40,23 +40,24 @@ git diff
 
 | 变更路径 | 触发子 Skill | 执行方式 | 说明 |
 |----------|-------------|---------|------|
-| 任何包含 `*.py` 文件的变更 | `code-review/lang-python/SKILL.md` | **Agent** | Python 语言 |
-| 任何包含 `*.go` 文件的变更 | `code-review/lang-go/SKILL.md` | **Agent** | Go 语言 |
-| 任何包含 `*.js` 或 `*.mjs` 文件的变更 | `code-review/lang-js/SKILL.md` | **Agent** | JavaScript 语言 |
-| 任何包含 `*.ts` 或 `*.tsx` 文件的变更 | `code-review/lang-ts/SKILL.md` | **Agent** | TypeScript 语言 |
-| `web/` 或 `*.jsx` 或 `*.tsx` 文件的变更 | `code-review/lang-react/SKILL.md` | **Agent** | React 前端 |
-| 涉及 `openspec/changes/` 或 `*.md` 设计文档的变更 | `design-review/SKILL.md` | **Agent** | 设计文档自动检视（P0/P1 循环修复） |
-| 涉及 `openspec/changes/` 的变更 | `code-review/openspec-docs/SKILL.md` | **Agent** | OpenSpec 文档 |
-| 涉及权限/角色/认证的变更 | `code-review/permissions-review/SKILL.md` | **Agent** | 权限审查 |
-| 任何包含 `*.yaml` / `*.yml` 文件的变更 | `code-review/yaml-format/SKILL.md` | **Agent** | YAML 格式检查 |
-| **数据管道/指标异常/匹配问题** | `method-router/deep-analysis/SKILL.md` | **Agent** | 5W2H 深度根因分析（当匹配率低、转化率低、数据管道异常时激活） |
-| **任何代码审查** | `code-review/security-review/SKILL.md` | **Agent** | 安全审查（始终应用） |
-| **任何代码审查** | `code-review/solid-principles/SKILL.md` | **Agent** | SOLID 原则（始终应用） |
-| **任何代码审查** | `code-review/code-smells/SKILL.md` | **Agent** | 代码坏味道（始终应用） |
-| **任何代码审查** | `coding-standards/SKILL.md` | **Agent** | 通用编码规范（始终应用） |
+| 任何包含 `*.py` 文件的变更 | `lang-python` | **Agent** | Python 语言 |
+| 任何包含 `*.go` 文件的变更 | `lang-go` | **Agent** | Go 语言 |
+| 任何包含 `*.js` 或 `*.mjs` 文件的变更 | `lang-js` | **Agent** | JavaScript 语言 |
+| 任何包含 `*.ts` 或 `*.tsx` 文件的变更 | `lang-ts` | **Agent** | TypeScript 语言 |
+| `web/` 或 `*.jsx` 或 `*.tsx` 文件的变更 | `lang-react` | **Agent** | React 前端 |
+| 涉及 `openspec/changes/` 或 `*.md` 设计文档的变更 | `design` | **Agent** | 先进入设计领域，再按产物类型选择审查能力 |
+| 涉及 `openspec/changes/` 的变更 | `openspec-docs` | **Agent** | OpenSpec 文档 |
+| 涉及权限/角色/认证的变更 | `permissions-review` | **Agent** | 权限审查 |
+| 任何包含 `*.yaml` / `*.yml` 文件的变更 | `yaml-format` | **Agent** | YAML 格式检查 |
+| **数据管道/指标异常/匹配问题** | `deep-analysis` | **Agent** | 5W2H 深度根因分析（当匹配率低、转化率低、数据管道异常时激活） |
+| **任何代码审查** | `security-review` | **Agent** | 安全审查（始终应用） |
+| **任何代码审查** | `solid-principles` | **Agent** | SOLID 原则（始终应用） |
+| **任何代码审查** | `code-smells` | **Agent** | 代码坏味道（始终应用） |
+| **任何代码审查** | `coding-standards` | **Agent** | 通用编码规范（始终应用） |
 
 **路由规则**：
 - 所有子 skill 统一通过 Agent 执行（条件触发或始终触发）
+- 本仓 Skill 统一以规范 `skill_name` 路由，并通过根目录 `skill-domain-mapping.yaml` 解析实际路径
 - 语言规则根据文件后缀匹配（含 `lang-` 前缀）
 - 安全/SOLID/坏味道无条件执行（始终启动 Agent 审查）
 - 项目特定审查规则由目标项目提供；共享协调器不内置具体项目的测试层级、目录或门禁命令
@@ -69,7 +70,7 @@ git diff
 Task:
   subagent_type: explore
   prompt: |
-    请执行 `code-review/{subskill-name}/SKILL.md` 中的审查规则，检查以下变更：
+    请执行根注册表中 `{skill-name}` 对应路径的审查规则，检查以下变更：
 
     变更文件:
     {git diff --name-only 输出}
@@ -83,13 +84,13 @@ Task:
 
 ### 4. 执行全局审查
 
-协调者通过 Agent 执行安全审查、SOLID 原则、代码坏味道、通用编码规范审查（这四项为始终触发）。注意：通用编码规范审查加载 `coding-standards/SKILL.md`（与 code-review 同级的权威源目录，路径 `.cc-switch/skills/coding-standards/SKILL.md`），加载通用核心条款逐条核对：
+协调者通过 Agent 执行安全审查、SOLID 原则、代码坏味道、通用编码规范审查（这四项为始终触发）。所有名称均先通过根注册表解析，再加载对应规则：
 
 ```
 Task:
   subagent_type: explore
   prompt: |
-    请执行 `code-review/{skill-name}/SKILL.md` 中的审查规则，检查以下变更：
+    请执行根注册表中 `{skill-name}` 对应路径的审查规则，检查以下变更：
 
     变更文件:
     {git diff --name-only 输出}
