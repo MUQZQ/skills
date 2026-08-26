@@ -1,250 +1,677 @@
-version: "3.3"
-# 方法论路由映射表 v3.3
+# 方法论路由映射表 v3.4
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
-
-
+# v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
+version: '3.4'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
-last_updated: "2026-08-22"
-# Phase 5: +DAG 完成事件驱动 ready queue
-# v3.3: +Pugh/ADR/ADL/DesignThinking/A3/KPT/RICE 七个新框架（补齐 decide/design/improve/report 链）
-
+last_updated: '2026-08-26'
 classification:
   diagnose:
-    keywords: [为什么, 报错, 失败, 异常, 不对, bug, 排查, 定位, 原因, 根因]
-    examples: ["匹配率为什么这么低", "这个接口一直报错"]
+    keywords:
+    - 为什么
+    - 报错
+    - 失败
+    - 异常
+    - 不对
+    - bug
+    - 排查
+    - 定位
+    - 原因
+    - 根因
+    examples:
+    - 匹配率为什么这么低
+    - 这个接口一直报错
   decide:
-    keywords: [选哪个, 要不要, 优先级, 对比, 方案, 技术选型]
-    examples: ["用 Redis 还是 Kafka", "这三个方案哪个好"]
+    keywords:
+    - 选哪个
+    - 要不要
+    - 优先级
+    - 对比
+    - 方案
+    - 技术选型
+    examples:
+    - 用 Redis 还是 Kafka
+    - 这三个方案哪个好
   design:
-    keywords: [设计, 架构, 重构, 新功能, 怎么实现, 搭建]
-    examples: ["设计一个消息推送系统", "这个模块需要重构"]
+    keywords:
+    - 设计
+    - 架构
+    - 重构
+    - 新功能
+    - 怎么实现
+    - 搭建
+    examples:
+    - 设计一个消息推送系统
+    - 这个模块需要重构
   improve:
-    keywords: [优化, 提升, 改进, 加速, 减少, 自动化, 太慢]
-    examples: ["这个接口太慢了", "能不能优化一下 CI 流程"]
+    keywords:
+    - 优化
+    - 提升
+    - 改进
+    - 加速
+    - 减少
+    - 自动化
+    - 太慢
+    examples:
+    - 这个接口太慢了
+    - 能不能优化一下 CI 流程
   risk:
-    keywords: [风险, 安全, 漏洞, 事故, 万一, 上线, 有问题吗]
-    examples: ["这个改动能上线吗", "有什么安全风险"]
+    keywords:
+    - 风险
+    - 安全
+    - 漏洞
+    - 事故
+    - 万一
+    - 上线
+    - 有问题吗
+    examples:
+    - 这个改动能上线吗
+    - 有什么安全风险
   report:
-    keywords: [总结, 汇报, 周报, 复盘, 文档, 记录, 写报告]
-    examples: ["帮我写个复盘报告", "本周工作总结"]
+    keywords:
+    - 总结
+    - 汇报
+    - 周报
+    - 复盘
+    - 文档
+    - 记录
+    - 写报告
+    examples:
+    - 帮我写个复盘报告
+    - 本周工作总结
   manage:
-    keywords: [管理, 协作, 分工, 委派, 责任, 协调, 资源, 排期, 子 Agent, 卡槽, DAG, 有向无环图, 依赖图, 拓扑, 关键路径, 时间, 截止, 超时, 进度, 升级]
-    examples: ["Sol 和 Luna 怎么分工", "如何安排多个子 Agent 协作", "如何避免 Luna 超时"]
-
+    keywords:
+    - 管理
+    - 协作
+    - 分工
+    - 委派
+    - 责任
+    - 协调
+    - 资源
+    - 排期
+    - 子 Agent
+    - 卡槽
+    - DAG
+    - 有向无环图
+    - 依赖图
+    - 拓扑
+    - 关键路径
+    - 时间
+    - 截止
+    - 超时
+    - 进度
+    - 升级
+    examples:
+    - Sol 和 Luna 怎么分工
+    - 如何安排多个子 Agent 协作
+    - 如何避免 Luna 超时
+  goal:
+    keywords:
+    - 目标
+    - OKR
+    - KPI
+    - 减肥
+    - 学习计划
+    - 愿景
+    - 里程碑
+    - flag
+    - 定目标
+    - 达成
+    examples:
+    - 帮我定个季度减肥目标
+  learning:
+    keywords:
+    - 学习
+    - 理解
+    - 弄懂
+    - 掌握
+    - 复习
+    - 讲给别人听
+    - 面试
+    - 简单解释
+    examples:
+    - 这个机制我是不是真懂了
 urgency:
   critical:
-    keywords: [线上故障, 挂了, 紧急, 用户投诉, 宕机, 马上, 立刻]
+    keywords:
+    - 线上故障
+    - 挂了
+    - 紧急
+    - 用户投诉
+    - 宕机
+    - 马上
+    - 立刻
     action: skip_confirmation
   normal:
     keywords: []
     action: show_route_for_confirmation
-
 routes:
-  # === 元路由：Cynefin 域判定 ===
-  - type: meta
-    condition: { cynefin_pre: true }
-    chain:
-      - { skill_name: cynefin, order: 0, mandatory: false }
-    rationale: "先判断问题域(Simple/Complicated/Complex/Chaotic)，再选方法"
-
-  - type: diagnose
-    condition: { has_data: true }
-    chain:
-      - { skill_name: deep-analysis, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: true }
-    rationale: "有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式"
-
-  - type: diagnose
-    condition: { has_data: false }
-    chain:
-      - { skill_name: 5whys, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: true }
-    rationale: "无量化数据 → 5 Whys 层层追问 → SCQA 统一格式"
-
-  - type: diagnose
-    condition: { complexity: high }
-    chain:
-      - { skill_name: mece, order: 1, mandatory: true }
-      - { skill_name: 5whys, order: 2, mandatory: true }
-      - { skill_name: scqa, order: 3, mandatory: true }
-    rationale: "多因素交织 → MECE 先穷举 → 5 Whys 逐维深入"
-
-  - type: diagnose
-    condition: { urgency: critical }
-    chain:
-      - { skill_name: ooda-loop, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: false }
-    rationale: "线上故障 → OODA 快速闭环 → 事后 SCQA 复盘"
-
-  - type: decide
-    condition: { sub_type: priority }
-    chain:
-      - { skill_name: eisenhower-matrix, order: 1, mandatory: true }
-      - { skill_name: star, order: 2, mandatory: false }
-    rationale: "任务优先级 → Eisenhower 四象限 → STAR 结构化输出"
-
-  - type: decide
-    condition: { sub_type: priority_quant }
-    chain:
-      - { skill_name: rice, order: 1, mandatory: true }
-    rationale: "需求/功能优先级量化 → RICE 四参数打分排序"
-
-  - type: decide
-    condition: { sub_type: comparison }
-    chain:
-      - { skill_name: pugh-matrix, order: 1, mandatory: true }
-      - { skill_name: adr, order: 2, mandatory: false }
-    rationale: "多方案对比 → Pugh 量化矩阵 → ADR 记录决策"
-
-  - type: decide
-    condition: { sub_type: tech_selection }
-    chain:
-      - { skill_name: adl-matrix, order: 1, mandatory: true }
-      - { skill_name: adr, order: 2, mandatory: false }
-    rationale: "技术选型 → ADL 生命周期评估 → ADR 记录决策"
-
-  - type: manage
-    condition: { sub_type: role_split }
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: false }
-    rationale: "角色分工与委派 → RACI 和六字段任务卡 → 结构化协作方案"
-
-  - type: manage
-    condition: { sub_type: parallel_scheduling }
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: false }
-    rationale: "并行卡槽与依赖 → RACI + DAG ready queue + Kanban/WIP → 完成事件驱动的安全调度方案"
-
-  - type: manage
-    condition: { sub_type: time_management }
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: eisenhower-matrix, order: 2, mandatory: false }
-      - { skill_name: scqa, order: 3, mandatory: false }
-    rationale: "时间管理 → Timeboxing（时间盒） + Critical Path + 优先级排序 → 检查点与超时动作"
-
-  - type: manage
-    condition: { sub_type: escalation }
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: ooda-loop, order: 2, mandatory: true }
-      - { skill_name: scqa, order: 3, mandatory: false }
-    rationale: "阻塞或冲突 → RACI 明确决策者 + OODA 快速协调 → 结构化恢复方案"
-
-  - type: manage
-    condition: { sub_type: improvement }
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: pdca-tuning, order: 2, mandatory: true }
-      - { skill_name: scqa, order: 3, mandatory: false }
-    rationale: "协作低效 → RACI 明确责任 + PDCA 持续改进 → 结构化改进方案"
-
-  - type: manage
-    condition: {}
-    chain:
-      - { skill_name: management-collaboration, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: false }
-    rationale: "管理协作 → RACI、委派任务卡和 Kanban/WIP → 结构化协作方案"
-
-  - type: design
-    condition: { scope: new_system }
-    chain:
-      - { skill_name: design-thinking, order: 1, mandatory: true }
-      - { skill_name: adr, order: 2, mandatory: false }
-    rationale: "新系统 → Design Thinking 5 步法 → ADR 记录决策"
-
-  - type: design
-    condition: { scope: refactor }
-    chain:
-      - { skill_name: first-principles, order: 1, mandatory: true }
-      - { skill_name: adr, order: 2, mandatory: false }
-    rationale: "重构 → First Principles 拆解 → ADR 记录决策"
-
-  - type: improve
-    condition: { domain: process }
-    chain:
-      - { skill_name: pdca-tuning, order: 1, mandatory: true }
-      - { skill_name: a3-report, order: 2, mandatory: false }
-    rationale: "流程优化 → PDCA 循环 → A3 一页纸报告"
-
-  - type: improve
-    condition: { domain: data }
-    chain:
-      - { skill_name: dmaic, order: 1, mandatory: true }
-      - { skill_name: a3-report, order: 2, mandatory: false }
-    rationale: "数据驱动优化 → DMAIC 六西格玛 → A3 报告"
-
-  - type: risk
-    condition: { scope: code_change }
-    chain:
-      - { skill_name: pre-mortem, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: true }
-    rationale: "代码变更 → Pre-mortem 假想失败 → SCQA 格式化"
-
-  - type: risk
-    condition: { scope: systematic }
-    chain:
-      - { skill_name: fmea, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: true }
-    rationale: "系统性评估 → FMEA 失效模式分析 → SCQA 格式化"
-
-  - type: report
-    condition: { sub_type: retrospective }
-    chain:
-      - { skill_name: star, order: 1, mandatory: true }
-      - { skill_name: scqa, order: 2, mandatory: false }
-    rationale: "复盘 → STAR 结构化 → SCQA 格式化"
-
-  - type: report
-    condition: { sub_type: kpt }
-    chain:
-      - { skill_name: kpt-review, order: 1, mandatory: true }
-    rationale: "高频轻量复盘 → KPT 三栏（Keep/Problem/Try）→ 行动项"
-
-  - type: report
-    condition: {}
-    chain:
-      - { skill_name: scqa, order: 1, mandatory: true }
-    rationale: "通用汇报 → SCQA 叙事框架"
-
+- type: meta
+  condition:
+    cynefin_pre: true
+  chain:
+  - skill_name: cynefin
+    order: 0
+    mandatory: false
+  rationale: 先判断问题域(Simple/Complicated/Complex/Chaotic)，再选方法
+- type: diagnose
+  condition:
+    has_data: true
+  chain:
+  - skill_name: deep-analysis
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: true
+  rationale: 有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式
+- type: diagnose
+  condition:
+    has_data: false
+  chain:
+  - skill_name: 5whys
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: true
+  rationale: 无量化数据 → 5 Whys 层层追问 → SCQA 统一格式
+- type: diagnose
+  condition:
+    complexity: high
+  chain:
+  - skill_name: mece
+    order: 1
+    mandatory: true
+  - skill_name: 5whys
+    order: 2
+    mandatory: true
+  - skill_name: scqa
+    order: 3
+    mandatory: true
+  rationale: 多因素交织 → MECE 先穷举 → 5 Whys 逐维深入
+- type: diagnose
+  condition:
+    urgency: critical
+  chain:
+  - skill_name: ooda-loop
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: 线上故障 → OODA 快速闭环 → 事后 SCQA 复盘
+- type: decide
+  condition:
+    sub_type: priority
+  chain:
+  - skill_name: eisenhower-matrix
+    order: 1
+    mandatory: true
+  - skill_name: star
+    order: 2
+    mandatory: false
+  rationale: 任务优先级 → Eisenhower 四象限 → STAR 结构化输出
+- type: decide
+  condition:
+    sub_type: priority_quant
+  chain:
+  - skill_name: rice
+    order: 1
+    mandatory: true
+  rationale: 需求/功能优先级量化 → RICE 四参数打分排序
+- type: decide
+  condition:
+    sub_type: comparison
+  chain:
+  - skill_name: pugh-matrix
+    order: 1
+    mandatory: true
+  - skill_name: adr
+    order: 2
+    mandatory: false
+  rationale: 多方案对比 → Pugh 量化矩阵 → ADR 记录决策
+- type: decide
+  condition:
+    sub_type: tech_selection
+  chain:
+  - skill_name: adl-matrix
+    order: 1
+    mandatory: true
+  - skill_name: adr
+    order: 2
+    mandatory: false
+  rationale: 技术选型 → ADL 生命周期评估 → ADR 记录决策
+- type: manage
+  condition:
+    sub_type: role_split
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: 角色分工与委派 → RACI 和六字段任务卡 → 结构化协作方案
+- type: manage
+  condition:
+    sub_type: parallel_scheduling
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: 并行卡槽与依赖 → RACI + DAG ready queue + Kanban/WIP → 完成事件驱动的安全调度方案
+- type: manage
+  condition:
+    sub_type: time_management
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: eisenhower-matrix
+    order: 2
+    mandatory: false
+  - skill_name: scqa
+    order: 3
+    mandatory: false
+  rationale: 时间管理 → Timeboxing（时间盒） + Critical Path + 优先级排序 → 检查点与超时动作
+- type: manage
+  condition:
+    sub_type: escalation
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: ooda-loop
+    order: 2
+    mandatory: true
+  - skill_name: scqa
+    order: 3
+    mandatory: false
+  rationale: 阻塞或冲突 → RACI 明确决策者 + OODA 快速协调 → 结构化恢复方案
+- type: manage
+  condition:
+    sub_type: improvement
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: pdca-tuning
+    order: 2
+    mandatory: true
+  - skill_name: scqa
+    order: 3
+    mandatory: false
+  rationale: 协作低效 → RACI 明确责任 + PDCA 持续改进 → 结构化改进方案
+- type: manage
+  condition: {}
+  chain:
+  - skill_name: management-collaboration
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: 管理协作 → RACI、委派任务卡和 Kanban/WIP → 结构化协作方案
+- type: design
+  condition:
+    scope: new_system
+  chain:
+  - skill_name: design-thinking
+    order: 1
+    mandatory: true
+  - skill_name: adr
+    order: 2
+    mandatory: false
+  rationale: 新系统 → Design Thinking 5 步法 → ADR 记录决策
+- type: design
+  condition:
+    scope: refactor
+  chain:
+  - skill_name: first-principles
+    order: 1
+    mandatory: true
+  - skill_name: adr
+    order: 2
+    mandatory: false
+  rationale: 重构 → First Principles 拆解 → ADR 记录决策
+- type: improve
+  condition:
+    domain: process
+  chain:
+  - skill_name: pdca-tuning
+    order: 1
+    mandatory: true
+  - skill_name: a3-report
+    order: 2
+    mandatory: false
+  rationale: 流程优化 → PDCA 循环 → A3 一页纸报告
+- type: improve
+  condition:
+    domain: data
+  chain:
+  - skill_name: dmaic
+    order: 1
+    mandatory: true
+  - skill_name: a3-report
+    order: 2
+    mandatory: false
+  rationale: 数据驱动优化 → DMAIC 六西格玛 → A3 报告
+- type: risk
+  condition:
+    scope: code_change
+  chain:
+  - skill_name: pre-mortem
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: true
+  rationale: 代码变更 → Pre-mortem 假想失败 → SCQA 格式化
+- type: risk
+  condition:
+    scope: systematic
+  chain:
+  - skill_name: fmea
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: true
+  rationale: 系统性评估 → FMEA 失效模式分析 → SCQA 格式化
+- type: report
+  condition:
+    sub_type: retrospective
+  chain:
+  - skill_name: star
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: 复盘 → STAR 结构化 → SCQA 格式化
+- type: report
+  condition:
+    sub_type: kpt
+  chain:
+  - skill_name: kpt-review
+    order: 1
+    mandatory: true
+  rationale: 高频轻量复盘 → KPT 三栏（Keep/Problem/Try）→ 行动项
+- type: report
+  condition: {}
+  chain:
+  - skill_name: scqa
+    order: 1
+    mandatory: true
+  rationale: 通用汇报 → SCQA 叙事框架
+- type: diagnose
+  condition:
+    sub_type: multi_factor
+  chain:
+  - skill_name: fishbone
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: '补充 diagnose 链路由（{''sub_type'': ''multi_factor''}）'
+- type: decide
+  condition:
+    sub_type: quick_priority
+  chain:
+  - skill_name: impact-effort
+    order: 1
+    mandatory: true
+  rationale: '补充 decide 链路由（{''sub_type'': ''quick_priority''}）'
+- type: decide
+  condition:
+    sub_type: consequence_check
+  chain:
+  - skill_name: second-order
+    order: 1
+    mandatory: true
+  - skill_name: scqa
+    order: 2
+    mandatory: false
+  rationale: '补充 decide 链路由（{''sub_type'': ''consequence_check''}）'
+- type: manage
+  condition:
+    sub_type: structured_discussion
+  chain:
+  - skill_name: six-hats
+    order: 1
+    mandatory: true
+  rationale: '补充 manage 链路由（{''sub_type'': ''structured_discussion''}）'
+- type: improve
+  condition:
+    sub_type: focus
+  chain:
+  - skill_name: pareto
+    order: 1
+    mandatory: true
+  rationale: '补充 improve 链路由（{''sub_type'': ''focus''}）'
+- type: goal
+  condition:
+    sub_type: goal_setup
+  chain:
+  - skill_name: okr
+    order: 1
+    mandatory: true
+  - skill_name: smart
+    order: 2
+    mandatory: true
+  rationale: '补充 goal 链路由（{''sub_type'': ''goal_setup''}）'
+- type: goal
+  condition:
+    sub_type: goal_quality
+  chain:
+  - skill_name: smart
+    order: 1
+    mandatory: true
+  rationale: '补充 goal 链路由（{''sub_type'': ''goal_quality''}）'
+- type: report
+  condition:
+    sub_type: feedback
+  chain:
+  - skill_name: sbi
+    order: 1
+    mandatory: true
+  rationale: '补充 report 链路由（{''sub_type'': ''feedback''}）'
+- type: design
+  condition:
+    scope: user_insight
+  chain:
+  - skill_name: jtbd
+    order: 1
+    mandatory: true
+  - skill_name: design-thinking
+    order: 2
+    mandatory: false
+  rationale: '补充 design 链路由（{''scope'': ''user_insight''}）'
+- type: design
+  condition:
+    scope: enhance_existing
+  chain:
+  - skill_name: scamper
+    order: 1
+    mandatory: true
+  - skill_name: impact-effort
+    order: 2
+    mandatory: false
+  rationale: '补充 design 链路由（{''scope'': ''enhance_existing''}）'
+- type: design
+  condition:
+    scope: requirement_classify
+  chain:
+  - skill_name: kano
+    order: 1
+    mandatory: true
+  rationale: '补充 design 链路由（{''scope'': ''requirement_classify''}）'
+- type: risk
+  condition:
+    sub_type: long_term
+  chain:
+  - skill_name: scenario-planning
+    order: 1
+    mandatory: true
+  rationale: '补充 risk 链路由（{''sub_type'': ''long_term''}）'
+- type: risk
+  condition:
+    sub_type: top_down
+  chain:
+  - skill_name: fta
+    order: 1
+    mandatory: true
+  rationale: '补充 risk 链路由（{''sub_type'': ''top_down''}）'
+- type: improve
+  condition:
+    sub_type: process_define
+  chain:
+  - skill_name: sipoc
+    order: 1
+    mandatory: true
+  - skill_name: pdca-tuning
+    order: 2
+    mandatory: false
+  rationale: '补充 improve 链路由（{''sub_type'': ''process_define''}）'
+- type: improve
+  condition:
+    sub_type: compare
+  chain:
+  - skill_name: benchmarking
+    order: 1
+    mandatory: true
+  - skill_name: smart
+    order: 2
+    mandatory: false
+  rationale: '补充 improve 链路由（{''sub_type'': ''compare''}）'
+- type: learning
+  condition:
+    sub_type: verify_understanding
+  chain:
+  - skill_name: feynman
+    order: 1
+    mandatory: true
+  rationale: '补充 learning 链路由（{''sub_type'': ''verify_understanding''}）'
+- type: manage
+  condition:
+    sub_type: personal_tasks
+  chain:
+  - skill_name: gtd
+    order: 1
+    mandatory: true
+  rationale: '补充 manage 链路由（{''sub_type'': ''personal_tasks''}）'
+- type: report
+  condition:
+    sub_type: deep_retro
+  chain:
+  - skill_name: double-loop
+    order: 1
+    mandatory: true
+  rationale: '补充 report 链路由（{''sub_type'': ''deep_retro''}）'
 skill_registry:
   available:
-    - { skill_name: deep-analysis, category: diagnose }
-    - { skill_name: pdca-tuning, category: improve }
-    # method-router 自身为元层入口，不注册为可路由目标
-    - { skill_name: scqa, category: report }
-    - { skill_name: 5whys, category: diagnose }
-    - { skill_name: pre-mortem, category: risk }
-    - { skill_name: cynefin, category: meta }
-    - { skill_name: ooda-loop, category: diagnose }
-    - { skill_name: first-principles, category: design }
-    - { skill_name: eisenhower-matrix, category: decide }
-    - { skill_name: mece, category: analysis }
-    - { skill_name: dmaic, category: improve }
-    - { skill_name: fmea, category: risk }
-    - { skill_name: star, category: report }
-    - { skill_name: management-collaboration, category: manage }
-    - { skill_name: pugh-matrix, category: decide }
-    - { skill_name: adr, category: decide }
-    - { skill_name: adl-matrix, category: decide }
-    - { skill_name: rice, category: decide }
-    - { skill_name: design-thinking, category: design }
-    - { skill_name: a3-report, category: improve }
-    - { skill_name: kpt-review, category: report }
+  - skill_name: deep-analysis
+    category: diagnose
+  - skill_name: pdca-tuning
+    category: improve
+  - skill_name: scqa
+    category: report
+  - skill_name: 5whys
+    category: diagnose
+  - skill_name: pre-mortem
+    category: risk
+  - skill_name: cynefin
+    category: meta
+  - skill_name: ooda-loop
+    category: diagnose
+  - skill_name: first-principles
+    category: design
+  - skill_name: eisenhower-matrix
+    category: decide
+  - skill_name: mece
+    category: analysis
+  - skill_name: dmaic
+    category: improve
+  - skill_name: fmea
+    category: risk
+  - skill_name: star
+    category: report
+  - skill_name: management-collaboration
+    category: manage
+  - skill_name: pugh-matrix
+    category: decide
+  - skill_name: adr
+    category: decide
+  - skill_name: adl-matrix
+    category: decide
+  - skill_name: rice
+    category: decide
+  - skill_name: design-thinking
+    category: design
+  - skill_name: a3-report
+    category: improve
+  - skill_name: kpt-review
+    category: report
+  - skill_name: fishbone
+    category: diagnose
+  - skill_name: second-order
+    category: decide
+  - skill_name: impact-effort
+    category: decide
+  - skill_name: six-hats
+    category: manage
+  - skill_name: pareto
+    category: improve
+  - skill_name: smart
+    category: goal
+  - skill_name: okr
+    category: goal
+  - skill_name: sbi
+    category: report
+  - skill_name: jtbd
+    category: design
+  - skill_name: scamper
+    category: design
+  - skill_name: scenario-planning
+    category: risk
+  - skill_name: kano
+    category: design
+  - skill_name: sipoc
+    category: improve
+  - skill_name: feynman
+    category: learning
+  - skill_name: benchmarking
+    category: improve
+  - skill_name: fta
+    category: risk
+  - skill_name: gtd
+    category: manage
+  - skill_name: double-loop
+    category: report
   planned: []
-
 composition_rules:
-  - { rule: R_A, desc: "诊断类输出自动衔接 SCQA" }
-  - { rule: R_B, desc: "MECE 先于 5 Whys" }
-  - { rule: R_C, desc: "Pre-mortem 先于 FMEA" }
-  - { rule: R_D, desc: "用户显式指定 > 路由推荐" }
-  - { rule: R_E, desc: "同类型 Skill 不重复运行" }
-  - { rule: R_F, desc: "管理协作先建立 RACI，再生成委派和并行计划" }
-  - { rule: R_G, desc: "仅依赖就绪且安全隔离的工作进入并行 WIP；验收完成后立即释放后继，不为填槽拆分内聚场景" }
-  - { rule: R_H, desc: "任务不清晰时执行者先向唯一 A 提问，不得自行补全授权" }
-  - { rule: R_I, desc: "时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证" }
+- rule: R_A
+  desc: 诊断类输出自动衔接 SCQA
+- rule: R_B
+  desc: MECE 先于 5 Whys
+- rule: R_C
+  desc: Pre-mortem 先于 FMEA
+- rule: R_D
+  desc: 用户显式指定 > 路由推荐
+- rule: R_E
+  desc: 同类型 Skill 不重复运行
+- rule: R_F
+  desc: 管理协作先建立 RACI，再生成委派和并行计划
+- rule: R_G
+  desc: 仅依赖就绪且安全隔离的工作进入并行 WIP；验收完成后立即释放后继，不为填槽拆分内聚场景
+- rule: R_H
+  desc: 任务不清晰时执行者先向唯一 A 提问，不得自行补全授权
+- rule: R_I
+  desc: 时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证

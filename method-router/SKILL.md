@@ -124,6 +124,8 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 | **improve** | 优化、提升、改进、加速、减少、自动化、太慢 | "这个接口太慢了" |
 | **risk** | 风险、安全、漏洞、事故、万一、上线、有问题吗 | "这个改动能上线吗" |
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
+| **goal** | 目标、OKR、KPI、flag、减肥、学习计划、愿景、里程碑、定目标、达成 | "帮我定个季度减肥目标" |
+| **learning** | 学习、理解、弄懂、掌握、复习、讲给别人听、面试、简单解释 | "这个机制我是不是真懂了" |
 | **manage** | 管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、升级 | "按依赖图安排 Sol 和 Luna 的并发波次" |
 
 ### 分类置信度计算
@@ -177,6 +179,24 @@ confidence = 加权平均:
 | **risk** | 系统性评估 | **FMEA** | — | SCQA |
 | **report** | 复盘总结 | **STAR** | — | SCQA |
 | **report** | 通用报告 | **SCQA** | — | — |
+| **diagnose** | 多因素混杂（multi_factor） | **鱼骨图（fishbone）** | 5Whys（收敛后深挖） | SCQA |
+| **decide** | 快速优先级（quick_priority） | **Impact/Effort 矩阵** | — | — |
+| **decide** | 后果推演（consequence_check） | **二阶思考** | — | SCQA |
+| **manage** | 结构化讨论（structured_discussion） | **六顶思考帽** | — | SCQA |
+| **improve** | 聚焦（focus） | **帕累托 80/20** | — | SCQA |
+| **goal** | 目标框架（goal_setup） | **OKR** | SMART（校验层） | SCQA |
+| **goal** | 目标校验（goal_quality） | **SMART** | — | — |
+| **report** | 反馈（feedback） | **SBI** | — | — |
+| **design** | 用户洞察（user_insight） | **JTBD** | Design Thinking | ADR |
+| **design** | 存量改造（enhance_existing） | **SCAMPER** | Impact/Effort | — |
+| **design** | 需求分类（requirement_classify） | **Kano** | — | — |
+| **risk** | 长期不确定（long_term） | **情景规划** | — | SCQA |
+| **risk** | 顶级失效（top_down） | **FTA 故障树** | FMEA（先广后深） | SCQA |
+| **improve** | 流程定义（process_define） | **SIPOC** | PDCA | A3 |
+| **improve** | 对标（compare） | **Benchmarking** | SMART | A3 |
+| **learning** | 理解验证（verify_understanding） | **费曼技巧** | — | — |
+| **manage** | 个人任务（personal_tasks） | **GTD** | Eisenhower | SCQA |
+| **report** | 深度复盘（deep_retro） | **双环学习** | KPT/STAR（先事件后框架） | SCQA |
 
 ### 组合规则
 
