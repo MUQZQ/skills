@@ -379,6 +379,23 @@ route_log:
 
 ---
 
+## 方法论块总览（按功能块分组，英文（中文名））
+
+> 39 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+
+| 块 | 框架 |
+|---|---|
+| **问题分析** diagnose | 5whys（五个为什么）· deep-analysis（5W2H 深度分析）· mece（MECE 穷尽检查）· fishbone（鱼骨图）· ooda（OODA 快速闭环） |
+| **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验） |
+| **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录） |
+| **设计创新** design | design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
+| **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
+| **风险管理** risk | pre-mortem（事前验尸）· fmea（失效模式分析）· fta（故障树分析）· scenario-planning（情景规划） |
+| **汇报与反馈** report | scqa（金字塔叙事）· star（STAR 叙事）· kpt（KPT 复盘）· a3（一页纸报告）· sbi（SBI 反馈）· double-loop（双环学习） |
+| **协作管理** manage | management-collaboration（管理与协作）· six-hats（六顶思考帽）· gtd（GTD 任务管理） |
+| **学习验证** learning | feynman（费曼技巧） |
+| **元认知** meta | cynefin（问题域分类） |
+
 ## 参考文档索引
 
 | 文档 | 用途 |
