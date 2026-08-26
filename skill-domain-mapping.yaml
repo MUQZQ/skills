@@ -244,92 +244,92 @@
         },
         "fishbone": {
           "skill_name": "fishbone",
-          "description": "鱼骨图（Ishikawa）根因分析：多因素混杂问题按 6M 维度穷举再收敛，与 5Whys 单链深挖互补，输出衔接 SCQA",
+          "description": "鱼骨图（Ishikawa）：按 6M 维度穷举再收敛，多因素根因分析，与 5Whys 互补",
           "path": "method-router/fishbone/SKILL.md"
         },
         "second-order": {
           "skill_name": "second-order",
-          "description": "二阶思考 + 10/10/10 决策后果链推演：一阶/二阶/三阶后果逐层追问，再用 10 分钟/10 个月/10 年视角检验，与 Pre-mortem 互补",
+          "description": "二阶思考（Second-Order）：后果链推演 + 10/10/10 视角，与 Pre-mortem 互补",
           "path": "method-router/second-order/SKILL.md"
         },
         "impact-effort": {
           "skill_name": "impact-effort",
-          "description": "Impact/Effort 矩阵快速优先级筛选：影响 x 努力四象限归类，先做高影响低努力 Quick Wins，是 RICE 与 Eisenhower 之间的轻量漏斗",
+          "description": "影响×努力矩阵（Impact/Effort）：四象限快筛，RICE 与 Eisenhower 之间的轻量漏斗",
           "path": "method-router/impact-effort/SKILL.md"
         },
         "six-hats": {
           "skill_name": "six-hats",
-          "description": "六顶思考帽：白/红/黑/黄/绿/蓝六视角一次一顶有序讨论，覆盖全视角避免偏执争论，Cynefin 判域后可用",
+          "description": "六顶思考帽（Six Hats）：六视角结构化讨论，防偏执争论",
           "path": "method-router/six-hats/SKILL.md"
         },
         "pareto": {
           "skill_name": "pareto",
-          "description": "帕累托 80/20 聚焦：按影响量化排序取累计 80% 头部因素为聚焦点，超轻量（5 分钟内出结论）",
+          "description": "帕累托（80/20）：取累计 80% 头部因素聚焦，超轻量",
           "path": "method-router/pareto/SKILL.md"
         },
         "smart": {
           "skill_name": "smart",
-          "description": "SMART 目标校验：Specific/Measurable/Achievable/Relevant/Time-bound 五要素逐项核对，不合格改写目标；OKR 的校验层",
+          "description": "SMART：目标五要素校验，OKR 的校验层",
           "path": "method-router/smart/SKILL.md"
         },
         "okr": {
           "skill_name": "okr",
-          "description": "OKR 目标管理：O 定性有感召力（1-3 个）+ KR 定量可验证（每 O 3-5 个）+ 定期评分复盘，与 PDCA/KPT 配套",
+          "description": "OKR：目标-关键结果框架，定期评分复盘",
           "path": "method-router/okr/SKILL.md"
         },
         "sbi": {
           "skill_name": "sbi",
-          "description": "SBI 反馈模型：Situation 情境 + Behavior 客观行为 + Impact 影响三段式反馈，Code Review/复盘/辅导适用",
+          "description": "SBI（情境-行为-影响）：结构化反馈，给他人提改进",
           "path": "method-router/sbi/SKILL.md"
         },
         "jtbd": {
           "skill_name": "jtbd",
-          "description": "Jobs-to-be-Done 用户任务洞察：用户雇佣产品完成任务，从 Job 反推需求避免堆功能，Design Thinking 的前置 lens",
+          "description": "JTBD：用户任务洞察，Design Thinking 的前置 lens",
           "path": "method-router/jtbd/SKILL.md"
         },
         "scamper": {
           "skill_name": "scamper",
-          "description": "SCAMPER 创意改造：替代/组合/适配/修改/他用/消除/重排七问扫描已有方案，存量优化创新",
+          "description": "SCAMPER：七问改造存量方案，创新点子生成",
           "path": "method-router/scamper/SKILL.md"
         },
         "scenario-planning": {
           "skill_name": "scenario-planning",
-          "description": "情景规划：关键变量组合设计 2-3 个未来剧本，共同预案先做、信号触发转向，应对中长期不确定性",
+          "description": "情景规划（Scenario）：多剧本预案，应对中长期不确定性",
           "path": "method-router/scenario-planning/SKILL.md"
         },
         "kano": {
           "skill_name": "kano",
-          "description": "Kano 需求特性分类：双问法把需求归入基本型/期望型/惊喜型，指导必须做/按性价比做/后置做",
+          "description": "Kano：需求特性分类，指导必须做/性价比做/后置做",
           "path": "method-router/kano/SKILL.md"
         },
         "sipoc": {
           "skill_name": "sipoc",
-          "description": "SIPOC 流程边界：Supplier-Input-Process(5-7步)-Output-Customer 一页图框定流程范围，改进类任务第一步",
+          "description": "SIPOC：流程边界一页图，改进类任务第一步",
           "path": "method-router/sipoc/SKILL.md"
         },
         "feynman": {
           "skill_name": "feynman",
-          "description": "费曼技巧理解验证：用大白话讲给外行听，卡壳处即知识漏洞；学习/面试/科普前的自检",
+          "description": "费曼技巧：讲给小白听验证理解，学习/面试自检",
           "path": "method-router/feynman/SKILL.md"
         },
         "benchmarking": {
           "skill_name": "benchmarking",
-          "description": "对标分析：选可比标杆+可比指标量化差距，出差距清单与追赶目标（衔接 SMART）",
+          "description": "对标分析（Benchmarking）：可比指标量化差距",
           "path": "method-router/benchmarking/SKILL.md"
         },
         "fta": {
           "skill_name": "fta",
-          "description": "故障树分析：顶事件 → AND/OR 逻辑门 → 基本事件，最小割集定位失效组合；FMEA 的深度补充",
+          "description": "故障树（FTA）：自上而下失效逻辑，FMEA 深度补充",
           "path": "method-router/fta/SKILL.md"
         },
         "gtd": {
           "skill_name": "gtd",
-          "description": "GTD 任务管理：收集-理清-组织-回顾-执行五步，大脑外置，与滴答清单配套",
+          "description": "GTD：收集-理清-组织-回顾-执行，个人任务管理",
           "path": "method-router/gtd/SKILL.md"
         },
         "double-loop": {
           "skill_name": "double-loop",
-          "description": "双环学习：单环改行为，双环追问规则/假设/框架本身，解决「类似问题反复出现」",
+          "description": "双环学习：改行为+改规则假设，防重复犯错",
           "path": "method-router/double-loop/SKILL.md"
         }
       }

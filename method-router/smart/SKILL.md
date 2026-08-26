@@ -1,10 +1,6 @@
 ---
 name: smart
-description: >
-  SMART 目标校验：当设定或评估一个目标（减肥、学习、交付、优化、项目）
-  时使用。逐项检查 Specific/Measurable/Achievable/Relevant/Time-bound
-  五要素，不满足就改写目标。超轻量。当用户提到"目标""定目标""flag"
-  "可行性""可度量""怎么算达标"时触发，常与 OKR 组合（OKR 定框架、SMART 做校验）。
+description: SMART：目标五要素校验（具体/可测/可达/相关/有时限），不合格改写。用户说"目标、定目标、flag、可行性、可度量、怎么算达标"时触发。
 ---
 
 # SMART 目标校验

@@ -1,10 +1,6 @@
 ---
 name: sbi
-description: >
-  SBI 结构化反馈：当需要给别人（人或 Agent）提供反馈、Code Review 评论、
-  协作复盘、辅导下属时使用。Situation 情境 + Behavior 行为（客观描述
-  不加标签）+ Impact 影响（对结果/他人/成本），再落到明确建议。
-  当用户提到"反馈""建议""评价""指出问题""怎么说""Review 意见"时触发。
+description: SBI 反馈（情境-行为-影响）：客观描述行为+影响，Code Review/复盘/辅导反馈。用户说"反馈、建议、指出问题、怎么说、Review 意见"时触发。
 ---
 
 # SBI 反馈模型（情境-行为-影响）

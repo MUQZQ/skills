@@ -1,11 +1,6 @@
 ---
 name: impact-effort
-description: >
-  Impact/Effort 矩阵快速优先级筛选：当有多个待办、需求、优化点（>5 个）
-  需要快速决定先做哪些时使用。按影响（高/低）× 努力（小/大）四象限归类，
-  先做高影响低努力的 Quick Wins。当用户问"先做哪个""优先级排序"、
-  说"事情太多"或提到 Quick Win、速胜、影响大、成本低时触发，
-  即使没有明确说要用这个矩阵。
+description: 影响×努力矩阵（Impact/Effort）：四象限快速排序，先做高影响低努力。用户说"先做哪个、优先级排序、事情太多、Quick Win"时触发。
 ---
 
 # Impact/Effort 矩阵（影响 × 努力）

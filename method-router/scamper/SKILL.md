@@ -1,11 +1,6 @@
 ---
 name: scamper
-description: >
-  SCAMPER 创意改造：当需要优化/迭代一个已有产品、流程、方案（不是从零）
-  时使用。七种操作逐项尝试：替代 Substitute / 组合 Combine / 适配 Adapt /
-  修改 Modify / 他用 Put to other use / 消除 Eliminate / 重排 Rearrange。
-  当用户提到"改进""改造""还能怎么做""变个花样""创新点子""优化方案"
-  "SCAMPER"时触发。
+description: SCAMPER 改造法：替代/组合/适配/修改/他用/消除/重排七问扫描存量方案。用户说"改进、改造、还能怎么做、变个花样、创新点子、SCAMPER"时触发。
 ---
 
 # SCAMPER 创意改造法
