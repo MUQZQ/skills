@@ -1,0 +1,78 @@
+version: "1.0"
+domain: design
+source_of_truth: true
+description: 设计领域从产物意图和实施阶段路由到一个主 Skill。
+
+precedence:
+  - explicit_skill
+  - artifact_and_stage
+  - conflict_rule
+  - confidence_fallback
+
+defaults:
+  confidence_threshold: 0.70
+  max_primary_skills: 1
+  max_helper_skills: 1
+  helper_requires_non_overlapping_scope: true
+
+routes:
+  ui_ux_guidance:
+    artifacts: [ui_spec, ux_spec, design_system_guidance, accessibility_review]
+    stages: [research, guidance, review]
+    primary_skill: ui-ux-pro-max
+    implementation_owner: frontend-design
+    keywords: [UI/UX, 视觉规范, 交互规范, 设计系统建议, 可访问性审查]
+
+  frontend_implementation:
+    artifacts: [web_ui, frontend_page, component, implemented_design_system]
+    stages: [prototype, implementation, refactor]
+    primary_skill: frontend-design
+    optional_helper: ui-ux-pro-max
+    keywords: [实现页面, 修改前端, 写组件, 落地界面, 前端重构]
+
+  diagram:
+    artifacts: [flowchart, architecture_diagram, uml, er_diagram, drawio]
+    stages: [design, implementation]
+    primary_skill: drawio-skill
+    keywords: [流程图, 架构图, UML, ER图, Draw.io]
+
+  interactive_visualization:
+    artifacts: [interactive_chart, simulator, explainer, visual_tool]
+    stages: [prototype, implementation]
+    primary_skill: visualize:visualize
+    keywords: [交互式可视化, 模拟器, 图表工具, 可视化讲解]
+
+  presentation:
+    artifacts: [slides, ppt, pptx, presentation]
+    stages: [design, implementation, revision]
+    primary_skill: presentations:Presentations
+    keywords: [演示文稿, 幻灯片, PPT, PPTX]
+
+  document:
+    artifacts: [document, docx, word]
+    stages: [design, implementation, revision]
+    primary_skill: documents:documents
+    keywords: [文档, Word, DOCX]
+
+  pdf:
+    artifacts: [pdf, fillable_pdf]
+    stages: [design, implementation, revision]
+    primary_skill: pdf:pdf
+    keywords: [PDF, 可填写表单]
+
+conflict_rules:
+  guidance_and_implementation:
+    when: 同时需要设计建议与前端代码落地
+    primary_skill: frontend-design
+    optional_helper: ui-ux-pro-max
+  system_problem_and_visual_artifact:
+    when: 同时包含系统问题定义与视觉产物
+    route_to: method-router
+    exception: 视觉产物目标和系统决策已经明确时继续 design
+  project_rule_conflict:
+    when: 项目规范与领域映射冲突
+    action: 项目规范优先并记录覆盖原因
+
+fallback:
+  below_confidence: 展示最接近的两个叶子 Skill 及边界，等待用户选择
+  no_natural_route: 保持专业单用途 Skill 显式直达，不创建空壳父模块
