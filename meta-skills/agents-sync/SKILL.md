@@ -44,7 +44,7 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 |-----------|---------|--------|
 | Codex | 固定路径 `$env:USERPROFILE\.codex\` | `AGENTS.md` |
 | Claude Code | 检测 `$env:USERPROFILE\CLAUDE.md` 或 `$env:USERPROFILE\.claude\CLAUDE.md`（优先已存在的路径） | `CLAUDE.md` |
-| OpenCode | 检测 `$env:USERPROFILE\.opencode\`（目录存在则同步） | `AGENTS.md` |
+| OpenCode | 检测 `$env:USERPROFILE\.opencode\` 或 `$env:USERPROFILE\.config\opencode\`（扫描两个候选目录，优先已存在的路径） | `AGENTS.md` |
 
 ### Skill 目录目标
 
@@ -112,11 +112,20 @@ $targets = @(
 `<consumer-skills>\skill-domain-mapping.yaml`：
 
 ```powershell
+$opencodeCandidates = @(
+    (Join-Path $env:USERPROFILE ".opencode"),
+    (Join-Path $env:USERPROFILE ".config\opencode")
+)
 $fileSyncPairs = @(
     [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Codex AGENTS.md>" },
-    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Claude CLAUDE.md>" },
-    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<OpenCode AGENTS.md>" }
+    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Claude CLAUDE.md>" }
 )
+foreach ($ocRoot in $opencodeCandidates) {
+    $fileSyncPairs += [pscustomobject]@{
+        Source = (Join-Path $srcRoot "AGENTS.md")
+        Target = (Join-Path $ocRoot "AGENTS.md")
+    }
+}
 foreach ($consumerRoot in $targets) {
     $fileSyncPairs += [pscustomobject]@{
         Source = (Join-Path $srcRoot "skill-domain-mapping.yaml")
@@ -203,7 +212,7 @@ foreach ($t in $targets) {
 |-------------|----------------------------|------|---------------------|
 | Codex       | ~\.codex\AGENTS.md         | ✅   | 符号链接已指向源     |
 | Claude Code | ~\CLAUDE.md                | ⚠️  | 内容不一致，需更新   |
-| OpenCode    | ~\.opencode\AGENTS.md      | ⊘   | 目录不存在，跳过     |
+| OpenCode    | ~\.opencode\AGENTS.md / ~\.config\opencode\AGENTS.md      | ⊘   | 两个候选目录均不存在或未创建，跳过     |
 
 Skill 目录：
 | Target   | Skill             | 状态 | 说明                    |
@@ -314,6 +323,7 @@ Skill: agents-sync
 | 场景 | 处理方式 |
 |------|---------|
 | 目标父目录不存在 | 跳过该目标（标记 ⊘），不报错 |
+| 指令文件存在多个候选目录 | 每个候选目录生成独立同步对，父目录不存在者跳过，已存在者正常处理 |
 | 指令文件符号链接创建失败（权限不足） | 降级为文件复制，提示用户手动授权以启用自动同步 |
 | Skill Junction 创建失败 | 从备份恢复原 Junction 并报告错误，不静默降级为拷贝 |
 | 目标是普通目录、文件或外部链接 | 停止并报告，禁止删除、覆盖或递归移动 |
@@ -322,6 +332,6 @@ Skill: agents-sync
 
 ---
 
-*版本：2.0*
-*最后更新：2026-08-17*
-*变更：新增 skill 目录 Junction 同步方法（枚举权威源顶层含 SKILL.md 的目录，向 OpenCode/Codex/Claude 三组 skills 目录建立或替换 Junction）；Junction 目标比较使用 Target 数组 join；区分指令文件符号链接与 skill 目录 Junction 的权限要求。*
+*版本：2.1*
+*最后更新：2026-08-26*
+*变更：OpenCode 指令文件目标由固定 `~\.opencode` 扩展为 `~\.opencode` 与 `~\.config\opencode` 多候选目录扫描，每个候选目录独立生成同步对，父目录不存在者跳过。*
