@@ -12,6 +12,79 @@ PROVIDER_ROOT = SKILLS_ROOT / "_providers" / "sol-luna"
 
 
 class AutoCodeGeneratorContractTests(unittest.TestCase):
+    def test_luna_is_one_native_model_without_catalog_or_fallback(self) -> None:
+        active_files = (
+            AUTO_ROOT / "SKILL.md",
+            AUTO_ROOT / "evals" / "evals.json",
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md",
+            PROVIDER_ROOT / "CONTRACT.md",
+        )
+
+        for path in active_files:
+            content = path.read_text(encoding="utf-8")
+            self.assertIn("gpt-5.6-luna", content, path)
+            for retired in (
+                "deepseek",
+                "DeepSeek",
+                "gpt-5.3-codex-spark",
+                "gpt-5.4-mini",
+                "gpt-5.6-terra",
+                "codex_exec",
+                "claude_code",
+                "modelOverrides",
+            ):
+                self.assertNotIn(retired, content, path)
+
+        for path in (
+            AUTO_ROOT / "SKILL.md",
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md",
+            PROVIDER_ROOT / "CONTRACT.md",
+        ):
+            content = path.read_text(encoding="utf-8")
+            self.assertIn("spawn_agent", content, path)
+            self.assertIn('model="gpt-5.6-luna"', content, path)
+            self.assertIn("reasoning_effort", content, path)
+            self.assertIn('fork_turns="none"', content, path)
+            self.assertIn("由 Sol 直接执行", content, path)
+
+        adapter = (
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
+        ).read_text(encoding="utf-8")
+        self.assertIn("宿主实际能力面", adapter)
+        self.assertIn("宿主能力超出当前授权", adapter)
+        self.assertIn("不换模", adapter)
+        self.assertIn("不调用外部 runner", adapter)
+
+    def test_luna_permission_gate_fails_closed_without_host_enforcement(self) -> None:
+        contract_files = (
+            AUTO_ROOT / "SKILL.md",
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md",
+            PROVIDER_ROOT / "CONTRACT.md",
+        )
+
+        for path in contract_files:
+            content = path.read_text(encoding="utf-8")
+            self.assertIn("任务卡不是安全边界", content, path)
+            self.assertIn("只读工具白名单", content, path)
+            self.assertIn("路径沙箱", content, path)
+            self.assertIn("命令限制", content, path)
+            self.assertIn("宿主无法强制", content, path)
+            self.assertIn("由 Sol 直接执行", content, path)
+
+        for retired in (
+            "luna-models.json",
+            "scripts/sol_luna.py",
+            "scripts/bootstrap.sh",
+            "tests/test_sol_luna.py",
+            "references/project-template/AGENTS.md",
+            "references/project-template/CLAUDE.md",
+            "references/project-template/.claude/agents/luna-scout.md",
+            "references/project-template/.claude/agents/luna-worker.md",
+            "references/project-template/.claude/agents/luna-critic.md",
+            "references/project-template/.claude/agents/luna-tester.md",
+        ):
+            self.assertFalse((PROVIDER_ROOT / retired).exists(), retired)
+
     def test_maintained_view_initialization_and_drift_contract_is_explicit(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
 
@@ -33,8 +106,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
 
         for phrase in (
             "Luna 默认开启",
-            "mode=off",
-            "--user-triggered",
+            "只用 Sol",
+            "gpt-5.6-luna",
             "完整内聚场景组",
             "六字段任务卡",
             "不得拆分 RED、GREEN、REFACTOR",
@@ -47,117 +120,10 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase, adapter)
 
-    def test_codex_backend_prefers_native_runner_without_model_substitution(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
-        adapter = (
-            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
-        ).read_text(encoding="utf-8")
-        contract = (PROVIDER_ROOT / "CONTRACT.md").read_text(encoding="utf-8")
-        project_policy = (
-            PROVIDER_ROOT / "references" / "project-template" / "CLAUDE.md"
-        ).read_text(encoding="utf-8")
-        controller = (PROVIDER_ROOT / "scripts" / "sol_luna.py").read_text(
-            encoding="utf-8"
-        )
-
-        for content in (adapter, contract):
-            self.assertIn("native_spawn", content)
-            self.assertIn("codex_exec", content)
-            self.assertNotIn("不使用原生 `spawn_agent`", content)
-
-        for phrase in (
-            "只用 Sol",
-            "当前会话暴露的原生 allowlist",
-            "`spawn_agent` 工具说明",
-            "精确模型",
-            "仅在启动前",
-            "不得静默换模",
-            "返回 Agent 标识",
-        ):
-            self.assertIn(phrase, adapter)
-
-        for phrase in (
-            "直接调用 `spawn_agent`",
-            "fork_turns=\"none\"",
-            "外部 runner",
-        ):
-            self.assertIn(phrase, skill)
-        self.assertNotIn("spawn_agent", controller)
-
-        self.assertIn("原生优先", project_policy)
-        self.assertNotIn("native_spawn", project_policy)
-        self.assertNotIn("codex_exec", project_policy)
-
-        evals = json.loads(
-            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
-        )["evals"]
-        native_first = next(
-            item for item in evals if item["name"] == "codex_native_first_runner"
-        )
-        self.assertIn("gpt-5.3-codex-spark", native_first["prompt"])
-        self.assertIn("native only", native_first["expected_output"])
-        self.assertIn("权限边界", native_first["expected_output"])
-
-        default_auto = next(
-            item
-            for item in evals
-            if item["name"] == "no_view_and_default_auto_luna"
-        )
-        self.assertIn("native_spawn", default_auto["expected_output"])
-
-        explicit_off = next(
-            item for item in evals if item["name"] == "explicit_sol_only_disables_luna"
-        )
-        self.assertIn("只用 Sol", explicit_off["prompt"])
-        self.assertIn("不调用 native_spawn", explicit_off["expected_output"])
-        self.assertIn("codex_exec", explicit_off["expected_output"])
-
-        started_failure = next(
-            item
-            for item in evals
-            if item["name"] == "started_native_failure_does_not_fallback"
-        )
-        self.assertIn("Agent 标识", started_failure["prompt"])
-        self.assertIn("禁止调用 codex_exec", started_failure["expected_output"])
-
-        permission_mismatch = next(
-            item
-            for item in evals
-            if item["name"] == "native_permission_mismatch"
-        )
-        self.assertIn("权限能力", permission_mismatch["prompt"])
-        self.assertIn("同一精确模型", permission_mismatch["expected_output"])
-
     def test_shared_provider_is_not_a_user_triggered_skill(self) -> None:
         self.assertTrue((PROVIDER_ROOT / "CONTRACT.md").is_file())
         self.assertFalse((PROVIDER_ROOT / "SKILL.md").exists())
-        self.assertTrue((PROVIDER_ROOT / "scripts" / "sol_luna.py").is_file())
-        self.assertTrue((PROVIDER_ROOT / "tests" / "test_sol_luna.py").is_file())
-
-    def test_shared_provider_retains_claude_roles_without_native_catalog(self) -> None:
-        required_files = (
-            ".gitignore",
-            "scripts/bootstrap.sh",
-            "references/project-template/AGENTS.md",
-            "references/project-template/CLAUDE.md",
-            "references/project-template/.claude/agents/luna-scout.md",
-            "references/project-template/.claude/agents/luna-worker.md",
-            "references/project-template/.claude/agents/luna-critic.md",
-            "references/project-template/.claude/agents/luna-tester.md",
-        )
-
-        missing = [path for path in required_files if not (PROVIDER_ROOT / path).is_file()]
-        self.assertEqual([], missing)
-        for retired in (
-            "scripts/prepare-luna-catalog.sh",
-            "references/project-template/scripts/prepare-luna-catalog.sh",
-            "references/project-template/.codex/config.toml",
-            "references/project-template/.codex/agents/luna_scout.toml",
-            "references/project-template/.codex/agents/luna_worker.toml",
-            "references/project-template/.codex/agents/luna_critic.toml",
-            "references/project-template/.codex/agents/luna_tester.toml",
-        ):
-            self.assertFalse((PROVIDER_ROOT / retired).exists(), retired)
+        self.assertTrue((PROVIDER_ROOT / "references" / "result-schema.json").is_file())
 
     def test_provider_result_statuses_match_auto_code_contract(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -383,8 +349,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, skill)
         self.assertIn("六字段任务卡的“约束”", adapter)
         for phrase in (
-            "runner 无关的统一返回验收规则",
-            "原生和外部",
+            "统一返回验收规则",
+            "原生 Luna",
             "更新 tracker 前",
             "带 timebox 的结果不得使用 `N/A`",
         ):
@@ -400,6 +366,136 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
                 "enum"
             ],
         )
+
+    def test_demo_fast_is_default_and_spec_intent_selects_full(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        for phrase in (
+            "Delivery profile",
+            "默认 Delivery profile 为 `DEMO_FAST`",
+            "有 spec",
+            "按 spec 实施",
+            "完整模式",
+            "全流程",
+            "生产级",
+            "选择 `FULL`",
+            "不能从文件数量或 Agent 自行偏好切 FULL",
+            "`FULL` 只改变交付深度，不改变生命周期所有者或风险档位",
+            "同时输出生命周期所有者和 `Light | Standard | Strict` 风险档位",
+            "只有 `DEMO_FAST` 要求一个可观察 Demo 目标和排除项",
+            "`FULL` 使用 spec 或任务定义的可观察交付目标",
+            "当前用户明确、正向的执行意图",
+            "否定、引用、历史转述或仅讨论词语本身",
+            "不能按关键词子串匹配",
+        ):
+            self.assertIn(phrase, skill)
+
+    def test_demo_fast_preserves_minimum_tdd_and_blocks_strict_boundary(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+
+        for phrase in (
+            "本地、可逆、单一可演示 happy path",
+            "`DEMO_FAST` 只允许 `Light` 风险档位",
+            "Standard 或 Strict",
+            "风险档位门禁优先于 Delivery profile",
+            "架构",
+            "公共契约",
+            "数据迁移",
+            "安全权限隐私支付",
+            "并发一致性",
+            "不可逆外部操作",
+            "项目强制门禁",
+            "停止并报告 `BLOCKED`",
+            "需要用户明确改为 spec/FULL",
+            "不得静默升级 FULL",
+            "只读基线和权限",
+            "一个可观察 Demo 目标",
+            "排除项",
+            "RED → GREEN → REFACTOR",
+            "可重复 smoke",
+            "不虚构 RED",
+            "聚焦自审",
+            "项目原生聚焦测试",
+            "本地 Demo smoke",
+            "不能收敛为一个本地、可逆、单一可演示 happy path",
+            "缩小 Demo 目标或明确改为 spec/FULL",
+            "不得自行创建额外归档工件",
+            "不能跳过项目官方归档、关闭或强制门禁",
+            "意图冲突且无法消歧时结果为 `BLOCKED`",
+        ):
+            self.assertIn(phrase, skill)
+
+    def test_demo_fast_report_is_not_production_or_git_authorization(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        evals = json.loads(
+            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+        )["evals"]
+        eval_by_name = {item["name"]: item for item in evals}
+
+        for phrase in (
+            "production_ready=false",
+            "已验证 happy path",
+            "延期项/风险",
+            "运行 Demo 命令",
+            "不推导 commit/push/PR/deploy",
+            "Demo VERIFIED",
+            "生产就绪",
+            "Delivery profile：`DEMO_FAST | FULL`",
+            "PLAN_ONLY",
+            "validation=PENDING",
+            "拟运行 Demo 命令",
+            "PLAN_ONLY` 的最终结果为 `INCOMPLETE",
+        ):
+            self.assertIn(phrase, skill)
+
+        self.assertEqual(len(evals), len(eval_by_name))
+        self.assertEqual(len(evals), len({item["id"] for item in evals}))
+        expected_ids = {
+            "default_demo_fast_local_happy_path": 30,
+            "demo_fast_strict_boundary_requires_explicit_full": 31,
+            "explicit_spec_intent_uses_full": 32,
+            "demo_fast_does_not_infer_git_or_production_ready": 33,
+            "negated_or_quoted_spec_does_not_select_full": 34,
+            "standard_without_full_intent_blocks": 35,
+        }
+        self.assertEqual(
+            expected_ids,
+            {name: eval_by_name[name]["id"] for name in expected_ids},
+        )
+
+        planned = eval_by_name["default_demo_fast_local_happy_path"]
+        self.assertIn("INCOMPLETE", planned["expected_output"])
+        self.assertIn("validation=PENDING", planned["expected_output"])
+        self.assertIn("拟运行 Demo 命令", planned["expected_output"])
+        self.assertNotIn("已验证 happy path", planned["expected_output"])
+
+        blocked = eval_by_name["demo_fast_strict_boundary_requires_explicit_full"]
+        self.assertIn("不得静默升级 FULL", blocked["expected_output"])
+        self.assertIn("项目生命周期", blocked["expected_output"])
+        self.assertIn("Strict", blocked["expected_output"])
+        self.assertNotIn("Standard/Strict", blocked["expected_output"])
+
+        full = eval_by_name["explicit_spec_intent_uses_full"]
+        self.assertIn("选择 FULL", full["expected_output"])
+        self.assertIn("生命周期所有者", full["expected_output"])
+        self.assertIn("风险档位", full["expected_output"])
+
+        demo = eval_by_name["demo_fast_does_not_infer_git_or_production_ready"]
+        self.assertIn("无官方生命周期归档操作", demo["prompt"])
+        self.assertIn("pnpm demo -- --scenario happy-path", demo["prompt"])
+        self.assertIn("pnpm demo -- --scenario happy-path", demo["expected_output"])
+        self.assertIn("不创建非官方归档", demo["expected_output"])
+
+        negated = eval_by_name["negated_or_quoted_spec_does_not_select_full"]
+        self.assertIn("不是按 spec 实施", negated["prompt"])
+        self.assertIn("不能按子串", negated["expected_output"])
+        self.assertIn("DEMO_FAST", negated["expected_output"])
+
+        standard = eval_by_name["standard_without_full_intent_blocks"]
+        self.assertIn("Standard", standard["prompt"])
+        self.assertIn("BLOCKED", standard["expected_output"])
+        self.assertIn("缩小为 Light", standard["expected_output"])
+        self.assertIn("明确 spec/FULL", standard["expected_output"])
 
 
 if __name__ == "__main__":

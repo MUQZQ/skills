@@ -141,77 +141,76 @@
     {
       "id": 11,
       "name": "luna_default_auto_full_group_without_tdd_split",
-      "prompt": "Luna 使用默认 mode=auto。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡压缩后可放入 provider 限额。请说明 auto-code-generator 如何选择 Sol-Luna provider、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
-      "expected_output": "默认 mode=auto 时可选择 provider；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若完整场景组无法在限额内表达则 provider 不适用并回退直接执行，而不是切碎 TDD。",
+      "prompt": "Luna 默认开启。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡可保真表达。请说明 auto-code-generator 如何使用固定的 gpt-5.6-luna、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
+      "expected_output": "默认选择固定的原生 gpt-5.6-luna；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若模型或权限不可用、或场景组无法保真表达，则由 Sol 直接执行，不换模也不切碎 TDD。",
       "files": [],
       "expectations": [
-        "默认 mode=auto 且当前任务未显式关闭时可选择共享 provider",
+        "当前任务未显式关闭时默认选择固定的原生 gpt-5.6-luna",
         "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
         "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
-        "完整场景组超过限额或无法保持语义时回退 Sol 或原生执行，不拆散 TDD"
+        "模型或权限不可用、或完整场景组无法保持语义时由 Sol 直接执行，不换模、不拆散 TDD"
       ]
     },
     {
       "id": 12,
       "name": "no_view_and_default_auto_luna",
-      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，也没有显式关闭，默认 mode=auto。当前 spawn_agent 原生支持默认 Luna 精确模型及所需权限。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行 provider 选择、TDD 和权限边界，不修改文件。",
-      "expected_output": "没有维护视图契约时不创建或伪造投影；默认 mode=auto 且未显式关闭时选择 Luna，精确模型与权限受原生支持时使用 native_spawn；保持直接 RED-GREEN-REFACTOR；不推断 commit、push、PR 或部署权限。",
+      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，也没有显式关闭。当前 spawn_agent 原生支持 gpt-5.6-luna 及所需权限。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行模式选择、TDD 和权限边界，不修改文件。",
+      "expected_output": "没有维护视图契约时不创建或伪造投影；默认使用 spawn_agent 且固定 model=gpt-5.6-luna；保持直接 RED-GREEN-REFACTOR；不推断 commit、push、PR 或部署权限。",
       "files": [],
       "expectations": [
         "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
-        "默认 mode=auto 且未显式关闭时选择 Luna，精确模型与权限匹配时优先 native_spawn",
+        "未显式关闭时默认用 spawn_agent 委派固定的 gpt-5.6-luna",
         "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
         "不从实施请求推断 commit、push、PR 或部署权限"
       ]
     },
     {
       "id": 13,
-      "name": "codex_native_first_runner",
-      "prompt": "Luna 默认 mode=auto，用户分别给出三个选择：默认 gpt-5.6-luna 在当前原生 allowlist；gpt-5.3-codex-spark 不在 allowlist；以及对 Spark 额外要求 native only。请说明 backend 与 runner 的选择、权限门禁和失败处理。评估模式：只输出路由决策，不执行任务。",
-      "expected_output": "backend 与 runner 分离。默认 mode=auto 时，Sol 从当前 spawn_agent 工具说明读取 allowlist 与权限边界。默认 Luna 的精确模型受原生支持且权限满足时使用 native_spawn；Spark 不在原生 allowlist或权限边界无法证明时，仅在启动前保持同一模型走 codex_exec，不静默换模；Spark 加 native only 时返回 BLOCKED 并展示原生可选模型。spawn_agent 返回 Agent 标识后，任何失败都升级给 Sol 检查共享工作树，不自动跨 runner 重跑。",
+      "name": "single_native_luna_model",
+      "prompt": "Luna 默认开启，当前 spawn_agent 支持 gpt-5.6-luna 及所需权限。请说明模型、执行通道和失败处理。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "Luna 只有一个模型和一条执行通道：直接调用 spawn_agent 并显式传 model=gpt-5.6-luna 与角色权限边界；不维护候选列表、别名、其他后端或 CLI 回退。spawn_agent 返回 Agent 标识后，失败由 Sol 检查共享工作树并恢复，不自动重跑。",
       "files": [],
       "expectations": [
-        "Codex 精确模型受原生 allowlist 支持且权限满足时优先 native_spawn",
-        "默认 mode=auto，allowlist 与权限边界只来自当前 spawn_agent 工具说明",
-        "原生不支持 Spark 时保持 gpt-5.3-codex-spark 并在启动前选择 codex_exec，不替换模型",
-        "native only 与原生不支持冲突时返回 BLOCKED",
-        "原生任务启动后失败不自动回退 CLI，避免重复副作用"
+        "只使用原生 gpt-5.6-luna，不建立模型目录或别名",
+        "可用性与权限边界只来自当前 spawn_agent 工具说明",
+        "不使用其他后端或 CLI 回退",
+        "原生任务启动后失败不自动重跑，避免重复副作用"
       ]
     },
     {
       "id": 14,
       "name": "started_native_failure_does_not_fallback",
-      "prompt": "用户已在当前会话明确启用 Luna。Sol 为一个可写场景组选中 gpt-5.6-luna，调用 spawn_agent 后已经收到 Agent 标识；随后该 Agent 以失败状态结束，共享工作树可能已有部分改动。请说明 Sol 的恢复动作以及是否允许改用 codex_exec 重跑。评估模式：只输出恢复决策，不修改文件。",
-      "expected_output": "收到 Agent 标识即代表原生任务已经启动。Sol 必须读取 Agent 结果并检查共享工作树、diff 与测试证据，保留已有改动后决定补充上下文、重划任务或由 Sol 恢复；禁止调用 codex_exec 自动重跑同一场景，避免重复写入和重复测试。",
+      "prompt": "用户已在当前会话明确启用 Luna。Sol 为一个可写场景组调用 gpt-5.6-luna 后已经收到 Agent 标识；随后该 Agent 以失败状态结束，共享工作树可能已有部分改动。请说明 Sol 的恢复动作。评估模式：只输出恢复决策，不修改文件。",
+      "expected_output": "收到 Agent 标识即代表原生任务已经启动。Sol 必须读取 Agent 结果并检查共享工作树、diff 与测试证据，保留已有改动后决定补充上下文、重划任务或由 Sol 恢复；不自动重跑同一场景，避免重复写入和重复测试。",
       "files": [],
       "expectations": [
         "把 spawn_agent 返回 Agent 标识识别为 started 边界",
         "先检查 Agent 结果、共享工作树、diff 和测试证据",
-        "禁止调用 codex_exec 自动重跑同一场景",
+        "不自动重跑同一场景",
         "恢复由 Sol 决策，不覆盖或清理已有改动"
       ]
     },
     {
       "id": 15,
       "name": "native_permission_mismatch",
-      "prompt": "用户已在当前会话明确启用 Luna，所选 gpt-5.6-luna 位于当前 spawn_agent 模型 allowlist，但当前 spawn_agent 工具说明没有提供该只读 critic 角色所需的权限能力；任务尚未启动，用户没有要求 native only。请说明 runner 选择。评估模式：只输出路由决策，不执行任务。",
-      "expected_output": "原生资格同时要求精确模型和权限边界都由当前 spawn_agent 工具说明证明；模型可用但权限能力无法证明时，native_spawn 不适用。由于任务尚未启动且用户未要求 native only，应保持同一精确模型在启动前选择 codex_exec，不继承 Sol、不换模；若用户要求 native only，则返回 BLOCKED。",
+      "prompt": "Luna 固定使用 gpt-5.6-luna；当前 spawn_agent 支持该模型，但不提供 critic 要求的只读工具白名单、路径沙箱或命令限制，任务尚未启动。请说明执行选择。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "任务卡不是安全边界；原生委派必须确保宿主能力未超出当前任务授权。只读工具白名单、路径沙箱或命令限制无法由宿主强制时不启动 Luna，由 Sol 直接执行当前场景组，不换成其他模型，也不调用外部通道。",
       "files": [],
       "expectations": [
-        "权限能力只取自当前 spawn_agent 工具说明",
-        "模型在 allowlist 但权限无法证明时不启动 native_spawn",
-        "任务未启动时通过 codex_exec 执行同一精确模型",
-        "native only 时返回 BLOCKED，不静默换模"
+        "宿主能力只取自当前 spawn_agent 工具说明，任务卡不能替代安全隔离",
+        "宿主无法强制任务所需权限边界时不启动 Luna",
+        "由 Sol 直接执行当前场景组",
+        "不换成其他模型，不调用外部通道"
       ]
     },
     {
       "id": 16,
       "name": "explicit_sol_only_disables_luna",
-      "prompt": "Luna 默认 mode=auto，但用户在当前任务明确要求只用 Sol。请说明本任务的 provider 选择，以及是否修改持久配置。评估模式：只输出路由决策，不执行任务。",
-      "expected_output": "当前任务的显式只用 Sol 优先于默认 auto；本任务不调用 native_spawn 或 codex_exec，由 Sol 直接执行；不修改项目或全局持久配置，后续任务仍按其各自输入和有效配置决定。",
+      "prompt": "Luna 默认开启，但用户在当前任务明确要求只用 Sol。请说明本任务的执行选择。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "当前任务的显式只用 Sol 优先于 Luna 默认开启；本任务不调用 Luna，由 Sol 直接执行；不写项目或全局持久配置，后续任务仍默认启用 Luna。",
       "files": [],
       "expectations": [
-        "当前任务显式只用 Sol 时不调用 native_spawn 或 codex_exec",
+        "当前任务显式只用 Sol 时不调用 Luna",
         "由 Sol 直接执行当前任务",
         "不修改项目或全局持久配置"
       ]
@@ -380,6 +379,82 @@
         "最终 closeout 仍要求 VERIFIED、archive SUCCESS 和独立 Git 授权",
         "剩余 diff 使用同一 AUTHORIZED_COMMIT_SET 和暂存快照事务门禁",
         "没有剩余 diff 时不创建空 commit，只报告 checkpoint hashes"
+      ]
+    },
+    {
+      "id": 30,
+      "name": "default_demo_fast_local_happy_path",
+      "prompt": "一个普通本地小仓库没有 spec，用户只描述了一个可逆、单一可演示 happy path，没有说快速 Demo 或完整模式。请说明默认 Delivery profile、最小 TDD/验证流程和最终报告。评估模式：只输出规划和结论，不修改文件。",
+      "expected_output": "默认选择 Delivery profile DEMO_FAST，不要求用户额外说快速 Demo，且不持久化；保留只读基线和权限、一个 Demo 目标及排除项，并规划同一场景组 RED→GREEN→REFACTOR（不能合理测试的脚手架用可重复 smoke）、聚焦自审、项目原生聚焦测试和本地 Demo smoke。因为当前为 PLAN_ONLY，最终结果为 INCOMPLETE，并报告 validation=PENDING、计划的 happy path、延期项/风险与拟运行 Demo 命令，不得声称已经验证。",
+      "files": [],
+      "expectations": [
+        "没有 spec/FULL 意图时默认使用 DEMO_FAST",
+        "默认档位不依赖用户说快速 Demo，也不持久化",
+        "保留最小基线、目标/排除项、TDD 或可重复 smoke、聚焦审查和原生验证",
+        "PLAN_ONLY 输出 validation=PENDING、计划的 happy path、延期项/风险和拟运行 Demo 命令"
+      ]
+    },
+    {
+      "id": 31,
+      "name": "demo_fast_strict_boundary_requires_explicit_full",
+      "prompt": "普通本地仓库没有 spec，用户只描述了一个原型演示，但候选变更涉及公共 API 契约和权限控制，并且项目有 QEDA/OpenSpec 或强制 Strict 门禁。用户没有说有 spec、按 spec 实施、完整模式、全流程或生产级。请说明是否可以使用 DEMO_FAST，以及应如何继续。评估模式：只输出路由决定，不修改文件。",
+      "expected_output": "停止并报告 BLOCKED；公共契约、安全/权限和项目强制门禁使该范围明确为 Strict，默认 DEMO_FAST 不得继续，也不得静默升级 FULL。说明需要用户明确改为 spec/FULL 后，才能按 FULL 的 Strict 流程继续，并保留项目生命周期和完整必要评审验证。",
+      "files": [],
+      "expectations": [
+        "公共契约或安全权限边界命中时不使用 DEMO_FAST",
+        "项目强制生命周期或门禁仍然拥有权威，不能绕过",
+        "没有 spec/FULL 意图时报告 BLOCKED、要求用户明确改为 spec/FULL",
+        "不得静默升级 FULL 或通过缩减测试审查绕过 Strict 控制"
+      ]
+    },
+    {
+      "id": 32,
+      "name": "explicit_spec_intent_uses_full",
+      "prompt": "用户明确要求‘按 spec 实施’一个普通功能，并说明要完整模式、全流程和生产级验证。请说明 Delivery profile 如何选择，以及 DEMO_FAST 是否适用。评估模式：只输出路由决定，不修改文件。",
+      "expected_output": "识别当前用户意图为明确正向的 spec-bound/full intent，选择 FULL；不能因任务文件少或 Agent 偏好改选 DEMO_FAST。明确输出项目生命周期所有者和风险档位，并按对应 Standard/Strict 门禁执行完整规格追踪、TDD、审查和原生验证。",
+      "files": [],
+      "expectations": [
+        "有 spec、按 spec 实施、完整模式、全流程或生产级意图时选择 FULL",
+        "FULL 选择由用户意图驱动，不由文件数量或 Agent 偏好推断",
+        "选择 FULL 后保留项目生命周期和相应风险档位门禁"
+      ]
+    },
+    {
+      "id": 33,
+      "name": "demo_fast_does_not_infer_git_or_production_ready",
+      "prompt": "用户未说 spec 或完整模式，只要求做一个本地可逆 Demo happy path；Demo 已用 `pnpm demo -- --scenario happy-path` 验证通过，项目无官方生命周期归档操作，且用户没有明确授予任何 Git 或生产发布权限。请给出最终状态、延期项和动作边界。评估模式：只输出报告，不修改文件。",
+      "expected_output": "明确默认 DEMO_FAST 的结论仍为 production_ready=false，并标记已验证的 happy path、延期项/风险和运行命令 `pnpm demo -- --scenario happy-path`；Demo VERIFIED 仅表示该演示场景证据，不表示生产就绪；不推导 commit、push、PR 或 deploy，不创建非官方归档或发布动作。",
+      "files": [],
+      "expectations": [
+        "Demo VERIFIED 不等同于生产就绪，production_ready 必须为 false",
+        "最终报告包含 happy path、延期项/风险和可重复 Demo 命令",
+        "没有明确授权时不推导 commit、push、PR、deploy 或其他外部动作"
+      ]
+    },
+    {
+      "id": 34,
+      "name": "negated_or_quoted_spec_does_not_select_full",
+      "prompt": "用户说：‘我不是按 spec 实施，也不要完整模式；上面只是引用了“有 spec”这个词。先快速做一个本地可逆 Demo。’请说明 Delivery profile。评估模式：只输出路由决定，不修改文件。",
+      "expected_output": "不能按子串匹配‘有 spec’或‘按 spec 实施’；这些内容处于否定或引用语境，不构成正向 FULL 授权。默认选择 DEMO_FAST，并继续检查是否满足本地、可逆、单一 happy path 及项目强制门禁。",
+      "files": [],
+      "expectations": [
+        "否定或引用 spec/full 词语不构成 FULL 意图",
+        "不能按关键词子串把‘没有 spec’或‘不是按 spec 实施’路由为 FULL",
+        "无明确正向 FULL 意图时仍默认 DEMO_FAST",
+        "仍须执行 DEMO_FAST 适用性和项目强制门禁检查"
+      ]
+    },
+    {
+      "id": 35,
+      "name": "standard_without_full_intent_blocks",
+      "prompt": "用户没有正向 spec/FULL 意图；候选 Demo 虽可逆，但实际影响跨多个模块，风险分类已经确定为 Standard，无法在不改变需求的情况下缩小为单一 Light happy path。请说明默认 profile 是否可以继续。评估模式：只输出路由决定，不修改文件。",
+      "expected_output": "默认 profile 仍先选 DEMO_FAST，但风险档位门禁优先；DEMO_FAST 只允许 Light，因此 Standard 范围必须报告 BLOCKED。要求用户把 Demo 目标缩小为 Light，或明确 spec/FULL 后按 Standard 最低控制执行；不得静默降级风险或升级 FULL。",
+      "files": [],
+      "expectations": [
+        "DEMO_FAST 只允许 Light 风险范围",
+        "Standard 且无明确 FULL 意图时报告 BLOCKED",
+        "只能由用户缩小为 Light 或明确 spec/FULL",
+        "不得静默降低风险档位或升级 FULL"
       ]
     }
   ]

@@ -2,76 +2,30 @@
 
 ## 定位
 
-本目录是 `auto-code-generator` 的共享 Sol-Luna 执行 provider，不是用户触发 skill：无 `SKILL.md`、
-无 frontmatter，不进入 skill 列表。**自动编码的唯一用户入口是 `auto-code-generator`**；执行委派由其
-适配层调用。Sol 始终是当前主会话所用的高能力模型，不在 Luna 模型列表中。管理员用
-`scripts/bootstrap.sh` 做项目初始化；控制器的管理与诊断子命令为 `status`、`models`、`mode`、`model`、
-`configure-claude`、`sync`、`audit` 和 `smoke`。Codex 原生委派由 `auto-code-generator` 编排层发起，
-不由 Python 控制器递归启动子 Agent；`scripts/sol_luna.py run` 只实现外部 runner。
+本目录是 `auto-code-generator` 的轻量执行契约，不是用户触发 skill：无 `SKILL.md`、无模型控制器。
+`auto-code-generator` 是唯一用户入口，Sol 负责规划、协调、证据验收和最终决策。
 
-## 运行时范围
+## 单一 Luna 路径
 
-- **Luna 默认开启**：默认有效配置为 `mode=auto`。有效配置为 `off`，或用户在当前任务明确说“不用 Luna”
-  “只用 Sol”时关闭自动委派。
-- 外部 runner 仅通过 `scripts/sol_luna.py` 的 `run` / `smoke` 命令执行；`auto` / `force` 无需额外标志。
-  `--user-triggered` 仅用于当前用户明确要求 Luna 时单次覆盖有效 `off`，且不写持久配置。它是受信任编排
-  层传递的当前请求声明，不是操作系统级凭据或安全边界；能直接执行本地控制器的调用者本身已经拥有
-  启动 runner 的权限。原生 runner 由编排层直接调用宿主 `spawn_agent`。
-- 任务卡六项各占一行，严格使用 `字段：非空内容`：目标、允许范围、禁止范围、约束、预期输出、验证证据；
-  任一项缺失或为空时拒绝委派。
-- `auto-code-generator` 必须把完整内聚场景组作为一个可观察目标写入任务卡；不得为了满足长度限制拆分
-  `RED → GREEN → REFACTOR`。完整场景组无法保真表达时，provider 不适用并回退 Sol 或项目原生执行。
-- scout/critic 保持 plan-only；tester 只被预授权 Bash 以运行 Sol 指定的测试，worker 被预授权工作区编辑与
-  Bash 以完成同一场景的 TDD。所有角色仍受六字段任务卡和权限边界约束，禁止 bypass 权限。
-- **建议规则：优先利用可用子 Agent 卡槽**：当当前波次存在两个或更多已通过安全并行门禁、且写入与验证
-  可隔离的独立场景组，并有空闲子 Agent 卡槽时，Sol 应优先并行填充可用卡槽，负责波次编排、边界与依赖
-  确认、证据回收、冲突处理和最终验收。不得为填满卡槽拆分内聚场景、`RED → GREEN → REFACTOR`、公共
-  契约或共享资源；无法证明安全并行时宁可串行。
-- **建议规则：任务不清晰时及时回问 Sol**：Luna 发现目标、上下文、允许范围、依赖、约束或验收证据不清晰，
-  或发现冲突、越界风险时，应立即暂停并询问 Sol，不得猜测、扩大范围或先写入；用 `NEEDS_CONTEXT` 或
-  `NEEDS_COORDINATION` 返回缺口和需要 Sol 决策的具体问题。
-- 涉及多 Agent 角色、责任、委派、卡槽、升级或协作复盘时，Sol-Luna 可参考
-  `method-router/management-collaboration/SKILL.md` 的 RACI、委派任务卡、Kanban/WIP、时间盒和检查点；该方法论只提供
-  协调建议，不替代项目生命周期、用户授权、任务状态或 Git 权限。
+- Luna 默认开启，固定且唯一使用原生 `gpt-5.6-luna`。
+- 委派只通过宿主 `spawn_agent`；显式传入 `model="gpt-5.6-luna"`、适合任务的 `reasoning_effort`、
+  `fork_turns="none"` 和输入受限的任务卡。
+- 任务卡不是安全边界。任务要求只读工具白名单、路径沙箱或命令限制而宿主无法强制时，由 Sol 直接执行；
+  不得把任务卡当作机器可执行的权限隔离。
+- 不维护模型列表、别名、其他后端、外部 CLI 回退或 provider 映射。
+- 用户在当前任务明确说“不用 Luna”“只用 Sol”时，由 Sol 直接执行且不写持久配置。
+- 当前工具不支持 `gpt-5.6-luna`，或宿主能力超出用户与项目对当前任务的授权时，由 Sol 直接执行；不得替换模型。
+- `spawn_agent` 返回 Agent 标识后不自动重跑；Sol 先检查共享工作树、diff、测试和 Agent 结果再恢复。
 
-## Luna 模型列表
+## 任务与结果
 
-- `luna-models.json` 是用户维护的有序 Luna 低成本模型列表；第一项是默认模型，第二项可作为套餐额度优先的
-  备选。初始顺序是 `gpt-5.6-luna`、`gpt-5.3-codex-spark`，Sol 不得自动改写或联网刷新该列表。
-- 不指定模型以及选择 `auto` / `default` 时均使用第一项；也可按 `id` 或 `aliases` 显式选择，未知项拒绝执行。
-- 公共字段是 `id`、`label`、`backend`、`provider_model` 和 `aliases`。`backend=codex` 还需
-  `reasoning_effort`；`backend=claude` 还需 `claude_model` 与 `override_model`。缺少 `backend` 的旧条目按
-  `claude` 解释。列表不得包含密钥、Token 或服务地址。
-- `backend` 与 `runner` 分离：Codex 条目按 `native_spawn → codex_exec` 选择，Claude 条目使用
-  `claude_code`。runner 是当前会话的动态执行决策，不写入用户维护的模型列表。
-- `backend=codex` 时，编排层仅在所选**精确模型**位于当前会话暴露的原生 allowlist 且权限满足角色边界时
-  使用 `native_spawn`；必须显式传入模型、reasoning effort 与输入受限的 assignment，不得继承 Sol 或
-  静默换模。allowlist 与权限能力只取自当前 `spawn_agent` 工具说明，不从 CLI 缓存推断。否则仅在启动前
-  回退同一模型的 `codex_exec`。用户要求 `native only` 时不可回退。
-- `codex_exec` 由控制器通过临时会话、明确模型和沙箱执行，不得加入 bypass、ignore-rules 或额外写目录
-  参数。其 JSONL 当前只能证明命令请求的模型，返回标记为 `model_verification=command_only`，不得伪称
-  等价于实际模型证明。`spawn_agent` 返回 Agent 标识即视为 `native_spawn` 已启动；之后失败不得自动再跑
-  CLI，以免重复副作用。
-- `backend=claude` 由 `claude_code` runner 执行；用户调整 Claude 条目后应运行 `configure-claude` 合并映射，
-  并通过 `modelUsage` 核验实际 provider 模型。`configure-claude` 不处理 Codex 条目。
-- `models` 和 `status` 是只读查看命令。`run` / `smoke` 在 `auto` / `force` 下直接执行；有效 `off` 下只有
-  当前用户明确要求 Luna 时才可用 `--user-triggered` 单次覆盖。`smoke` 默认只验证第一项；只有显式指定
-  `--model all` 才遍历整个列表。
+- 委派任务卡固定六项：目标、允许范围、禁止范围、约束、预期输出、验证证据；任一项不清楚则不委派。
+- 一个完整内聚场景组由同一 Luna 完成，禁止拆分 `RED → GREEN → REFACTOR`。
+- `references/result-schema.json` 是统一返回契约。Sol 核对逐 task 证据、实际 diff、验证和
+  `time_management` 后，才更新权威 tracker。
+- provider 不拥有生命周期、任务状态或 Git 授权；不归档、不 commit、不 push、不建 PR、不部署。
 
 ## 管理资产
 
-- `scripts/sol_luna.py`：配置、双后端模型路由、角色同步/审计、运行与 smoke 控制器；
-- `luna-models.json`：用户维护的 Luna 模型列表，第一项为默认；
-- `references/result-schema.json`：双后端统一的组状态、逐 task 结果、文件和验证证据返回契约；Codex 通过
-  `--output-schema` 前置约束，Claude 的最终文本由控制器按同一契约解析和复核；
-- `scripts/bootstrap.sh`：可选安装 Claude 角色文件和共享政策指引；不生成 Codex 模型目录；
-- `references/project-template`：Claude 角色与项目级指导模板；
-- `tests/test_sol_luna.py`：provider 控制面回归测试。
-
-## 边界
-
-- provider 不拥有生命周期、任务状态或 Git 授权；由 `auto-code-generator`（Sol）依据逐 task 的 diff、
-  测试和证据验收，不得由 provider 自行宣告整体完成。
-- `group_status` 与 `task_results[].status` 必须分别使用 consumer 定义的状态集；完成态要求每个 task 都为
-  `SATISFIED`，task 证据和组级验证均不得为空。
-- provider 不创建 phase、artifact、tracker 或第二套完成结论；项目权威生命周期始终优先。
+- `CONTRACT.md`：单一路径、任务和授权边界；
+- `references/result-schema.json`：Luna 结构化返回契约。

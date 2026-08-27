@@ -8,7 +8,7 @@ description: >
   状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v4.6
+# 自动代码生成器 v4.8
 
 ## 定位
 
@@ -117,6 +117,39 @@ Detect & Route
 
 如果项目 schema 已经完成风险路由，直接使用其结果，不做第二次分类。风险事实不清且会改变档位时先取证；
 仍不清楚则停止并说明缺失项，不靠“更严格总没错”替代授权决定。
+
+### 1.2.1 Delivery profile
+
+默认 Delivery profile 为 `DEMO_FAST`，不需要用户说“快速 Demo”，也不持久化。只有当前用户明确、正向的执行意图
+要求“有 spec”、“按 spec 实施”、“完整模式”、“全流程”或“生产级”等 spec-bound/full 交付时，才选择
+`FULL`；否定、引用、历史转述或仅讨论词语本身都不算授权，不能按关键词子串匹配。意图冲突且无法消歧时结果为 `BLOCKED`，请求用户明确，不自行选更重的流程。不能从文件数量或 Agent 自行偏好切 FULL。
+
+启用任一 profile 前仍须完成只读基线和权限检查。只有 `DEMO_FAST` 要求一个可观察 Demo 目标和排除项；
+`FULL` 使用 spec 或任务定义的可观察交付目标。项目已有 QEDA、OpenSpec 或强制生命周期时仍由其拥有权威，
+任何 profile 都不能绕过其状态、审批和工件。
+
+`FULL` 只改变交付深度，不改变生命周期所有者或风险档位；选择后必须同时输出生命周期所有者和 `Light | Standard | Strict` 风险档位，并按该档位保留相应门禁。
+
+`DEMO_FAST` 只允许 `Light` 风险档位，且只适用于本地、可逆、单一可演示 happy path；风险档位门禁优先于 Delivery profile。
+若收敛后的候选范围为 Standard 或 Strict，必须停止并报告 `BLOCKED`，要求用户把 Demo 目标缩小到 Light，或明确
+改为 spec/FULL 后按对应最低控制执行；不得静默缩减需求、降低风险档位或升级 FULL。文件数量本身不能自动选择
+`FULL`，但仍可按 1.2 的事实参与风险分类。若候选范围不能收敛为一个本地、可逆、单一可演示 happy path，也按
+同一规则阻塞并要求用户缩小 Demo 目标或明确改为 spec/FULL。
+
+若命中架构、公共契约、数据迁移、安全权限隐私支付、并发一致性、不可逆外部操作或项目强制门禁，而用户没有
+明确 spec/FULL 意图，必须停止并报告 `BLOCKED`，说明需要用户明确改为 spec/FULL；不得静默升级 FULL，也不得
+继续极速实施。无权威生命周期时计划留在当前对话；默认只形成一个场景组，不构造 DAG 或多 worker。
+
+`DEMO_FAST` 的最小流程仍保留：同一场景组有效执行 `RED → GREEN → REFACTOR`；不能合理测试的脚手架使用可重复 smoke，
+不虚构 RED；完成聚焦自审、项目原生聚焦测试和本地 Demo smoke。不得做未要求的生产加固、全量回归或多轮
+review，不得自行创建额外归档工件；这不能跳过项目官方归档、关闭或强制门禁，项目规则或实际影响要求更广验证时
+不得省略。保留既有 `VERIFIED`、`BLOCKED`、`INCOMPLETE` 状态。
+
+报告必须写明 Delivery profile：`DEMO_FAST | FULL`。`PLAN_AND_APPLY` 实际完成验证时，`DEMO_FAST` 报告明确
+`production_ready=false`、已验证 happy path、延期项/风险和运行 Demo 命令；`PLAN_ONLY` 只能报告计划的 happy path、
+`validation=PENDING`、延期项/风险和拟运行 Demo 命令；`PLAN_ONLY` 的最终结果为 `INCOMPLETE`，不得写 `VERIFIED`
+或声称已经运行。`Demo VERIFIED` 只代表
+演示场景证据，不代表生产就绪，也不推导 commit/push/PR/deploy。
 
 ### 1.3 锁定基线和权限
 
@@ -357,30 +390,25 @@ worker 返回后，协调者必须检查共享工作树中的：
 完成事件；DAG 后继是否释放仍只由真实任务/场景组验收决定。没有合格文件集时继续实施或重划边界，不创建
 空提交，不把未完成改动硬塞进本批次。
 
-### 3.8 共享执行 provider 选择
+### 3.8 Luna 执行模式
 
-默认可选用共享 Sol-Luna provider（`_providers/sol-luna`，无 `SKILL.md`；`auto-code-generator` 是唯一用户
-入口）。有效配置为 `off`，或用户在当前任务明确说“不用 Luna”“只用 Sol”时不委派；当前用户明确要求
-Luna 时可单次覆盖持久 `off`，但不得改写配置。选择与委派规则见
-`references/execution-providers/sol-luna.md`。Codex 原生 runner 由 Sol 按以下顺序直接协调，不进入 Python
-控制器：
+Luna 默认开启，固定且唯一使用原生模型 `gpt-5.6-luna`；没有模型列表、别名、后端选择或 CLI 兼容通道。
+用户在当前任务明确说“不用 Luna”“只用 Sol”时不委派且不写持久配置。选择与委派规则见
+`references/execution-providers/sol-luna.md`：
 
-1. 先应用当前任务的显式选择；“不用 Luna”“只用 Sol”优先关闭，其余情况默认按 `mode=auto` 选择；
-2. 从用户模型列表解析精确模型，再从当前 `spawn_agent` 工具说明读取模型 allowlist 与权限能力；不得用 CLI
-   缓存推断原生能力；
-3. 精确模型和权限均匹配时，直接调用 `spawn_agent`，显式传入 `model`、`reasoning_effort`、
-   `fork_turns="none"` 和六字段任务卡；
-4. `spawn_agent` 返回 Agent 标识即记为已启动；此后失败只由 Sol 检查工作树并恢复，不得改走其他 runner；
-5. 只有尚未启动且原生能力不匹配时，才调用 provider 控制器的外部 runner，以同一模型走受限 CLI 降级；
-   用户要求 `native only` 时直接 `BLOCKED`。
+1. 从当前 `spawn_agent` 工具说明读取 `gpt-5.6-luna` 是否可用及宿主实际能力面；不得从 CLI、缓存或历史会话推断；
+2. 任务卡不是安全边界。若任务要求只读工具白名单、路径沙箱或命令限制，且宿主无法强制，则由 Sol 直接执行；
+3. 模型可用且宿主能力未超出用户与项目对当前任务的授权时，调用 `spawn_agent`，显式传入 `model="gpt-5.6-luna"`、适合任务的
+   `reasoning_effort`、`fork_turns="none"` 和六字段任务卡；
+4. 模型不可用或宿主能力超出当前授权时由 Sol 直接执行当前场景组，不换成其他模型，也不调用外部 runner；
+5. `spawn_agent` 返回 Agent 标识即记为已启动；此后失败由 Sol 检查共享工作树和证据后恢复，不自动重跑。
 
-模型 backend 与执行 runner 分离；不得静默换模或在已启动失败后重复执行。
 把完整内聚场景组压缩为一个六字段任务卡；assignment 的 `time_management` 必须进入六字段任务卡的“约束”，
 由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，不得
 拆分 TDD；provider 不拥有生命周期、任务状态或 Git 授权；完整场景组无法在限额内保持语义时 provider
 不适用，回退 Sol 或项目原生执行，不得切碎 TDD。
 
-所有 runner 使用同一套 runner 无关的统一返回验收规则：原生和外部返回都必须映射到 provider 的
+原生 Luna 使用统一返回验收规则：结果必须映射到 provider 的
 `result-schema.json`，由 Sol 在更新 tracker 前检查逐 task 证据、`time_management` 与 assignment 一致性。
 带 timebox 的结果不得使用 `N/A`；时间盒到期只能选择“完成验收”“带证据重排”或“升级阻塞”，不能
 静默延长或跳过验证。`TIMEBOX_EXPIRED + 完成验收` 必须对应 `DONE` / `DONE_WITH_CONCERNS`；重排或
@@ -520,6 +548,6 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
 
 ---
 
-*版本：4.6*
-*最后更新：2026-08-18*
-*变更：新增授权式增量交付检查点，在完整验收切片后分批提交并保留累计 whole-change 审查。*
+*版本：4.8*
+*最后更新：2026-08-27*
+*变更：默认使用单一原生 `gpt-5.6-luna`；删除多模型目录、替代后端和 CLI 回退，同时保留 `DEMO_FAST` 默认，仅在显式 spec 意图时选择 `FULL`。*
