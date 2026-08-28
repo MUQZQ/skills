@@ -2,24 +2,23 @@
 name: security-review
 description: 安全审查规则：密钥管理、输入验证、SQL 注入防护、XSS/CSRF、限流
 requires_source: true
-source_context: shared_snippets
+source_context: review_diff_or_shared_snippets
 ---
 
 # 安全审查
 
 ## 上下文协议
 
-本 skill 从 design-review 协调层接收 **共享源码片段**（`shared_snippets`）。
+本 skill 可从 `code-review` 接收待审查代码 diff，也可从 design-review 接收设计文档与共享源码片段。
 
 审查输入包含：
-1. **设计文档**：待审查的 .md 文档
-2. **共享上下文**：`【共享上下文：{模块路径}】...【共享上下文结束】` 标记的代码片段
+1. **代码审查**：审查目标为协调器指定的唯一 diff/range，提交前必须是精确暂存快照。
+2. **设计审查**：审查目标为待审查的设计文档，共享源码片段仅用于一致性对照。
 
 **审查规则**：
-- 审查目标始终是**设计文档**，源码仅作为对照参考
-- 共享上下文标注为"仅供审查参考，审查目标为设计文档"
-- 不修改共享上下文中的源码，只检查设计文档与源码的一致性
-- 如需源码修复，交由 design-review 协调层路由到 `code-review/SKILL.md`
+- 按调用协调器声明的审查目标执行，不自行切换到其他 diff、文件或工作树状态。
+- 设计审查中的共享上下文只作对照；代码审查中的 diff 是审查目标本身。
+- 本 skill 只报告问题，不直接修改审查目标。
 
 ## 何时激活
 

@@ -12,7 +12,7 @@
     },
     "code-review-before-commit": {
       "intent": [
-        "提交前循环审查与本地提交"
+        "提交前审查模式选择与本地提交"
       ],
       "skill_name": "code-review-before-commit"
     }

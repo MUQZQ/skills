@@ -404,7 +404,7 @@
       "responsibility": "跨领域、跨阶段和授权边界的工作流编排路由",
       "intents": [
         "规格驱动实施",
-        "提交前循环审查",
+        "提交前审查模式选择",
         "跨域生命周期编排"
       ],
       "entry_path": "orchestration/SKILL.md",
@@ -417,7 +417,7 @@
         },
         "code-review-before-commit": {
           "skill_name": "code-review-before-commit",
-          "description": "提交代码前的自动化审查工作流：5 轮循环 + 路由 + 用户确认",
+          "description": "提交代码前的审查选择闸门。用户请求 commit 且未明确审查模式时，只询问一次“1. 快速 / 2. 不做 / 3. 全量”；不得自动开启代码审查。快速模式执行单轮聚焦审查，不做模式跳过审查，全量模式执行最多 5 轮审查修复闭环。",
           "path": "orchestration/code-review-before-commit/SKILL.md"
         }
       }
