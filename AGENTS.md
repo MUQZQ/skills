@@ -46,12 +46,14 @@
 
 统一路由层级：`AGENTS.md → 领域模块 → 具体 Skill`。
 
-全仓领域注册表的唯一权威源是根目录 `skill-domain-mapping.yaml`。`AGENTS.md` 只引用该表，
+全局领域注册表的唯一权威源位于权威 Skill 仓库根目录：
+`~/.cc-switch/skills/skill-domain-mapping.yaml`；它不在任何项目仓库根目录。
+各 Agent 的 `skills/skill-domain-mapping.yaml` 只是该权威文件的同步入口。`AGENTS.md` 只引用该表，
 不维护领域或叶子 Skill 清单；新增、移动 Skill 时无需修改本文件。
 
 路由约束：
 
-- 先读取 `skill-domain-mapping.yaml` 选择一级领域入口。
+- 路由前先读取当前 Agent 的 `skills/skill-domain-mapping.yaml`；不得在当前项目根目录查找该文件。
 - 进入领域模块后，再读取该模块的权威映射并选择一个主 Skill。
 - 用户显式指定具体 Skill 时直接服从，不经过领域推荐覆盖。
 - 元技能、独立工具和跨域编排均通过各自父域路由，仓库顶层不暴露叶子 Skill。
