@@ -157,6 +157,28 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
                     registered_names.append(skill["skill_name"])
         self.assertEqual(len(registered_names), len(set(registered_names)))
 
+    def test_method_router_supports_blank_slate_discovery(self) -> None:
+        method_skills = ROOT_MAPPING_DATA["domains"]["method-router"]["skills"]
+        self.assertIn("discovery-sprint", method_skills)
+
+        skill_path = ROOT / method_skills["discovery-sprint"]["path"]
+        skill_text = skill_path.read_text(encoding="utf-8")
+        for required_text in (
+            "完全初始",
+            "事实 / 推断 / 假设",
+            "来源",
+            "头脑风暴",
+            "首个可验证实验",
+        ):
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, skill_text)
+
+        method_mapping = (
+            ROOT / "method-router" / "references" / "method-mapping.yaml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("scope: blank_slate", method_mapping)
+        self.assertIn("skill_name: discovery-sprint", method_mapping)
+
     def test_repository_readme_owns_repository_specific_guidance(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("AGENTS.md", readme)

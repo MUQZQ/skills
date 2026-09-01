@@ -1,12 +1,34 @@
-# 方法论路由映射表 v3.4
+# 方法论路由映射表 v3.6
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
+# v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
+# v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.4'
+version: '3.6'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
-last_updated: '2026-08-26'
+last_updated: '2026-09-01'
+route_context:
+  fields:
+    type: required; classify to one of diagnose/decide/design/improve/risk/report/manage/goal/learning
+    urgency: required; critical or normal; default normal
+    domain: required; code/data/architecture/process/general; default general; data includes logs and metrics
+    has_data: required; true/false/unknown; default unknown
+    complexity: required; high/normal/unknown; default unknown
+    sub_type: required; route-specific value or unknown
+    scope: required; route-specific value or unknown
+    cynefin_pre: required; true or false; default false
+  derivation: derive every field from explicit user wording and verified project context; never infer missing authorization
+  unknown_policy: use unknown for absent evidence; do not coerce unknown to false
+resolution:
+  strategy: highest_priority_then_specificity
+  preprocess: execute_meta_route_when_cynefin_pre_true
+  default_priority: 500
+  specificity: number_of_matched_condition_fields
+  tie_breaker: ask_user_with_top_3
+  no_match: type_fallback
+  explicit_user_skill: overrides_route_recommendation
 classification:
   diagnose:
     keywords:
@@ -36,6 +58,14 @@ classification:
     - 这三个方案哪个好
   design:
     keywords:
+    - 完全初始
+    - 从零开始
+    - 完全没思路
+    - 先调研
+    - 网上实践
+    - 行业实践
+    - 头脑风暴
+    - 探索方向
     - 设计
     - 架构
     - 重构
@@ -43,6 +73,7 @@ classification:
     - 怎么实现
     - 搭建
     examples:
+    - 我只有一个粗略想法，先查网上实践并头脑风暴
     - 设计一个消息推送系统
     - 这个模块需要重构
   improve:
@@ -147,18 +178,40 @@ urgency:
   normal:
     keywords: []
     action: show_route_for_confirmation
+fallbacks:
+  diagnose:
+    action: ask_user_with_top_3
+  decide:
+    action: ask_user_with_top_3
+  design:
+    action: ask_user_with_top_3
+  improve:
+    action: ask_user_with_top_3
+  risk:
+    action: ask_user_with_top_3
+  report:
+    action: ask_user_with_top_3
+  manage:
+    action: ask_user_with_top_3
+  goal:
+    action: ask_user_with_top_3
+  learning:
+    action: ask_user_with_top_3
 routes:
 - type: meta
+  priority: 1000
   condition:
     cynefin_pre: true
   chain:
   - skill_name: cynefin
     order: 0
     mandatory: false
-  rationale: 先判断问题域(Simple/Complicated/Complex/Chaotic)，再选方法
+  rationale: 因为问题域尚未确定，选择 Cynefin 预分类而非直接套用具体方法
 - type: diagnose
+  priority: 300
   condition:
     has_data: true
+    domain: data
   chain:
   - skill_name: deep-analysis
     order: 1
@@ -166,8 +219,9 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: true
-  rationale: 有量化数据 → 5W2H 数据驱动分析 → SCQA 统一格式
+  rationale: 因为已有量化数据且领域为数据分析，选择 Deep Analysis 而非无数据的 5 Whys
 - type: diagnose
+  priority: 300
   condition:
     has_data: false
   chain:
@@ -177,8 +231,9 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: true
-  rationale: 无量化数据 → 5 Whys 层层追问 → SCQA 统一格式
+  rationale: 因为缺少量化数据，选择 5 Whys 逐层追问而非依赖指标的 Deep Analysis
 - type: diagnose
+  priority: 700
   condition:
     complexity: high
   chain:
@@ -191,8 +246,9 @@ routes:
   - skill_name: scqa
     order: 3
     mandatory: true
-  rationale: 多因素交织 → MECE 先穷举 → 5 Whys 逐维深入
+  rationale: 因为问题复杂但尚未指明多因素类型，选择 MECE 后接 5 Whys 而非单线追问
 - type: diagnose
+  priority: 900
   condition:
     urgency: critical
   chain:
@@ -202,7 +258,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: 线上故障 → OODA 快速闭环 → 事后 SCQA 复盘
+  rationale: 因为处于紧急故障，选择 OODA 快速闭环而非先做完整静态分类
 - type: decide
   condition:
     sub_type: priority
@@ -213,7 +269,7 @@ routes:
   - skill_name: star
     order: 2
     mandatory: false
-  rationale: 任务优先级 → Eisenhower 四象限 → STAR 结构化输出
+  rationale: 因为任务需按重要与紧急排序，选择 Eisenhower 而非面向需求量化的 RICE
 - type: decide
   condition:
     sub_type: priority_quant
@@ -221,7 +277,7 @@ routes:
   - skill_name: rice
     order: 1
     mandatory: true
-  rationale: 需求/功能优先级量化 → RICE 四参数打分排序
+  rationale: 因为需求优先级需要量化比较，选择 RICE 而非只做四象限归类
 - type: decide
   condition:
     sub_type: comparison
@@ -232,7 +288,7 @@ routes:
   - skill_name: adr
     order: 2
     mandatory: false
-  rationale: 多方案对比 → Pugh 量化矩阵 → ADR 记录决策
+  rationale: 因为多个方案需要统一标准比较，选择 Pugh Matrix 而非仅凭直觉决策
 - type: decide
   condition:
     sub_type: tech_selection
@@ -243,7 +299,7 @@ routes:
   - skill_name: adr
     order: 2
     mandatory: false
-  rationale: 技术选型 → ADL 生命周期评估 → ADR 记录决策
+  rationale: 因为技术选型涉及生命周期与竞争位置，选择 ADL Matrix 而非通用方案打分
 - type: manage
   condition:
     sub_type: role_split
@@ -254,7 +310,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: 角色分工与委派 → RACI 和六字段任务卡 → 结构化协作方案
+  rationale: 因为问题核心是角色分工与委派，选择 Management Collaboration 而非个人任务管理
 - type: manage
   condition:
     sub_type: parallel_scheduling
@@ -265,7 +321,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: 并行卡槽与依赖 → RACI + DAG ready queue + Kanban/WIP → 完成事件驱动的安全调度方案
+  rationale: 因为存在并行卡槽与依赖波次，选择 Management Collaboration 而非无依赖的任务清单
 - type: manage
   condition:
     sub_type: time_management
@@ -279,7 +335,7 @@ routes:
   - skill_name: scqa
     order: 3
     mandatory: false
-  rationale: 时间管理 → Timeboxing（时间盒） + Critical Path + 优先级排序 → 检查点与超时动作
+  rationale: 因为需要同时管理时间盒和关键路径，选择 Management Collaboration 而非只做优先级矩阵
 - type: manage
   condition:
     sub_type: escalation
@@ -293,7 +349,7 @@ routes:
   - skill_name: scqa
     order: 3
     mandatory: false
-  rationale: 阻塞或冲突 → RACI 明确决策者 + OODA 快速协调 → 结构化恢复方案
+  rationale: 因为出现协作阻塞或冲突，选择 Management Collaboration 加 OODA 而非静态职责表
 - type: manage
   condition:
     sub_type: improvement
@@ -307,8 +363,9 @@ routes:
   - skill_name: scqa
     order: 3
     mandatory: false
-  rationale: 协作低效 → RACI 明确责任 + PDCA 持续改进 → 结构化改进方案
+  rationale: 因为协作机制反复低效，选择 Management Collaboration 加 PDCA 而非一次性任务重排
 - type: manage
+  priority: 0
   condition: {}
   chain:
   - skill_name: management-collaboration
@@ -317,7 +374,15 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: 管理协作 → RACI、委派任务卡和 Kanban/WIP → 结构化协作方案
+  rationale: 因为只有一般管理协作意图，选择 Management Collaboration 而非猜测具体管理子类型
+- type: design
+  condition:
+    scope: blank_slate
+  chain:
+  - skill_name: discovery-sprint
+    order: 1
+    mandatory: true
+  rationale: 因为任务完全初始且问题框架未定，选择 Discovery Sprint 而非直接进入方案实施
 - type: design
   condition:
     scope: new_system
@@ -328,7 +393,7 @@ routes:
   - skill_name: adr
     order: 2
     mandatory: false
-  rationale: 新系统 → Design Thinking 5 步法 → ADR 记录决策
+  rationale: 因为要从用户需求出发设计新系统，选择 Design Thinking 而非从既有结构直接重构
 - type: design
   condition:
     scope: refactor
@@ -339,7 +404,7 @@ routes:
   - skill_name: adr
     order: 2
     mandatory: false
-  rationale: 重构 → First Principles 拆解 → ADR 记录决策
+  rationale: 因为需要重建既有架构假设，选择 First Principles 而非沿用历史类比
 - type: improve
   condition:
     domain: process
@@ -350,7 +415,7 @@ routes:
   - skill_name: a3-report
     order: 2
     mandatory: false
-  rationale: 流程优化 → PDCA 循环 → A3 一页纸报告
+  rationale: 因为目标是持续优化流程，选择 PDCA 而非一次性数据统计
 - type: improve
   condition:
     domain: data
@@ -361,7 +426,7 @@ routes:
   - skill_name: a3-report
     order: 2
     mandatory: false
-  rationale: 数据驱动优化 → DMAIC 六西格玛 → A3 报告
+  rationale: 因为改进依赖可测数据与稳定过程，选择 DMAIC 而非经验型 PDCA 起步
 - type: risk
   condition:
     scope: code_change
@@ -372,7 +437,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: true
-  rationale: 代码变更 → Pre-mortem 假想失败 → SCQA 格式化
+  rationale: 因为代码变更尚未发生且需提前暴露失败，选择 Pre-mortem 而非事后根因分析
 - type: risk
   condition:
     scope: systematic
@@ -383,7 +448,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: true
-  rationale: 系统性评估 → FMEA 失效模式分析 → SCQA 格式化
+  rationale: 因为要系统枚举失效模式并量化风险，选择 FMEA 而非只推演单一顶事件
 - type: report
   condition:
     sub_type: retrospective
@@ -394,7 +459,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: 复盘 → STAR 结构化 → SCQA 格式化
+  rationale: 因为需要按情境任务行动结果复盘，选择 STAR 而非轻量三栏 KPT
 - type: report
   condition:
     sub_type: kpt
@@ -402,25 +467,30 @@ routes:
   - skill_name: kpt-review
     order: 1
     mandatory: true
-  rationale: 高频轻量复盘 → KPT 三栏（Keep/Problem/Try）→ 行动项
+  rationale: 因为这是高频轻量复盘，选择 KPT 而非完整事件叙事 STAR
 - type: report
+  priority: 0
   condition: {}
   chain:
   - skill_name: scqa
     order: 1
     mandatory: true
-  rationale: 通用汇报 → SCQA 叙事框架
+  rationale: 因为未识别到具体汇报子类型，选择 SCQA 通用叙事而非猜测专项复盘框架
 - type: diagnose
+  priority: 800
   condition:
     sub_type: multi_factor
   chain:
   - skill_name: fishbone
     order: 1
     mandatory: true
-  - skill_name: scqa
+  - skill_name: 5whys
     order: 2
+    mandatory: true
+  - skill_name: scqa
+    order: 3
     mandatory: false
-  rationale: '补充 diagnose 链路由（{''sub_type'': ''multi_factor''}）'
+  rationale: 因为问题明确包含多因素，选择 Fishbone 后接 5 Whys 而非直接沿单一路径追问
 - type: decide
   condition:
     sub_type: quick_priority
@@ -428,7 +498,7 @@ routes:
   - skill_name: impact-effort
     order: 1
     mandatory: true
-  rationale: '补充 decide 链路由（{''sub_type'': ''quick_priority''}）'
+  rationale: 因为需要快速按影响与努力排序，选择 Impact-Effort 而非信息要求更高的 RICE
 - type: decide
   condition:
     sub_type: consequence_check
@@ -439,7 +509,7 @@ routes:
   - skill_name: scqa
     order: 2
     mandatory: false
-  rationale: '补充 decide 链路由（{''sub_type'': ''consequence_check''}）'
+  rationale: 因为重点是推演决策后果链，选择 Second-Order Thinking 而非仅比较当下得分
 - type: manage
   condition:
     sub_type: structured_discussion
@@ -447,7 +517,7 @@ routes:
   - skill_name: six-hats
     order: 1
     mandatory: true
-  rationale: '补充 manage 链路由（{''sub_type'': ''structured_discussion''}）'
+  rationale: 因为需要让讨论视角有序切换，选择 Six Hats 而非职责与排期管理
 - type: improve
   condition:
     sub_type: focus
@@ -455,7 +525,7 @@ routes:
   - skill_name: pareto
     order: 1
     mandatory: true
-  rationale: '补充 improve 链路由（{''sub_type'': ''focus''}）'
+  rationale: 因为需要先找出关键少数，选择 Pareto 而非平均分配改进资源
 - type: goal
   condition:
     sub_type: goal_setup
@@ -466,7 +536,7 @@ routes:
   - skill_name: smart
     order: 2
     mandatory: true
-  rationale: '补充 goal 链路由（{''sub_type'': ''goal_setup''}）'
+  rationale: 因为需要建立目标体系并校验质量，选择 OKR 加 SMART 而非只写单一目标句
 - type: goal
   condition:
     sub_type: goal_quality
@@ -474,7 +544,7 @@ routes:
   - skill_name: smart
     order: 1
     mandatory: true
-  rationale: '补充 goal 链路由（{''sub_type'': ''goal_quality''}）'
+  rationale: 因为已有目标只需检查可执行性，选择 SMART 而非重新搭建 OKR 体系
 - type: report
   condition:
     sub_type: feedback
@@ -482,7 +552,7 @@ routes:
   - skill_name: sbi
     order: 1
     mandatory: true
-  rationale: '补充 report 链路由（{''sub_type'': ''feedback''}）'
+  rationale: 因为要提供基于行为的反馈，选择 SBI 而非通用汇报叙事
 - type: design
   condition:
     scope: user_insight
@@ -493,7 +563,7 @@ routes:
   - skill_name: design-thinking
     order: 2
     mandatory: false
-  rationale: '补充 design 链路由（{''scope'': ''user_insight''}）'
+  rationale: 因为需要先理解用户雇佣产品完成的任务，选择 JTBD 后接 Design Thinking 而非直接画方案
 - type: design
   condition:
     scope: enhance_existing
@@ -504,7 +574,7 @@ routes:
   - skill_name: impact-effort
     order: 2
     mandatory: false
-  rationale: '补充 design 链路由（{''scope'': ''enhance_existing''}）'
+  rationale: 因为目标是改造现有方案，选择 SCAMPER 加 Impact-Effort 而非从零设计
 - type: design
   condition:
     scope: requirement_classify
@@ -512,7 +582,7 @@ routes:
   - skill_name: kano
     order: 1
     mandatory: true
-  rationale: '补充 design 链路由（{''scope'': ''requirement_classify''}）'
+  rationale: 因为需要区分基本型期望型与惊喜型需求，选择 Kano 而非直接做优先级打分
 - type: risk
   condition:
     sub_type: long_term
@@ -520,7 +590,7 @@ routes:
   - skill_name: scenario-planning
     order: 1
     mandatory: true
-  rationale: '补充 risk 链路由（{''sub_type'': ''long_term''}）'
+  rationale: 因为风险来自长期关键变量的不确定组合，选择 Scenario Planning 而非单一路径预测
 - type: risk
   condition:
     sub_type: top_down
@@ -528,7 +598,7 @@ routes:
   - skill_name: fta
     order: 1
     mandatory: true
-  rationale: '补充 risk 链路由（{''sub_type'': ''top_down''}）'
+  rationale: 因为要从顶事件向下定位失效组合，选择 FTA 而非先做全流程 FMEA
 - type: improve
   condition:
     sub_type: process_define
@@ -539,7 +609,7 @@ routes:
   - skill_name: pdca-tuning
     order: 2
     mandatory: false
-  rationale: '补充 improve 链路由（{''sub_type'': ''process_define''}）'
+  rationale: 因为流程边界与上下游尚未定义，选择 SIPOC 后接 PDCA 而非直接进入改进循环
 - type: improve
   condition:
     sub_type: compare
@@ -550,7 +620,7 @@ routes:
   - skill_name: smart
     order: 2
     mandatory: false
-  rationale: '补充 improve 链路由（{''sub_type'': ''compare''}）'
+  rationale: 因为需要用外部标杆量化差距，选择 Benchmarking 加 SMART 而非内部自评
 - type: learning
   condition:
     sub_type: verify_understanding
@@ -558,7 +628,7 @@ routes:
   - skill_name: feynman
     order: 1
     mandatory: true
-  rationale: '补充 learning 链路由（{''sub_type'': ''verify_understanding''}）'
+  rationale: 因为目标是暴露理解漏洞，选择 Feynman Technique 而非被动复述资料
 - type: manage
   condition:
     sub_type: personal_tasks
@@ -566,7 +636,7 @@ routes:
   - skill_name: gtd
     order: 1
     mandatory: true
-  rationale: '补充 manage 链路由（{''sub_type'': ''personal_tasks''}）'
+  rationale: 因为要收集并组织个人任务，选择 GTD 而非多人职责协作框架
 - type: report
   condition:
     sub_type: deep_retro
@@ -574,7 +644,7 @@ routes:
   - skill_name: double-loop
     order: 1
     mandatory: true
-  rationale: '补充 report 链路由（{''sub_type'': ''deep_retro''}）'
+  rationale: 因为要追问反复问题背后的规则与假设，选择 Double-Loop Learning 而非只记录事件经过
 skill_registry:
   available:
   - skill_name: deep-analysis
@@ -614,6 +684,8 @@ skill_registry:
   - skill_name: rice
     category: decide
   - skill_name: design-thinking
+    category: design
+  - skill_name: discovery-sprint
     category: design
   - skill_name: a3-report
     category: improve
@@ -666,7 +738,7 @@ composition_rules:
 - rule: R_D
   desc: 用户显式指定 > 路由推荐
 - rule: R_E
-  desc: 同类型 Skill 不重复运行
+  desc: 同一目的的替代 Skill 不重复运行；承担不同阶段职责的互补链可以组合
 - rule: R_F
   desc: 管理协作先建立 RACI，再生成委派和并行计划
 - rule: R_G
@@ -675,3 +747,5 @@ composition_rules:
   desc: 任务不清晰时执行者先向唯一 A 提问，不得自行补全授权
 - rule: R_I
   desc: 时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证
+- rule: R_J
+  desc: 空白任务先用 Discovery Sprint 建立证据和首个实验，问题明确后重新分类；探索不自动授权实施

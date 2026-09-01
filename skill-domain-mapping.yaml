@@ -127,6 +127,7 @@
       "display_name": "方法论",
       "responsibility": "诊断、决策、问题探索、改进、风险与报告方法路由",
       "intents": [
+        "从零探索",
         "分析诊断",
         "决策选型",
         "设计规划",
@@ -171,6 +172,11 @@
           "skill_name": "design-thinking",
           "description": "Design Thinking 设计思维：以用户为中心的 5 步设计流程（共情→定义→构思→ 原型→测试）。适用于新系统/新功能设计、产品方案设计、\"从零设计一个 X\"的 场景。由 method-router 路由触发（design 类型 + 新系统/新功能），或用户 直接说\"设计思维\"\"Design Thinking\"\"从用户角度设计\"时触发。 与 First Principles 互补：Design Thinking 用户驱动（外部验证）、 First Principles 原理驱动（内部推导）。",
           "path": "method-router/design-thinking/SKILL.md"
+        },
+        "discovery-sprint": {
+          "skill_name": "discovery-sprint",
+          "description": "Discovery Sprint 探索冲刺：把完全初始或几乎没有上下文、目标尚模糊的空白任务，经过问题框定、联网实践调研、结构化头脑风暴、证据化收敛，转成探索简报和首个可验证实验。当用户说‘从零开始’‘完全没思路’‘先调研’‘看看网上怎么做’‘参考行业实践’‘头脑风暴’，或只有粗糙想法且尚无明确问题、用户、约束或候选方案时使用。",
+          "path": "method-router/discovery-sprint/SKILL.md"
         },
         "dmaic": {
           "skill_name": "dmaic",

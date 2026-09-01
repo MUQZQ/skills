@@ -4,7 +4,7 @@ description: >
   方法论体系统一路由器。当用户请求涉及诊断分析、决策选型、设计规划、流程改进、
   风险评估、管理协作、时间管理、总结汇报等需要方法论框架辅助的任务时触发。作为所有方法论 Skill 的
   统一入口，自动分类问题类型并路由到最合适的框架（5W2H/5Whys/SCQA/Pre-mortem 等）。
-  触发关键词：为什么、分析、排查、定位、选哪个、优先级、风险、管理、协作、分工、委派、责任、
+  触发关键词：从零、没思路、先调研、网上实践、头脑风暴、为什么、分析、排查、定位、选哪个、优先级、风险、管理、协作、分工、委派、责任、
   子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、排期、复盘、用什么框架。
   也适用于用户不确定该用哪个方法论时主动介入。不应在纯代码编写或简单查询任务中触发。
 ---
@@ -22,9 +22,9 @@ description: >
 | 规则 | 内容 | 违反后果 |
 |------|------|:------:|
 | **R0** | 用户显式指定 > 路由推荐。用户说"用 5W2H"则跳过路由器直接执行 | 无视用户意图，信任崩塌 |
-| **R1** | 分类置信度 < 0.7 时必须降级为展示 Top 3 选项让用户选择，禁止猜测 | 方向性错误，分析全链路作废 |
+| **R1** | 分类无法确定时必须降级为展示 Top 3 选项让用户选择，禁止猜测 | 方向性错误，分析全链路作废 |
 | **R2** | 紧急场景（线上故障/用户投诉）跳过确认，直接路由到最短路径 | 延误黄金处理时间 |
-| **R3** | 同类型 Skill 不重复运行。diagnose 场景 5W2H 和 5Whys 二选一 | 输出冗余，用户困惑 |
+| **R3** | 同一目的的替代 Skill 不重复运行；互补 Skill 可以按映射链执行 | 输出冗余，用户困惑 |
 | **R4** | 所有路由决策必须输出 rationale，格式：`因为 {A}，选择 {B} 而非 {C}` | 黑盒决策无法改进 |
 
 ## 实战反例
@@ -32,7 +32,7 @@ description: >
 | Agent 可能产生的想法 | 实际现实 | 违反规则 |
 |---------------------|---------|:------:|
 | "用户说分析一下，5W2H 和 5Whys 都挺合适，两个都跑吧" | 两份重叠报告 > 用户花额外时间判断哪个对 > 效率反而降低 | R3 |
-| "confidence 只有 0.65，但我感觉应该是 5W2H" | 0.35 的误判概率 × 每次误判浪费 5 分钟 = 不可接受 | R1 |
+| "类型证据不足，但我感觉应该是 5W2H" | 缺少可审计证据时直接猜测会让整条分析链偏航 | R1 |
 | "线上故障了，让我先仔细分类再路由" | 每延迟 1 分钟损失成倍放大。直接 OODA，理由事后补充 | R2 |
 | "用户没说是诊断还是决策，我自己判断就行" | "分析一下这个方案"可能是诊断（方案的问题）也可能是决策（A vs B）。语义歧义必须澄清 | R1 |
 | "5W2H 的输出不是 JSON，没法传给 SCQA，跳过衔接吧" | 路由器职责之一就是格式适配。让纯文本可被下游消费 | — |
@@ -48,11 +48,11 @@ description: >
 Phase 0: 上下文感知 ──▶ 扫描可用 Skill + 项目上下文
     │                    ← 读取 references/method-mapping.yaml
     ▼
-Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
+Phase 1: 意图分类 ──▶ route_context（type / urgency / domain / has_data / complexity / sub_type / scope / cynefin_pre）
     │
-    ├── confidence < 0.7 ──▶ 降级：展示 Top 3 + 理由 + 等待用户选择
+    ├── type=unknown 或选择平局 ──▶ 降级：展示 Top 3 + 理由 + 等待用户选择
     │
-    ├── confidence ≥ 0.7
+    ├── type 已确定且候选唯一
     │   └──▶
     │       ▼
     │   Phase 2: 方法路由 ──▶ 主 Skill + 辅助 Skill + 执行顺序 + rationale
@@ -72,7 +72,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
     │               │   - 用户可中断/跳过/重跑
     │               │
     │               ▼
-    │           Phase 4: 统一输出 ──▶ 汇总所有 Skill 输出 → SCQA 模板
+    │           Phase 4: 统一输出 ──▶ 按映射链指定的输出 Skill 汇总；未指定则直接交付
     │               │
     │               ▼
     │           Phase 5: 反馈收集 ──▶ 路由日志 + 用户评分
@@ -109,10 +109,14 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 
 | 维度 | 选项 | 判定依据 |
 |------|------|---------|
-| **类型** | `diagnose` / `decide` / `design` / `improve` / `risk` / `manage` / `report` | 关键词 + 语义 |
-| **紧急度** | `critical` / `normal` / `planning` | 时间词 + 情绪词 + 上下文 |
+| **类型** | `diagnose` / `decide` / `design` / `improve` / `risk` / `manage` / `report` / `goal` / `learning` | 关键词 + 语义；`meta` 是路由前预处理，不是业务类型 |
+| **紧急度** | `critical` / `normal` | 时间词 + 情绪词 + 上下文；未知时为 `normal` |
 | **领域** | `code` / `data` / `architecture` / `process` / `general` | 项目上下文 + 用户输入 |
-| **数据可用性** | `has_data` / `no_data` | 用户是否提供报告/指标/日志 |
+| **数据可用性** | `true` / `false` / `unknown` | 用户是否提供报告/指标/日志；作为 `has_data` 字段值 |
+| **复杂度** | `high` / `normal` / `unknown` | 因素是否交织、因果是否可直接分析 |
+| **子类型** | 映射声明的 `sub_type` 或 `unknown` | 更细粒度意图条件 |
+| **范围** | 映射声明的 `scope` 或 `unknown` | 任务边界条件 |
+| **Cynefin 预处理** | `true` / `false` | 需要先分域时为 `true` |
 
 ### 分类关键词矩阵（非穷举示例；完整映射以 YAML 为准）
 
@@ -120,7 +124,7 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 |------|--------|------|
 | **diagnose** | 为什么、报错、失败、异常、不对、bug、排查、定位、原因 | "匹配率为什么这么低" |
 | **decide** | 选哪个、要不要、优先级、对比、方案、技术选型 | "用 Redis 还是 Kafka" |
-| **design** | 设计、架构、重构、新功能、怎么实现、搭建 | "设计一个消息推送系统" |
+| **design** | 从零、没思路、先调研、网上实践、头脑风暴、设计、架构、重构、新功能、怎么实现、搭建 | "我只有一个粗略想法，先查网上实践并头脑风暴" |
 | **improve** | 优化、提升、改进、加速、减少、自动化、太慢 | "这个接口太慢了" |
 | **risk** | 风险、安全、漏洞、事故、万一、上线、有问题吗 | "这个改动能上线吗" |
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
@@ -128,23 +132,32 @@ Phase 1: 意图分类 ──▶ type / urgency / domain / confidence
 | **learning** | 学习、理解、弄懂、掌握、复习、讲给别人听、面试、简单解释 | "这个机制我是不是真懂了" |
 | **manage** | 管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、升级 | "按依赖图安排 Sol 和 Luna 的并发波次" |
 
-### 分类置信度计算
+### route_context 推导
 
-```
-confidence = 加权平均:
-  - 关键词命中 (权重 0.4): 命中 ≥3 个关键词 → 0.9, 1-2 个 → 0.6, 0 个 → 0.3
-  - 语义明确度 (权重 0.4): 问题描述长度 > 20 字 → 0.8, 10-20 字 → 0.6, < 10 字 → 0.3
-  - 上下文一致性 (权重 0.2): 当前项目领域与推断类型匹配 → 1.0, 不匹配 → 0.5
+先从用户原话和项目上下文提取字段，再与 YAML `classification`、`urgency` 和 `routes[].condition` 的键逐项匹配。字段缺少证据时使用 `unknown`，不得用输入长度推断语义清晰度，也不得把 `unknown` 当作任意条件的命中。
+
+```yaml
+route_context:
+  type: diagnose | decide | design | improve | risk | manage | report | goal | learning | unknown
+  urgency: critical | normal
+  domain: code | data | architecture | process | general | unknown
+  has_data: true | false | unknown
+  complexity: high | normal | unknown
+  sub_type: <映射条件值> | unknown
+  scope: <映射条件值> | unknown
+  cynefin_pre: true | false
 ```
 
-### 降级输出格式（confidence < 0.7 时）
+推导约定：`type` 由关键词与语义意图确定；`urgency` 命中 critical 关键词才为 `critical`，否则为 `normal`；`domain` 由项目上下文和请求对象确定；`has_data` 仅在出现报告、指标、日志或其他可分析数据时为 `true`，明确没有时为 `false`，其余为 `unknown`；`complexity=high` 仅在多因素交织或因果难以拆分时成立；`sub_type` 与 `scope` 只填写有直接证据的 YAML 条件值；`cynefin_pre=true` 表示先执行 `meta` 预处理链。无法确定 `type` 或多个候选同样成立时，进入 Top 3 降级。
+
+### 降级输出格式（type 未确定或选择平局时）
 
 ```markdown
 🤔 不太确定你的问题属于哪种类型，以下是可能性最高的 3 个方向：
 
-1. **诊断分析** (匹配度 45%) → 会用 5W2H 深度分析原因
-2. **决策对比** (匹配度 30%) → 会用量化矩阵对比方案
-3. **流程改进** (匹配度 15%) → 会用 PDCA 循环优化
+1. **诊断分析**（证据：出现“原因/异常”语义）→ 会用根因分析方法
+2. **决策对比**（证据：出现“方案/选择”语义）→ 会用量化矩阵对比方案
+3. **流程改进**（证据：出现“优化/流程”语义）→ 会用 PDCA 循环优化
 
 你更倾向于哪个方向？（输入数字或直接描述）
 ```
@@ -157,71 +170,83 @@ confidence = 加权平均:
 
 ### 主映射表
 
-| 类型 | 条件 | 主 Skill | 辅助 Skill | 输出 Skill |
-|------|------|----------|-----------|-----------|
-| **diagnose** | has_data=true | **5W2H** | — | SCQA |
-| **diagnose** | has_data=false | **5 Whys** | — | SCQA |
-| **diagnose** | complexity=high | **MECE** → 5 Whys | — | SCQA |
-| **diagnose** | urgency=critical | **OODA Loop** | — | SCQA |
-| **decide** | 任务优先级 | **Eisenhower Matrix** | — | STAR |
-| **decide** | 多方案对比 | **Pugh Matrix** | — | ADR |
-| **decide** | 技术选型 | **ADL Matrix** | — | ADR |
-| **manage** | 角色分工、责任归属、委派 | **Management Collaboration** | — | SCQA |
-| **manage** | 多 Agent 并行、卡槽和依赖波次 | **Management Collaboration** | — | SCQA |
-| **manage** | 时间管理、截止、超时和进度检查点（`time_management`） | **Management Collaboration** → Timeboxing + Critical Path → Eisenhower | — | SCQA |
-| **manage** | 阻塞升级、冲突协调 | **Management Collaboration** → OODA | — | SCQA |
-| **manage** | 重复性协作低效 | **Management Collaboration** → PDCA | — | SCQA |
-| **design** | 新功能/系统 | **Design Thinking** | — | ADR |
-| **design** | 架构重构 | **First Principles** | — | ADR |
-| **improve** | 流程优化 | **PDCA** | — | A3 |
-| **improve** | 数据驱动 | **DMAIC** | — | A3 |
-| **risk** | 代码变更 | **Pre-mortem** | — | SCQA |
-| **risk** | 系统性评估 | **FMEA** | — | SCQA |
-| **report** | 复盘总结 | **STAR** | — | SCQA |
-| **report** | 通用报告 | **SCQA** | — | — |
-| **diagnose** | 多因素混杂（multi_factor） | **鱼骨图（fishbone）** | 5Whys（收敛后深挖） | SCQA |
-| **decide** | 快速优先级（quick_priority） | **Impact/Effort 矩阵** | — | — |
-| **decide** | 后果推演（consequence_check） | **二阶思考** | — | SCQA |
-| **manage** | 结构化讨论（structured_discussion） | **六顶思考帽** | — | SCQA |
-| **improve** | 聚焦（focus） | **帕累托 80/20** | — | SCQA |
-| **goal** | 目标框架（goal_setup） | **OKR** | SMART（校验层） | SCQA |
-| **goal** | 目标校验（goal_quality） | **SMART** | — | — |
-| **report** | 反馈（feedback） | **SBI** | — | — |
-| **design** | 用户洞察（user_insight） | **JTBD** | Design Thinking | ADR |
-| **design** | 存量改造（enhance_existing） | **SCAMPER** | Impact/Effort | — |
-| **design** | 需求分类（requirement_classify） | **Kano** | — | — |
-| **risk** | 长期不确定（long_term） | **情景规划** | — | SCQA |
-| **risk** | 顶级失效（top_down） | **FTA 故障树** | FMEA（先广后深） | SCQA |
-| **improve** | 流程定义（process_define） | **SIPOC** | PDCA | A3 |
-| **improve** | 对标（compare） | **Benchmarking** | SMART | A3 |
-| **learning** | 理解验证（verify_understanding） | **费曼技巧** | — | — |
-| **manage** | 个人任务（personal_tasks） | **GTD** | Eisenhower | SCQA |
-| **report** | 深度复盘（deep_retro） | **双环学习** | KPT/STAR（先事件后框架） | SCQA |
+| 类型 | 条件 | 实际执行链（按 order） |
+|------|------|------------------------|
+| **meta**（预处理） | `cynefin_pre=true` | Cynefin |
+| **diagnose** | `has_data=true` 且 `domain=data` | deep-analysis → SCQA |
+| **diagnose** | `has_data=false` | 5whys → SCQA |
+| **diagnose** | `complexity=high` | MECE → 5whys → SCQA |
+| **diagnose** | `urgency=critical` | OODA Loop → SCQA（可选） |
+| **diagnose** | `sub_type=multi_factor` | fishbone → 5whys → SCQA（前两者必需，SCQA 可选） |
+| **decide** | `sub_type=priority` | Eisenhower Matrix → STAR（可选） |
+| **decide** | `sub_type=priority_quant` | RICE |
+| **decide** | `sub_type=comparison` | Pugh Matrix → ADR（可选） |
+| **decide** | `sub_type=tech_selection` | ADL Matrix → ADR（可选） |
+| **decide** | `sub_type=quick_priority` | Impact/Effort |
+| **decide** | `sub_type=consequence_check` | Second-order → SCQA（可选） |
+| **design** | `scope=blank_slate` | Discovery Sprint |
+| **design** | `scope=new_system` | Design Thinking → ADR（可选） |
+| **design** | `scope=refactor` | First Principles → ADR（可选） |
+| **design** | `scope=user_insight` | JTBD → Design Thinking（可选） |
+| **design** | `scope=enhance_existing` | SCAMPER → Impact/Effort（可选） |
+| **design** | `scope=requirement_classify` | Kano |
+| **improve** | `domain=process` | PDCA → A3（可选） |
+| **improve** | `domain=data` | DMAIC → A3（可选） |
+| **improve** | `sub_type=focus` | Pareto |
+| **improve** | `sub_type=process_define` | SIPOC → PDCA（可选） |
+| **improve** | `sub_type=compare` | Benchmarking → SMART（可选） |
+| **risk** | `scope=code_change` | Pre-mortem → SCQA |
+| **risk** | `scope=systematic` | FMEA → SCQA |
+| **risk** | `sub_type=long_term` | Scenario Planning |
+| **risk** | `sub_type=top_down` | FTA |
+| **manage** | `sub_type=role_split` / `parallel_scheduling` / 默认 | Management Collaboration → SCQA（可选） |
+| **manage** | `sub_type=time_management` | Management Collaboration → Eisenhower → SCQA（均可选） |
+| **manage** | `sub_type=escalation` | Management Collaboration → OODA Loop → SCQA（后两者可选） |
+| **manage** | `sub_type=improvement` | Management Collaboration → PDCA → SCQA（前两者必需，SCQA 可选） |
+| **manage** | `sub_type=structured_discussion` | Six Hats |
+| **manage** | `sub_type=personal_tasks` | GTD |
+| **report** | `sub_type=retrospective` | STAR → SCQA（可选） |
+| **report** | `sub_type=kpt` | KPT |
+| **report** | `sub_type=feedback` | SBI |
+| **report** | `sub_type=deep_retro` | Double-loop |
+| **report** | 默认 | SCQA |
+| **goal** | `sub_type=goal_setup` | OKR → SMART |
+| **goal** | `sub_type=goal_quality` | SMART |
+| **learning** | `sub_type=verify_understanding` | Feynman |
 
 ### 组合规则
 
 ```
-R_A: diagnose 类 Skill 输出自动衔接 SCQA（统一报告格式）
+R_A: 仅当 YAML 映射链显式包含 SCQA 时才执行 SCQA；不得因类型自动追加
 R_B: MECE 先于 5 Whys（先穷举维度，再逐维深入）
 R_C: Pre-mortem 先于 FMEA（方向性 → 系统性）
 R_D: 用户显式指定 > 路由推荐（R0）
-R_E: 同类型 Skill 不重复运行（R3）
+R_E: 同一目的的替代 Skill 不重复运行；互补链（如 MECE → 5whys）允许按映射执行
 R_F: 管理协作先建立 RACI，再生成委派和并行计划
 R_G: 只有通过依赖、写入、资源、契约和验证隔离门禁的工作才进入 WIP
 R_H: 执行者发现任务不清晰时先向唯一 A 提问，不得自行补全授权
 R_I: 时间盒到期只能验收、带证据重排或升级阻塞，不得静默延长或跳过验证
+R_J: 空白任务先探索证据、候选和首个实验；问题明确后重新路由，探索不授权实施
 ```
+
+### 路由选择算法
+
+1. 若 `cynefin_pre=true`，先执行 `meta` 预处理链，再将域判断结果写回 `route_context`。
+2. 在 `routes` 中筛选 `type` 相同且所有条件都与 `route_context` 明确匹配的候选；`unknown` 不匹配任何具体条件。
+3. 使用 `highest_priority_then_specificity`：先按映射优先级降序，再按条件特异度降序；特异度等于匹配的条件字段数量，空条件最低。优先级和 fallback 以 YAML 为准。
+4. 仍有多个同优先级候选时，按条件特异度选唯一链；仍平局则展示 Top 3 及理由，等待用户选择。
+5. 无任何匹配时执行该 `type` 的 fallback 动作；当前映射统一展示 Top 3 并等待选择。fallback 不存在时降级为手动引导，不要把其他类型的路由当作兜底。
 
 ### 路由输出格式
 
 ```markdown
 ## 🧭 路由决策
 
-**问题类型**：诊断分析（置信度 85%）
-**推荐框架**：5W2H → SCQA
+**问题类型**：诊断分析（证据：提供了量化指标与日志）
+**推荐框架**：deep-analysis → SCQA（以 YAML 映射链为准）
 **理由**：你提供了量化数据（匹配率 21.2%）和代码访问权限，
 5W2H 比 5 Whys 更适合数据驱动的根因分析。
-SCQA 将自动格式化最终报告。
+仅当映射链包含 SCQA 时才执行格式化；否则按链上最后一个 Skill 交付。
 
 **备选方案**：5 Whys（如果根因不明确需要进一步追问）
 
@@ -286,41 +311,20 @@ SCQA 将自动格式化最终报告。
 
 ## Phase 4: 统一输出
 
-**目的**：汇总所有 Skill 输出，用 SCQA 模板生成最终报告。
+**目的**：按 YAML 映射链交付结果，不对所有入口强制使用同一种输出格式。
 
-### 如果 SCQA Skill 可用
+### 按映射链输出
 
-自动调用 SCQA Skill 格式化所有输出。
+- 链中有输出 Skill 时，执行该 Skill 并以其格式交付。
+- 链中没有输出 Skill 时，直接交付主 Skill 的结果。
+- 只有映射链指定 SCQA 且运行时可用时，才调用 SCQA。
 
 ### 如果映射指定的输出 Skill 在运行时不可用
 
 先根据根注册表解析并确认映射指定的输出 Skill。只有确认不可用时，才降级为 Markdown 决策记录
 （背景 / 选项 / 决策 / 理由）或 A3 一页纸摘要（问题 / 现状 / 对策 / 效果）。
 
-### 如果 SCQA Skill 不可用
-
-使用内置 SCQA 模板：
-
-```markdown
-# {问题标题}
-
-## 情境 (Situation)
-{项目背景、当前状态}
-
-## 冲突 (Complication)
-{问题表现、量化数据、影响范围}
-
-## 问题 (Question)
-{核心需要解决什么问题}
-
-## 答案 (Answer)
-{根因链 + 修复方案 + 优先级 + 成本}
-
-## 附录
-- 路由决策日志：选择了 {Skill 链}，理由：{rationale}
-- 执行耗时：{总时间}
-- 跳过的 Skill：{如有}
-```
+无法使用映射指定的输出 Skill 时，按上述决策记录或 A3 摘要格式降级交付。
 
 ---
 
@@ -336,11 +340,17 @@ route_log:
   user_input: "匹配率为什么这么低"
   classification:
     type: diagnose
-    confidence: 0.85
     urgency: normal
+    route_context:
+      domain: data
+      has_data: true
+      complexity: unknown
+      sub_type: unknown
+      scope: unknown
+      cynefin_pre: false
   route:
-    skills: [5W2H, SCQA]
-    rationale: "有量化数据，选 5W2H 而非 5Whys"
+    skills: [deep-analysis, SCQA]
+    rationale: "有量化数据，选 deep-analysis 而非 5whys"
     user_confirmed: true
     user_adjusted: false
   execution:
@@ -367,8 +377,8 @@ route_log:
 |------|---------|---------|
 | Phase 0 | `method-mapping.yaml` 不存在 | 使用内置默认映射表，标注"使用默认规则" |
 | Phase 0 | 无任何可用 Skill | 手动执行对应方法论流程，问题驱动而非 Skill 驱动 |
-| Phase 1 | 用户输入 < 3 个字，无法分类 | 追问：你能再描述一下具体遇到了什么问题吗？ |
-| Phase 1 | 关键词跨类型命中（diagnose + decide 各命中 3 个） | 优先选择命中更多关键词的类型；相等时降级为用户选择 |
+| Phase 1 | `type=unknown` 或候选同优先级且特异度仍相同 | 展示 Top 3 选项并等待用户选择 |
+| Phase 1 | 关键词跨类型命中 | 按 `highest_priority_then_specificity` 选择；仍平局则展示 Top 3 |
 | Phase 2 | 主 Skill 和备选都缺失 | 降级为手动引导执行方法论步骤 |
 | Phase 3 | 子 Skill 加载超时（>30s） | 跳过该 Skill，标注 `⏱️ 超时`，继续链式执行 |
 | Phase 3 | 子 Skill 输出格式无法解析 | 保留原始输出，标注 `⚠️ 格式异常`，跳过格式适配 |
@@ -381,14 +391,14 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 39 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 40 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|
 | **问题分析** diagnose | 5whys（五个为什么）· deep-analysis（5W2H 深度分析）· mece（MECE 穷尽检查）· fishbone（鱼骨图）· ooda（OODA 快速闭环） |
 | **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验） |
 | **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录） |
-| **设计创新** design | design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
+| **设计创新** design | discovery-sprint（探索冲刺）· design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
 | **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
 | **风险管理** risk | pre-mortem（事前验尸）· fmea（失效模式分析）· fta（故障树分析）· scenario-planning（情景规划） |
 | **汇报与反馈** report | scqa（金字塔叙事）· star（STAR 叙事）· kpt（KPT 复盘）· a3（一页纸报告）· sbi（SBI 反馈）· double-loop（双环学习） |
@@ -401,6 +411,7 @@ route_log:
 | 文档 | 用途 |
 |------|------|
 | `references/method-mapping.yaml` | 完整的分类→框架映射配置 |
+| `discovery-sprint/SKILL.md` | 空白任务的联网证据探索、头脑风暴和首个实验 |
 | `deep-analysis/SKILL.md` | 5W2H 深度分析 |
 | `5whys/SKILL.md` | 5 Whys 根因追问 |
 | `scqa/SKILL.md` | SCQA 叙事框架 |
@@ -422,5 +433,5 @@ route_log:
 
 - 路由决策以 Markdown 表格展示：类型 / 推荐框架 / 理由 / 备选
 - 执行进度以步骤列表展示，标注状态图标（✅ ⏳ ❌ ⚠️）
-- 最终报告无论入口统一使用 SCQA 模板
+- 最终输出遵循 YAML 映射链；只有链中明确指定 SCQA 时才使用 SCQA
 - 每次路由输出 rationale，格式固定：`因为 {A}，选择 {B} 而非 {C}`
