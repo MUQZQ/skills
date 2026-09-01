@@ -27,9 +27,16 @@
 根注册表负责领域、规范 `skill_name`、描述和仓库相对路径。领域映射只负责将领域内意图映射到
 规范 `skill_name`，不重复保存物理路径。父 Skill 读取领域映射后，再通过根注册表解析实际路径。
 
-当前根注册表包含 7 个领域、65 个注册 Skill；其中 `method-router` 注册 40 个方法论 Skill。
+当前根注册表包含 7 个领域、73 个注册 Skill；其中 `method-router` 注册 48 个方法论 Skill，按 10 个功能块组织。
 `method-router/references/method-mapping.yaml` 是意图路由的权威配置，负责分类、上下文和路由链，
 不应以 README 或父 Skill 中的静态清单替代。
+
+芒格决策检查由 8 个独立叶子 Skill 组成：`multidisciplinary-models`（多元思维模型）、
+`mental-model-lattice`（思维模型格栅）、`inversion-thinking`（逆向思考）、
+`circle-of-competence`（能力圈）、`margin-of-safety`（安全边际）、
+`incentive-analysis`（激励机制分析）、`psychological-misjudgment`（心理误判检查）、
+`checklist-patience`（检查清单与耐心等待）。完整分析由 `sub_type=munger_full` 路由组合执行，
+不是第九个综合 Skill；每个叶子都可以独立执行并有自己的边界与精简 eval。
 
 ### 方法论路由契约
 

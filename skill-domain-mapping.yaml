@@ -208,6 +208,46 @@
           "description": "管理与协作方法论。用于多 Agent 或多人任务中的角色分工、责任归属、任务委派、并行卡槽、依赖波次、 阻塞升级、反馈闭环和复盘改进。当用户提到管理、协作、分工、委派、协调、责任、资源、排期、 子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径或团队效率时使用；不替代项目自身的 生命周期、授权和 Git 规则。",
           "path": "method-router/management-collaboration/SKILL.md"
         },
+        "multidisciplinary-models": {
+          "skill_name": "multidisciplinary-models",
+          "description": "多元思维模型：为一个决定选择相关学科模型，标注解释范围、盲点、事实、推断与假设。",
+          "path": "method-router/multidisciplinary-models/SKILL.md"
+        },
+        "mental-model-lattice": {
+          "skill_name": "mental-model-lattice",
+          "description": "思维模型格栅：将多个模型放在同一问题上交叉检查互补、冲突与共同盲点。",
+          "path": "method-router/mental-model-lattice/SKILL.md"
+        },
+        "inversion-thinking": {
+          "skill_name": "inversion-thinking",
+          "description": "逆向思考：从失败路径、最坏后果和预警信号反推决策约束。",
+          "path": "method-router/inversion-thinking/SKILL.md"
+        },
+        "circle-of-competence": {
+          "skill_name": "circle-of-competence",
+          "description": "能力圈：区分已理解、部分理解与超出能力圈的事项，并设置外部验证。",
+          "path": "method-router/circle-of-competence/SKILL.md"
+        },
+        "margin-of-safety": {
+          "skill_name": "margin-of-safety",
+          "description": "安全边际：检查参数误差、下行损失、可逆性与缓冲，避免依赖单一预测。",
+          "path": "method-router/margin-of-safety/SKILL.md"
+        },
+        "incentive-analysis": {
+          "skill_name": "incentive-analysis",
+          "description": "激励机制分析：检查参与者的报酬、权责、信息优势与代理问题。",
+          "path": "method-router/incentive-analysis/SKILL.md"
+        },
+        "psychological-misjudgment": {
+          "skill_name": "psychological-misjudgment",
+          "description": "心理误判检查：识别可能改变判断的认知偏差，并要求反方解释与反证。",
+          "path": "method-router/psychological-misjudgment/SKILL.md"
+        },
+        "checklist-patience": {
+          "skill_name": "checklist-patience",
+          "description": "检查清单与耐心等待：将证据门槛、复核日期与等待触发条件写成可执行清单。",
+          "path": "method-router/checklist-patience/SKILL.md"
+        },
         "mece": {
           "skill_name": "mece",
           "description": "MECE 结构化思维检查：验证分析维度是否相互独立(Mutually Exclusive)、完全穷尽 (Collectively Exhaustive)。作为分析质量闸门，在 5W2H/5Whys 等诊断 Skill 的 根因分类阶段介入，确保不遗漏、不重叠。触发关键词：维度完整吗、有没有遗漏、 MECE、分类检查、穷举验证。",

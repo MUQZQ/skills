@@ -1,10 +1,11 @@
-# 方法论路由映射表 v3.6
+# 方法论路由映射表 v3.8
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
+# v3.8: +8 个独立芒格决策检查 Skill 与完整组合链
 # v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
 # v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.6'
+version: '3.8'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
@@ -53,6 +54,14 @@ classification:
     - 对比
     - 方案
     - 技术选型
+    - 多元思维模型
+    - 思维模型格栅
+    - 逆向思考
+    - 能力圈
+    - 安全边际
+    - 激励机制分析
+    - 心理误判检查
+    - 检查清单与耐心等待
     examples:
     - 用 Redis 还是 Kafka
     - 这三个方案哪个好
@@ -300,6 +309,108 @@ routes:
     order: 2
     mandatory: false
   rationale: 因为技术选型涉及生命周期与竞争位置，选择 ADL Matrix 而非通用方案打分
+- type: decide
+  priority: 500
+  condition:
+    sub_type: multidisciplinary_models
+  chain:
+  - skill_name: multidisciplinary-models
+    order: 1
+    mandatory: true
+  rationale: 因为需要选择跨学科模型检查决策，选择多元思维模型而非单一视角判断
+- type: decide
+  priority: 500
+  condition:
+    sub_type: mental_model_lattice
+  chain:
+  - skill_name: mental-model-lattice
+    order: 1
+    mandatory: true
+  rationale: 因为需要交叉检验多个模型，选择思维模型格栅而非孤立使用单一模型
+- type: decide
+  priority: 500
+  condition:
+    sub_type: inversion_thinking
+  chain:
+  - skill_name: inversion-thinking
+    order: 1
+    mandatory: true
+  rationale: 因为需要从失败路径反推约束，选择逆向思考而非只收集正向论据
+- type: decide
+  priority: 500
+  condition:
+    sub_type: circle_of_competence
+  chain:
+  - skill_name: circle-of-competence
+    order: 1
+    mandatory: true
+  rationale: 因为需要识别理解边界，选择能力圈而非用熟悉感代替能力证明
+- type: decide
+  priority: 500
+  condition:
+    sub_type: margin_of_safety
+  chain:
+  - skill_name: margin-of-safety
+    order: 1
+    mandatory: true
+  rationale: 因为需要承受参数误差与下行损失，选择安全边际而非依赖精确预测
+- type: decide
+  priority: 500
+  condition:
+    sub_type: incentive_analysis
+  chain:
+  - skill_name: incentive-analysis
+    order: 1
+    mandatory: true
+  rationale: 因为参与者激励会改变实际行为，选择激励机制分析而非只接受口头叙事
+- type: decide
+  priority: 500
+  condition:
+    sub_type: psychological_misjudgment
+  chain:
+  - skill_name: psychological-misjudgment
+    order: 1
+    mandatory: true
+  rationale: 因为认知偏差可能扭曲判断，选择心理误判检查而非把直觉当作证据
+- type: decide
+  priority: 500
+  condition:
+    sub_type: checklist_patience
+  chain:
+  - skill_name: checklist-patience
+    order: 1
+    mandatory: true
+  rationale: 因为证据门槛与等待条件需要显式化，选择检查清单与耐心等待而非仓促行动
+- type: decide
+  priority: 500
+  condition:
+    sub_type: munger_full
+  chain:
+  - skill_name: multidisciplinary-models
+    order: 1
+    mandatory: true
+  - skill_name: mental-model-lattice
+    order: 2
+    mandatory: true
+  - skill_name: inversion-thinking
+    order: 3
+    mandatory: true
+  - skill_name: circle-of-competence
+    order: 4
+    mandatory: true
+  - skill_name: margin-of-safety
+    order: 5
+    mandatory: true
+  - skill_name: incentive-analysis
+    order: 6
+    mandatory: true
+  - skill_name: psychological-misjudgment
+    order: 7
+    mandatory: true
+  - skill_name: checklist-patience
+    order: 8
+    mandatory: true
+  rationale: 因为需要完整执行八段决策检查，选择独立叶子组合链而非新增一个综合 Skill
 - type: manage
   condition:
     sub_type: role_split
@@ -727,6 +838,22 @@ skill_registry:
     category: manage
   - skill_name: double-loop
     category: report
+  - skill_name: multidisciplinary-models
+    category: decide
+  - skill_name: mental-model-lattice
+    category: decide
+  - skill_name: inversion-thinking
+    category: decide
+  - skill_name: circle-of-competence
+    category: decide
+  - skill_name: margin-of-safety
+    category: decide
+  - skill_name: incentive-analysis
+    category: decide
+  - skill_name: psychological-misjudgment
+    category: decide
+  - skill_name: checklist-patience
+    category: decide
   planned: []
 composition_rules:
 - rule: R_A

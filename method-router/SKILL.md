@@ -182,6 +182,15 @@ route_context:
 | **decide** | `sub_type=priority_quant` | RICE |
 | **decide** | `sub_type=comparison` | Pugh Matrix → ADR（可选） |
 | **decide** | `sub_type=tech_selection` | ADL Matrix → ADR（可选） |
+| **decide** | `sub_type=multidisciplinary_models` | multidisciplinary-models（多元思维模型） |
+| **decide** | `sub_type=mental_model_lattice` | mental-model-lattice（思维模型格栅） |
+| **decide** | `sub_type=inversion_thinking` | inversion-thinking（逆向思考） |
+| **decide** | `sub_type=circle_of_competence` | circle-of-competence（能力圈） |
+| **decide** | `sub_type=margin_of_safety` | margin-of-safety（安全边际） |
+| **decide** | `sub_type=incentive_analysis` | incentive-analysis（激励机制分析） |
+| **decide** | `sub_type=psychological_misjudgment` | psychological-misjudgment（心理误判检查） |
+| **decide** | `sub_type=checklist_patience` | checklist-patience（检查清单与耐心等待） |
+| **decide** | `sub_type=munger_full` | 八个独立叶子 Skill 按顺序组合执行 |
 | **decide** | `sub_type=quick_priority` | Impact/Effort |
 | **decide** | `sub_type=consequence_check` | Second-order → SCQA（可选） |
 | **design** | `scope=blank_slate` | Discovery Sprint |
@@ -391,13 +400,13 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 40 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 48 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|
 | **问题分析** diagnose | 5whys（五个为什么）· deep-analysis（5W2H 深度分析）· mece（MECE 穷尽检查）· fishbone（鱼骨图）· ooda（OODA 快速闭环） |
 | **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验） |
-| **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录） |
+| **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录）· multidisciplinary-models（多元思维模型）· mental-model-lattice（思维模型格栅）· inversion-thinking（逆向思考）· circle-of-competence（能力圈）· margin-of-safety（安全边际）· incentive-analysis（激励机制分析）· psychological-misjudgment（心理误判检查）· checklist-patience（检查清单与耐心等待） |
 | **设计创新** design | discovery-sprint（探索冲刺）· design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
 | **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
 | **风险管理** risk | pre-mortem（事前验尸）· fmea（失效模式分析）· fta（故障树分析）· scenario-planning（情景规划） |
@@ -426,6 +435,17 @@ route_log:
 | `star/SKILL.md` | STAR 结构化叙事 |
 | `pdca-tuning/SKILL.md` | PDCA 流程改进 |
 | `management-collaboration/SKILL.md` | RACI、委派任务卡、Kanban/WIP、时间盒和 Sol-Luna 协作 |
+| `multidisciplinary-models/SKILL.md` | 多元思维模型叶子检查 |
+| `mental-model-lattice/SKILL.md` | 思维模型格栅叶子检查 |
+| `inversion-thinking/SKILL.md` | 逆向思考叶子检查 |
+| `circle-of-competence/SKILL.md` | 能力圈叶子检查 |
+| `margin-of-safety/SKILL.md` | 安全边际叶子检查 |
+| `incentive-analysis/SKILL.md` | 激励机制分析叶子检查 |
+| `psychological-misjudgment/SKILL.md` | 心理误判检查叶子检查 |
+| `checklist-patience/SKILL.md` | 检查清单与耐心等待叶子检查 |
+| `references/munger-source-basis.md` | 共享来源、归属和编辑性组合边界 |
+
+完整芒格式决策检查由 `sub_type=munger_full` 路由按八段顺序组合上述独立叶子 Skill；它不是第九个 Skill，也不在根注册表中创建综合实体。
 
 ---
 
