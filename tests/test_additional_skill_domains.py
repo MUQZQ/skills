@@ -46,7 +46,7 @@ class AdditionalSkillDomainContractTest(unittest.TestCase):
 
     def test_agents_references_single_repository_mapping(self):
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        self.assertIn("`skill-domain-mapping.yaml`", agents)
+        self.assertIn("skill-domain-mapping.yaml", agents)
         self.assertNotIn("| 元技能 | `meta-skills` |", agents)
         mapping = json.loads(ROOT_MAPPING.read_text(encoding="utf-8"))
         self.assertEqual(

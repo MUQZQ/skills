@@ -12,6 +12,63 @@ PROVIDER_ROOT = SKILLS_ROOT / "_providers" / "sol-luna"
 
 
 class AutoCodeGeneratorContractTests(unittest.TestCase):
+    def test_project_policy_overrides_fallback_at_execution_boundaries(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        adapter = (
+            AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
+        ).read_text(encoding="utf-8")
+        for phrase in (
+            "没有活动 change 不等于没有项目流程",
+            "本 skill 后文的 fallback 默认值不叠加生效",
+            "不强行填入 DEMO_FAST/FULL",
+            "不得仅因本 skill 把架构列为 Strict 而二次升级",
+            "先把项目实际测试策略传入 assignment 和 provider",
+            "不能等同于 `qeda-vibe-coding` 收敛 schema",
+            "没有 tracker 时仅用当前对话协调",
+        ):
+            self.assertIn(phrase, skill)
+        self.assertIn("不由 provider 增加 RED 门禁", adapter)
+        self.assertIn("适用 TDD 时", adapter)
+
+    def test_planning_git_and_verification_have_separate_state_rules(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        for phrase in (
+            "与当前决定无关的变化不要求重新确认",
+            "QEDA 规划不建立持久指纹",
+            "不能用规划规则豁免提交检查",
+            "qeda-verification-state.mjs",
+            "Apply 收尾及归档预检运行 `check`",
+            "不能只刷新指纹来恢复通过",
+            "不安装 QEDA 脚本或自行引入状态协议",
+            "缺少必要同步授权时报告具体阻塞",
+        ):
+            self.assertIn(phrase, skill)
+
+    def test_design_necessity_is_checked_in_planning_and_acceptance(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        self.assertIn("删除或内联后哪个具体结果会失败", skill)
+        self.assertIn("未来扩展、模式名称和文件长度不能单独", skill)
+        self.assertIn("新增的重要设计项是否仍满足 2.2 的必要性检查", skill)
+        self.assertIn("不创建新的报告、账本或审批环节", skill)
+
+    def test_project_compatibility_evals_cover_positive_and_negative_routes(self) -> None:
+        evals = json.loads((AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8"))["evals"]
+        by_name = {item["name"]: item for item in evals}
+        for name in (
+            "qeda_vibe_keeps_project_test_strategy",
+            "qeda_architecture_does_not_reroute_strict",
+            "qeda_planning_ignores_unrelated_drift",
+            "qeda_verification_state_rejects_stale_result",
+            "single_implementation_avoids_speculative_layers",
+            "verification_binding_respects_authority_and_availability",
+        ):
+            case = by_name[name]
+            self.assertTrue(case["prompt"])
+            self.assertGreaterEqual(len(case["expectations"]), 3)
+        fallback = by_name["demo_fast_strict_boundary_requires_explicit_full"]
+        self.assertIn("没有 QEDA/OpenSpec 或其他项目交付流程", fallback["prompt"])
+        self.assertIn("BLOCKED", fallback["expected_output"])
+
     def test_luna_is_one_native_model_without_catalog_or_fallback(self) -> None:
         active_files = (
             AUTO_ROOT / "SKILL.md",
@@ -369,6 +426,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
 
     def test_demo_fast_is_default_and_spec_intent_selects_full(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = " ".join(skill.split())
 
         for phrase in (
             "Delivery profile",

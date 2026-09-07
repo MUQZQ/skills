@@ -98,9 +98,11 @@ class ReviewChoiceGateTests(unittest.TestCase):
         policy = (REPOSITORY_ROOT / "AGENTS.md").read_text(encoding="utf-8")
 
         self.assertIn("提交前审查选择门禁", policy)
-        self.assertIn("1. 快速 / 2. 不做 / 3. 全量", policy)
-        self.assertIn("不得自动开启 `code-review`", policy)
-        self.assertNotIn("提交前必须通过 `code-review`", policy)
+        self.assertIn("不得自动开启审查或提交", policy)
+        self.assertNotIn("1. 快速 / 2. 不做 / 3. 全量", policy)
+        self.assertNotIn("`code-review-before-commit`", policy)
+        self.assertNotIn("todo", policy)
+        self.assertIn("路由表对应 Skill", policy)
 
     def test_registry_describes_choice_gate_instead_of_automatic_review(self) -> None:
         registry = json.loads((REPOSITORY_ROOT / "skill-domain-mapping.yaml").read_text(encoding="utf-8"))

@@ -397,12 +397,12 @@
     {
       "id": 31,
       "name": "demo_fast_strict_boundary_requires_explicit_full",
-      "prompt": "普通本地仓库没有 spec，用户只描述了一个原型演示，但候选变更涉及公共 API 契约和权限控制，并且项目有 QEDA/OpenSpec 或强制 Strict 门禁。用户没有说有 spec、按 spec 实施、完整模式、全流程或生产级。请说明是否可以使用 DEMO_FAST，以及应如何继续。评估模式：只输出路由决定，不修改文件。",
-      "expected_output": "停止并报告 BLOCKED；公共契约、安全/权限和项目强制门禁使该范围明确为 Strict，默认 DEMO_FAST 不得继续，也不得静默升级 FULL。说明需要用户明确改为 spec/FULL 后，才能按 FULL 的 Strict 流程继续，并保留项目生命周期和完整必要评审验证。",
+      "prompt": "普通本地仓库没有 spec，也没有 QEDA/OpenSpec 或其他项目交付流程；用户只描述了一个原型演示，但候选变更涉及公共 API 契约和权限控制。用户没有说有 spec、按 spec 实施、完整模式、全流程或生产级。请说明是否可以使用 DEMO_FAST，以及应如何继续。评估模式：只输出路由决定，不修改文件。",
+      "expected_output": "项目生命周期未定义，使用 fallback；公共契约、安全/权限使该范围明确为 Strict，停止并报告 BLOCKED，默认 DEMO_FAST 不得继续，也不得静默升级 FULL。说明需要用户明确改为 spec/FULL 后，才能按 FULL 的 Strict 流程继续，并保留必要评审验证。",
       "files": [],
       "expectations": [
         "公共契约或安全权限边界命中时不使用 DEMO_FAST",
-        "项目强制生命周期或门禁仍然拥有权威，不能绕过",
+        "确认没有项目交付流程后才使用 fallback 风险与 profile 规则",
         "没有 spec/FULL 意图时报告 BLOCKED、要求用户明确改为 spec/FULL",
         "不得静默升级 FULL 或通过缩减测试审查绕过 Strict 控制"
       ]
@@ -456,6 +456,54 @@
         "只能由用户缩小为 Light 或明确 spec/FULL",
         "不得静默降低风险档位或升级 FULL"
       ]
+    },
+    {
+      "id": 36,
+      "name": "qeda_vibe_keeps_project_test_strategy",
+      "prompt": "项目默认入口是 QEDA VIBE_ACTIVE，尚无 change。用户要求实现已确认的两个页面交互，没有说 FULL；项目允许先实现后补测试，范围和实现授权清楚。请说明下一步、测试顺序和 worker 指令。评估模式：仅描述动作，不修改文件。",
+      "expected_output": "沿用项目 VIBE_ACTIVE 直接推进授权内实现，按项目策略补测试并运行必要验证；不选择 DEMO_FAST，不要求用户说 FULL，不创建 change 或 Apply 门禁；worker 同样不强制 RED。",
+      "files": [],
+      "expectations": ["没有活动 change 仍识别项目默认流程", "不额外要求 FULL 或 Apply 确认", "不强制 TDD 且 worker 沿用项目策略"]
+    },
+    {
+      "id": 37,
+      "name": "qeda_architecture_does_not_reroute_strict",
+      "prompt": "活动 change 已按 qeda-architecture-sdd 路由，架构决定完成且 Apply 已获授权。实时规则允许当前 Agent 自审；没有新增风险。请说明是否需要升级 Strict 或增加独立 worker/reviewer。评估模式：仅输出执行决定。",
+      "expected_output": "保留 Architecture 原名和项目要求，直接进入当前 Apply；不按 fallback 的架构风险定义升级 Strict，不增加独立 reviewer、强制 worker 或重复 Apply 授权。",
+      "files": [],
+      "expectations": ["保留 Architecture 不二次分类", "不增设独立 reviewer 或强制 worker", "不重复已有效的 Apply 授权"]
+    },
+    {
+      "id": 38,
+      "name": "qeda_planning_ignores_unrelated_drift",
+      "prompt": "QEDA 规划尚未 Apply-ready，另一位开发者修改了无关介绍文档。实时重读已证明不影响本次目标、设计或授权边界；项目规划禁止持久指纹。请说明是否暂停以及记录什么。评估模式：只输出决定。",
+      "expected_output": "继续规划，不因无关内容变化请求重新确认，不写 HEAD/摘要等持久指纹；若后续有实质变化则按项目阶段规则刷新受影响规划或重新授权。Git 提交快照检查仍独立保留。",
+      "files": [],
+      "expectations": ["不因无关漂移暂停或要求确认", "不在规划建立持久指纹", "保留实质变化和 Git 提交各自的处理边界"]
+    },
+    {
+      "id": 39,
+      "name": "qeda_verification_state_rejects_stale_result",
+      "prompt": "QEDA change 已完成验证并 capture，准备 Archive 时修改了一行生产源码，同时明确目标分支引用推进；check 失败。用户已授权将该目标分支同步到当前分支，但没有授权反向合入。请给出恢复顺序。评估模式：只描述，不执行 Git。",
+      "expected_output": "旧 VERIFIED 失效；依项目实时指令将目标分支同步到当前分支并处理冲突，再做实现复核与正式验证，重新 capture 写入官方报告并 check，归档预检仍检查。不能只更新指纹；不反向更新目标分支，不创建第二账本。",
+      "files": [],
+      "expectations": ["拒绝旧 VERIFIED 且不只刷新指纹", "同步和冲突处理在复核验证之前", "复用官方 capture/check 及报告", "不反向合入目标分支"]
+    },
+    {
+      "id": 40,
+      "name": "single_implementation_avoids_speculative_layers",
+      "prompt": "已确认功能只需一个内部函数，当前一个实现、一个调用方，没有外部边界或项目抽象要求。候选设计为未来扩展加入接口、工厂、适配器和新测试运行器。请审视候选设计并说明落地结构。评估模式：只输出设计决定。",
+      "expected_output": "逐项检查已确认结果与删除或内联后会失败的行为；未来扩展不足以证明新增机制，采用现有模块中的直接实现和原生测试。理由进入现有设计或验收，不建新报告和门禁；真实外部边界或强制规则存在时可保留有证据的机制。",
+      "files": [],
+      "expectations": ["用删除或内联后具体失败检查必要性", "不为未来扩展新增四层机制", "复用现有设计与测试入口", "保留有证据抽象的适用边界"]
+    },
+    {
+      "id": 41,
+      "name": "verification_binding_respects_authority_and_availability",
+      "prompt": "分别给出两个场景的动作：A：QEDA 实时验证要求同步一个明确目标分支，但用户未授权任何同步 Git 操作。B：普通项目没有验证状态脚本，原生测试已完成，用户没要求安装 QEDA。评估模式：只给出动作与限制。",
+      "expected_output": "A 报告缺少必要同步授权这一具体阻塞，不合并或声称 VERIFIED，不猜目标；B 使用原生测试证据和实际状态报告，不安装 QEDA 脚本或新建状态协议，变化后按原生要求重验。",
+      "files": [],
+      "expectations": ["A 不无授权同步且准确报告阻塞", "B 不引入 QEDA 脚本或第二协议", "两者均不制造验证通过证据"]
     }
   ]
 }

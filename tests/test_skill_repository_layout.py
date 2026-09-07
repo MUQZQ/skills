@@ -94,7 +94,7 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
 
     def test_agents_references_single_repository_mapping(self) -> None:
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
-        self.assertIn("`skill-domain-mapping.yaml`", agents)
+        self.assertIn("skill-domain-mapping.yaml", agents)
         self.assertNotIn("| 代码审查 | `code-review` |", agents)
         for duplicated_section in {
             "## 全流程自动化",

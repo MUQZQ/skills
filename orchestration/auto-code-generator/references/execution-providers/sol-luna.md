@@ -25,7 +25,8 @@ consumer skills 根目录本身存在 `_providers`，也不得使用评测快照
 - 把一个**完整内聚场景组**压缩为**六字段任务卡**：目标、允许范围、禁止范围、约束、预期输出、验证证据。
 - assignment 的时间盒、关键路径、检查点和超时动作必须写入六字段任务卡的“约束”；返回结果包含结构化
   `time_management`。
-- 同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`；不得拆分 RED、GREEN、REFACTOR。
+- 测试顺序以 assignment 中的项目策略为准；不要求 TDD 的项目可先实现后补测试，不由 provider 增加 RED 门禁。
+- 适用 TDD 时，同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`；不得拆分 RED、GREEN、REFACTOR。
 - **充分利用可用卡槽**：只有多个场景组通过依赖、写入、资源、契约和验证隔离门禁时才并行；Sol 保留
   领导协调、依赖确认、证据回收、冲突处理和最终验收。不得为填槽拆分内聚场景，安全隔离证据不足时串行优先。
 - **任务不清晰先问 Sol**：目标、上下文、范围、依赖、约束或验收证据不清时暂停，返回
