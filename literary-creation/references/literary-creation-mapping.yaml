@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "domain": "literary-creation",
+  "source_of_truth": true,
+  "routes": {
+    "novel-topic-discovery": {
+      "intent": [
+        "小说或网文选题",
+        "短篇爽文题材头脑风暴",
+        "短视频故事或微短剧选题",
+        "原创风险与撞题筛查"
+      ],
+      "skill_name": "novel-topic-discovery"
+    }
+  },
+  "authority_scope": "domain_intent_routing",
+  "registry_source": "../../skill-domain-mapping.yaml"
+}

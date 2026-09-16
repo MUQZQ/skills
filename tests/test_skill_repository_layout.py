@@ -179,6 +179,32 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         self.assertIn("scope: blank_slate", method_mapping)
         self.assertIn("skill_name: discovery-sprint", method_mapping)
 
+    def test_literary_creation_supports_novel_topic_discovery(self) -> None:
+        literary_skills = ROOT_MAPPING_DATA["domains"]["literary-creation"]["skills"]
+        self.assertIn("novel-topic-discovery", literary_skills)
+
+        skill_path = ROOT / literary_skills["novel-topic-discovery"]["path"]
+        skill_text = skill_path.read_text(encoding="utf-8")
+        for required_text in (
+            "10—15个",
+            "四层相似风险扫描",
+            "短视频实验",
+            "不承诺",
+            "不写正文",
+        ):
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, skill_text)
+
+        literary_mapping = json.loads(
+            (ROOT / "literary-creation" / "references" / "literary-creation-mapping.yaml")
+            .read_text(encoding="utf-8")
+        )
+        self.assertIn("novel-topic-discovery", literary_mapping["routes"])
+        self.assertEqual(
+            "novel-topic-discovery",
+            literary_mapping["routes"]["novel-topic-discovery"]["skill_name"],
+        )
+
     def test_repository_readme_owns_repository_specific_guidance(self) -> None:
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("AGENTS.md", readme)

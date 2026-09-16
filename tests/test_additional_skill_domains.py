@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ROOT_MAPPING = ROOT / "skill-domain-mapping.yaml"
 
 MAPPING_FILES = {
+    "literary-creation": "literary-creation-mapping.yaml",
     "meta-skills": "meta-skill-mapping.yaml",
     "independent-tools": "tool-mapping.yaml",
     "orchestration": "orchestration-mapping.yaml",

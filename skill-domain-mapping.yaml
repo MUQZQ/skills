@@ -123,6 +123,25 @@
         }
       }
     },
+    "literary-creation": {
+      "display_name": "文学创作",
+      "responsibility": "小说、网文、短篇故事与微短剧的选题和创作能力路由",
+      "intents": [
+        "小说与网文选题",
+        "短篇爽文策划",
+        "短视频故事与微短剧选题",
+        "原创风险筛查"
+      ],
+      "entry_path": "literary-creation/SKILL.md",
+      "routing_source": "literary-creation/references/literary-creation-mapping.yaml",
+      "skills": {
+        "novel-topic-discovery": {
+          "skill_name": "novel-topic-discovery",
+          "description": "中文网络小说、短篇爽文、短视频故事与微短剧方向的原创选题工作流。用户要求小说选题、题材头脑风暴、30章左右完结、短视频适配、反转爽点或避免撞题时使用；负责联网核验、结构化发散、四层相似风险扫描、候选收敛和最小验证实验，不负责正文写作。",
+          "path": "literary-creation/novel-topic-discovery/SKILL.md"
+        }
+      }
+    },
     "method-router": {
       "display_name": "方法论",
       "responsibility": "诊断、决策、问题探索、改进、风险与报告方法路由",
