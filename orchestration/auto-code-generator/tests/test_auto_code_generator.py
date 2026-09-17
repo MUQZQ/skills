@@ -555,6 +555,97 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("缩小为 Light", standard["expected_output"])
         self.assertIn("明确 spec/FULL", standard["expected_output"])
 
+    def test_fork_pr_delivery_and_review_repair_loop_contract(self) -> None:
+        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        stage6 = skill.split("## Stage 6：Fork PR 交付与评审戴明环", maxsplit=1)[1].split(
+            "## Git 与外部动作边界", maxsplit=1
+        )[0]
+        evals = json.loads(
+            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+        )["evals"]
+        eval_by_name = {item["name"]: item for item in evals}
+
+        for phrase in (
+            # 入口闸门：未授权时不得推送、开 PR 或进入循环
+            "没有这些授权时，Stage 5 的报告就是终点",
+            "`Delivery authority` 已记录具体动作与**目标分支**",
+            "不能从提交权限、验证结论或归档结果推导",
+            "`PR_REPAIR_LOOP` 缺少 `loop_budget`",
+            "不自行设定预算",
+            "`independent-tools/branch-manager` 拥有",
+            # 目标分支与基线
+            "目标分支取自用户指令或项目证据，不猜测",
+            "PR base 必须是验证时命名的目标分支",
+            # 同步动作需要独立 Git 授权
+            "只有 Git 授权已覆盖该方向",
+            # 戴明环四步与归档后处置
+            "把新评论与 CI 失败逐条归类",
+            "在授权和已确认边界内做最小修复",
+            "先按项目对归档后更正的规则建立或继续 linked follow-up change",
+            "重跑受影响的项目原生聚焦验证",
+            "以追加提交推送修复",
+            # 终止判定与字段
+            "绑定当前 head",
+            "没有注册 CI 时必须明确记录这一点",
+            "循环状态取 `进行中 | COMPLETE | INCOMPLETE | BLOCKED`",
+            "`BLOCKED` 优先于 `INCOMPLETE`",
+            "`pending` 或未注册时不得视为通过",
+            "既有自动合入机制",
+            # 不执行的边界
+            "禁止直接覆盖远程",
+            "不把当前工作分支合入目标分支",
+            "不改写已推送历史",
+            "不自行合入",
+        ):
+            self.assertIn(phrase, stage6)
+
+        for phrase in (
+            "Delivery authority：`NONE | PUSH_BRANCH | FORK_PR | PR_REPAIR_LOOP | MERGE`",
+            "推送、PR、评审修复循环和合入各自需要独立授权",
+            "评审意见不是授权",
+            "PR：未授权 / 已授权未执行 / <url>（base <目标分支>）",
+            "| 循环 <N/预算：进行中|COMPLETE|INCOMPLETE|BLOCKED>",
+            "| 无交付授权 |",
+            "| 需要同步但没有对应 Git 授权 |",
+            "不推导 commit/push/PR/deploy",
+            "默认不 stage、不 commit、不 push、不创建 PR、不部署",
+        ):
+            self.assertIn(phrase, skill)
+
+        mapping = (
+            AUTO_ROOT.parent / "references" / "orchestration-mapping.yaml"
+        ).read_text(encoding="utf-8")
+        self.assertIn("开 fork PR 与评审修复循环", mapping)
+
+        for name in (
+            "fork_pr_delivery_requires_its_own_authority",
+            "pr_review_loop_fixes_in_scope_and_revalidates",
+            "pr_loop_stops_at_budget_or_blocker",
+            "pr_merge_and_upstream_export_stay_with_existing_mechanisms",
+            "pr_loop_rejects_stale_review_and_escalates",
+        ):
+            case = eval_by_name[name]
+            self.assertTrue(case["prompt"])
+            self.assertGreaterEqual(len(case["expectations"]), 4)
+
+        archived = eval_by_name["pr_review_loop_fixes_in_scope_and_revalidates"]
+        self.assertIn("已归档", archived["prompt"])
+        self.assertIn("linked follow-up change", archived["expected_output"])
+        self.assertIn("先按项目规则建立或继续 linked follow-up change", archived["expected_output"])
+
+        budget = eval_by_name["pr_loop_stops_at_budget_or_blocker"]
+        self.assertIn("INCOMPLETE", budget["expected_output"])
+        self.assertIn("不自行合入", budget["expected_output"])
+
+        stale = eval_by_name["pr_loop_rejects_stale_review_and_escalates"]
+        self.assertIn("绑定的是 head", stale["prompt"])
+        self.assertIn("失效", stale["expected_output"])
+
+        merge = eval_by_name[
+            "pr_merge_and_upstream_export_stay_with_existing_mechanisms"
+        ]
+        self.assertIn("既有自动合入机制", merge["expected_output"])
+
 
 if __name__ == "__main__":
     unittest.main()
