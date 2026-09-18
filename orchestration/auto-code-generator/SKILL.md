@@ -2,21 +2,22 @@
 name: auto-code-generator
 description: >
   规格驱动的自动代码实施编排器。用户提到“自动生成代码”“全流程实施”“一键实施变更”
-  “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用。先识别项目已有的
-  生命周期所有者和风险档位；有 OpenSpec、QEDA 或其他权威流程时服从其实时状态与指令，只提供
-  场景组内 TDD、按场景组粒度调度、安全并行、审查和验证等阶段内能力，不建立第二套流程、
+  “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用；用户明确要求
+  “推送分支”“开 PR”“盯着评审修到过”时，在独立交付授权下继续到 fork PR 交付与评审戴明环修复。
+  先识别项目已有的生命周期所有者和风险档位；有 OpenSpec、QEDA 或其他权威流程时服从其实时状态与指令，
+  只提供场景组内 TDD、按场景组粒度调度、安全并行、审查和验证等阶段内能力，不建立第二套流程、
   状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v4.9
+# 自动代码生成器 v5.0
 
 ## 定位
 
 本 skill 将已经确认的需求持续推进到可验证结果。它是自适应编排器，不是凌驾于项目工作流之上的
 第二套生命周期。项目的 AGENTS、schema、实时指令、任务状态和原生验证命令始终优先。
 
-保留的工程骨架：规格追踪、阶段门禁、行为任务 TDD、依赖调度、安全并行、严重度审查、最终验证，
-以及独立 Git 授权下的 Apply 内 checkpoint 和归档后最终 closeout。
+保留的工程骨架：规格追踪、阶段门禁、行为任务 TDD、依赖调度、安全并行、严重度审查、最终验证、
+fork PR 交付与评审戴明环，以及独立 Git 授权下的 Apply 内 checkpoint 和归档后最终 closeout。
 
 ## 前置输入
 
@@ -28,6 +29,9 @@ description: >
 - Git 权限：默认 `NONE`，只有用户明确要求提交时才是 `LOCAL_COMMIT`；提交模式默认
   `CLOSEOUT_ONCE`，只有用户明确要求“分批提交”“阶段性提交”或“做完一部分先提交”时才是
   `INCREMENTAL_CHECKPOINT`；
+- 交付权限：默认 `NONE`；只有用户明确要求推送分支、开 PR、盯着评审修到过或合入时，才记录具体动作与
+  明确的目标分支；选择 `PR_REPAIR_LOOP` 时同时记录修复循环预算 `loop_budget`。它不能从提交权限、
+  验证结论或归档结果推导；
 - 当前分支、HEAD、工作树和重要外部输入的基线；
 - 项目原生构建、测试、集成或人工验证入口。
 
@@ -52,6 +56,7 @@ description: >
 | R11 | 单次变更只能提出规则更新建议；未经明确请求不得自动修改项目或全局 skills | 单样本被过拟合成永久规则 |
 | R12 | tracker task 是持久状态/验收单元，worker 场景组是临时调度单元；两者不得强制一一对应 | 每个微任务启动 worker，重复上下文与测试成本吞噬收益 |
 | R13 | 增量提交只接受完整验收、文件归属可分离的交付切片；提交不等于整个 change 完成或归档 | 未完成或混合改动被冻结进历史，最终审查遗漏已提交阶段 |
+| R14 | 推送、PR、评审修复循环和合入各自需要独立授权；循环有预算和终止判定，评审意见不扩授权边界 | 未经授权的交付动作，或无终止条件的修复循环持续消耗授权与成本 |
 
 ## 实战反例
 
@@ -68,6 +73,10 @@ description: >
 | “这次出现了新模式，自动写入项目 skill” | 一次成功不等于稳定通用规则 | R11 |
 | “一个 task 通过了，马上把当前所有改动提交掉” | worker/task 结果不是自动提交边界；只有完整验收的交付切片及其准确文件集可提交 | R13 |
 | “同一文件混合了已完成和未完成任务，用补丁暂存切一下即可” | 默认补丁暂存会削弱范围审计和恢复；混合未完成任务的文件应留到边界可分离后 | R13 |
+| “评审评论说顺手把旁边也改一下” | 评审意见不是授权；范围外改动先确认再动 | R1/R14 |
+| “CI 挂了，force push 重跑一遍最干净” | 改写已推送历史会打断评审基线和他人同步 | R10/R14 |
+| “一直修到 ✅ 为止，预算不重要” | 无预算的循环持续消耗授权与成本，还会掩盖真实阻塞 | R14 |
+| “评审 ✅ 了，我直接合入 fork main” | 合入是独立授权，且既有自动合入机制已经负责 | R10/R14 |
 
 ## 工作流总览
 
@@ -79,6 +88,7 @@ Detect & Route
   → Review & Verify final state
   → Achieve and archive
   → Final closeout only with separate authority
+  → Fork PR delivery and review repair loop only with separate authority
   → Report final state
 ```
 
@@ -182,7 +192,11 @@ Git 暂存/提交仍单独遵守“Git 与外部动作边界”的精确快照�
 - Source：实质影响方案的外部仓库 revision，或非 Git 输入的版本/摘要；
 - Execution intent：`PLAN_ONLY` 或 `PLAN_AND_APPLY`；
 - Git authority：`NONE` 或用户明确授予的具体动作；Commit mode：`CLOSEOUT_ONCE` 或
-  `INCREMENTAL_CHECKPOINT`。
+  `INCREMENTAL_CHECKPOINT`；
+- Delivery authority：`NONE | PUSH_BRANCH | FORK_PR | PR_REPAIR_LOOP | MERGE` 及其明确的目标分支；
+  每个取值只覆盖同名动作：`FORK_PR` 含该 PR 分支的首推，`PR_REPAIR_LOOP` 含循环内为修复产生的本地提交与该
+  分支的非强制推送，`MERGE` 只表示允许触发或等待既有合入机制，本 skill 仍不自行执行合入；
+- Repair loop budget：`loop_budget` 的轮次或时限上限，仅在 `PR_REPAIR_LOOP` 时记录。
 
 不要另建 baseline ledger。规划前、Apply 前和 Achieve 前比较当前状态；预先存在的非流程改动、HEAD 或
 外部输入变化时，输出 `BASELINE_CHANGED`、具体差异和受影响决定，等待重新确认。
@@ -509,11 +523,81 @@ QEDA 项目先读取项目内 `openspec/references/qeda/qeda-verification.md` �
 验证：命令/方法、退出状态、关键结果
 归档：位置或未归档原因
 Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <hash|N/A> / 提交失败 <状态/原因>
+PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash> | CI <状态> | 评审 <N 轮：✅|未决> | 修复提交 <hash...> | 循环 <N/预算：进行中|COMPLETE|INCOMPLETE|BLOCKED> | 合入 <既有机制|未合入原因>
 范围外发现：仅列候选，不写入当前任务状态
 ```
 
 报告是当前事实的展示，不是新的状态账本。Minor 和范围外发现可以报告，但不得把失败的必要测试或
 未解决的 Critical/Important 降级成“遗留问题后继续归档”。
+
+## Stage 6：Fork PR 交付与评审戴明环
+
+只有用户明确要求推送分支、开 PR、盯着评审修到过或合入时才进入本阶段；没有这些授权时，Stage 5 的报告就是终点，
+只给出建议动作。本阶段不建立第二套 Git 或 PR 流程：分支创建、推送纪律、PR 修改前状态确认和 `pr-watch` 监控由
+`independent-tools/branch-manager` 拥有，本阶段只规定进入条件、修复循环和终止判定。项目规则优先；QEDA 规定交付
+动作必须由用户另行明确授权并命名目标分支，也不允许把当前工作分支合入目标分支当成验证或归档的一部分。
+
+### 6.1 进入条件
+
+- 最终结论为 `VERIFIED`，且 closeout 已完成或明确不适用；
+- `Delivery authority` 已记录具体动作与**目标分支**：推送分支、开 PR、评审修复循环、合入分别是独立授权，
+  不能从提交权限、验证结论或归档结果推导；
+- `PR_REPAIR_LOOP` 缺少 `loop_budget` 或缺少目标分支时不进入循环，报告 `BLOCKED` 并要求用户给出上限，
+  不自行设定预算；
+- 目标分支取自用户指令或项目证据，不猜测；fork 集成主线的证据（分支归属、PR 基线惯例）通常指向 fork 的
+  `main`，`upstream` 只用于用户另行要求的批量出口，并把所选依据写进报告；
+- 分支命名沿用项目惯例（如 `qin/<主题>`、`codex/<任务>`），并说明本 PR 的基线分支；
+- PR base 必须是验证时命名的目标分支；base 不同或目标分支在归档后推进时，按项目规则使用托管平台的
+  合入候选检查或 linked follow-up change，不把归档报告当作该交付对象的证据。
+
+### 6.2 推送与开 PR
+
+1. 推送与开 PR 前按 branch-manager 的“PR 修改前状态确认”确认远程 head、目标分支是否推进和 PR 当前状态；
+   需要同步才能继续时，只有 Git 授权已覆盖该方向（目标分支或远程 PR 分支 → 当前分支）才执行同步与冲突处理，
+   缺少这项许可时报告 `BLOCKED` 并请求授权；同步完成后重新确认，不沿用旧结论；
+2. 只推送授权范围内的分支，不使用 `--force`；需要 `--force-with-lease` 的窄边界情形必须先取得用户明确授权，
+   再按 branch-manager 与项目 Git 规则执行，本阶段不自行决定；
+3. 明确 base 与 head 后开 PR；PR 描述由既有 change、任务状态、审查与验证结论拼成，不新造报告、
+   不建立第二份验收结论；
+4. fork 模式下 PR 在 fork 内闭环评审，跨仓出口由既有机制或用户决定；
+5. 推送和开 PR 不改变归档状态，也不把当前工作分支合入目标分支。
+
+### 6.3 监控
+
+用 `pr-watch`（指定本 PR 所属的 fork 仓库与 PR 号）建立快照基线，每轮读取本 PR 的 `state`、`head`、
+`mergeable`、CI 和评论计数，无变化不打扰；它只给出变化信号，评论正文与评审结论按 branch-manager 的用法
+另行读取。会话内可以轮询，也复用已有监控任务；只有用户明确要求时才新建定时监控任务，且不修改无关任务。
+快照基线和轮次计数随会话与同一份报告记录，跨会话恢复时从 PR 上的评审结论重建轮次，本阶段不写第二套状态账本。
+
+### 6.4 戴明环修复
+
+每轮按 Plan → Do → Check → Act 闭环，只处理本轮新增证据：
+
+1. **Plan**：把新评论与 CI 失败逐条归类为“当前变更相关 / 范围外”，再分 Critical、Important、Minor；
+   范围外或需要扩授权边界的条目只报告，不顺手修；
+2. **Do**：在授权和已确认边界内做最小修复，遵守项目测试策略、场景组粒度和文件归属；change 已经归档时
+   先按项目对归档后更正的规则建立或继续 linked follow-up change，再在其 Apply 边界内修复，不把更正追加在
+   已归档候选的报告下；
+3. **Check**：重跑受影响的项目原生聚焦验证。项目有验证状态机制时，源码变化使旧结果失效：change 仍活动时
+   返回复核与验证后重新 capture/check，不得只刷新指纹；已归档时不得声称可以对原 change 重新 capture/check，
+   当前候选的复核与验证在 linked follow-up change 上完成；
+4. **Act**：以追加提交推送修复，随后等待下一轮评审；同步更新轮次计数与本轮结论。
+
+### 6.5 终止判定
+
+| 情况 | 处理 |
+|---|---|
+| 评审 ✅ 绑定当前 head，且已注册的 CI 检查全部成功 | 交付动作完成；合入交给既有自动合入机制或人工，本阶段不自行合入；该 PR 没有注册 CI 时必须明确记录这一点，不能当作已通过 |
+| 达到 `loop_budget` 的轮次或时限 | 循环状态记 `INCOMPLETE`，保留 PR 与工作树现场，列出剩余问题 |
+| 同一根因连续修复失败、需要扩边界或需要人类裁决 | 循环状态记 `BLOCKED`，停止叠加猜测性修复 |
+| CI 失败来自基线噪音或与本变更无关 | 如实标注，不改代码掩盖；重跑使用项目原生方式 |
+| `mergeable=false` 或目标分支已推进 | 按 branch-manager 的“PR 修改前状态确认”处理；在 Git 授权覆盖该同步方向时先把目标分支同步到当前分支再叠加修复，缺少许可时报 `BLOCKED`，候选变更后的复核与验证按 6.4 的 Check 处置；禁止直接覆盖远程 |
+
+循环状态取 `进行中 | COMPLETE | INCOMPLETE | BLOCKED`，只写入报告的 PR 字段；`结果` 字段始终描述 change 的
+验证结论，不因循环状态改变。同一情形命中多行时按最需要人类介入的一行判定，`BLOCKED` 优先于 `INCOMPLETE`。
+评审 ✅ 必须绑定当前 head：结论里给出的 head 或评审提交要与当前 head 一致，之后有新推送即失效，不能只看
+“最新 commit 之后没有新评论”；CI 为 `pending` 或未注册时不得视为通过，如实记录并按项目原生方式确认。不执行：不改写已推送历史（Stage 6.2 明确授权的 `--force-with-lease` 除外）、不自行合入、不部署、不用 PR 描述或修订记录掩盖历史。
+完成后把最终 PR 事实补进同一份 Stage 5 报告，不新开报告。
 
 ## Git 与外部动作边界
 
@@ -532,7 +616,7 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
 - 只暂存 `AUTHORIZED_COMMIT_SET` 中的明确路径，不改动预先存在的 staged 状态；暂存后必须检查
   `git diff --cached --name-status` 和 `git diff --cached`，文件集合或内容不完全匹配就停止提交；
 - 提交前执行项目规定的审查与验证，并证明结果对应精确暂存快照；剩余工作树改动参与过的测试结果不能单独
-  证明 staged tree 有效；不得 force push；
+  证明 staged tree 有效；不得 `--force`（Stage 6.2 明确授权的 `--force-with-lease` 情形除外）；
 - 记录 `pre_commit_head` 和 `reviewed_tree = git write-tree`，紧邻 commit 前复核二者及完整 cached diff；
   提交后读取完整 parent 列表，验证新提交恰好一个 parent 且该 parent 等于 `pre_commit_head`，同时验证
   `HEAD^{tree}` 等于 `reviewed_tree`；任一不一致时报告 `COMMIT_TREE_MISMATCH` 并停止，不自动 amend、reset
@@ -548,7 +632,11 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
   只报告已有 checkpoint hashes；
 - 每次增量提交后更新完整 Target baseline，但保留原始 Change base；最终审查和验证必须覆盖 Change base
   以来的全部 checkpoint commits 与剩余 diff；
-- push、PR 和部署各自需要明确授权，不能从 commit 权限推导。
+- push、PR、评审修复循环、合入和部署各自需要明确授权，不能从 commit 权限推导，也不能从验证或归档结论推导；
+  授权必须命中用户指定的目标分支；
+- 交付动作按 Stage 6 执行：分支、推送纪律、PR 状态确认和 `pr-watch` 归 `independent-tools/branch-manager`，
+  本文件不复制其 Git 规则，也不建立第二套 PR 或监控账本；
+- 本 skill 不自行合入目标分支、不改写已推送历史、不部署；合入交给既有机制或用户明确授权。
 
 ## 错误与恢复
 
@@ -565,6 +653,12 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
 | 验证环境不可用 | 结论写 `BLOCKED` 或 `INCOMPLETE`，不得标记通过 |
 | 归档失败 | 保持活动 change，按官方错误恢复，不手工移动目录 |
 | 无 Git 授权 | 完成到归档和报告即停止，提供提交建议但不执行 |
+| 无交付授权 | 完成到 closeout 和报告即停止，给出建议的推送或开 PR 动作但不执行 |
+| 评审意见要求扩边界 | 停止该条修复，报告并请求确认，不顺手扩大改动 |
+| 修复使项目验证结果失效 | 返回项目要求的复核与验证后重新 capture/check，不刷新指纹 |
+| 交付循环达到预算 | 循环状态记 `INCOMPLETE` 并列出剩余问题，保留 PR 现场，不自行合入 |
+| 远程 PR 分支 head 领先本地 | 在 Git 授权覆盖该同步方向时先拉取合并再叠加修复，缺少许可时报 `BLOCKED`；禁止直接覆盖远程 |
+| 需要同步但没有对应 Git 授权 | 报告缺少的具体授权与方向，保留现场，不擅自合并或覆盖 |
 | 增量切片混合未完成/他人改动 | 排除混合文件并继续实施或重划边界；不补丁暂存、不创建空提交 |
 | 存在进行中的 merge/rebase/cherry-pick/revert | 停止普通 commit；不得替用户完成或中止该 Git 操作 |
 | commit 前 HEAD/index 漂移 | 停止提交并重新取证；不得沿用旧 `reviewed_tree` |
@@ -584,6 +678,8 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
 | 审查闭环 | 当前变更 Critical/Important 为 0 | 读取最终审查 |
 | 验证真实性 | 每项必要验证有实际命令/方法、状态和关键结果 | 读取最终验证 |
 | Git 授权 | 每个 Git/外部动作都有对应明确授权 | 对照用户指令和动作日志 |
+| 交付授权边界 | 推送、PR、评审修复循环和合入各有对应明确授权与目标分支 | 对照用户指令和 PR 记录 |
+| 修复循环闭环 | 每轮有归类、修复、受影响验证重跑和终止判定 | 读取轮次记录与验证结果 |
 
 ## 规则更新
 
@@ -592,6 +688,7 @@ Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <
 
 ---
 
-*版本：4.9*
-*最后更新：2026-09-07*
-*变更：明确项目模式优先于 fallback、TDD 与基线默认规则；复用设计必要性和项目验证状态检查。*
+*版本：5.0*
+*最后更新：2026-09-17*
+*变更：新增 Stage 6 fork PR 交付与评审戴明环（独立交付授权、pr-watch 监控、Plan-Do-Check-Act 修复循环和终止判定），
+并把交付权限、循环预算、PR 报告字段接入基线、错误恢复与质量指标。*
