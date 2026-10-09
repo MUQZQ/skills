@@ -3,10 +3,13 @@ name: branch-manager
 description: >
   Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、
   hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、
-  交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理。
+  交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理、
+  PR 修改前状态确认、Gitea API 令牌管理。
   当用户提到"创建分支"、"切换分支"、"stash"、"暂存"、"checkpoint"、
   "工作区检查"、"回退点"、"feature 分支"、"hotfix"、"cherry-pick"、
-  "整理提交"、"rebase"、"merge 冲突"、"bisect"时触发。
+  "整理提交"、"rebase"、"merge 冲突"、"bisect"、"更新 PR"、"改 PR 分支"、
+  "PR 状态"、"令牌"、"token"、"API token"、"fork PR"、"双阶段 PR"、
+  "fork 集成"、"合入 upstream"、"评审门禁"时触发。
 ---
 
 # 分支管理器
@@ -31,6 +34,8 @@ description: >
 | 对比两个分支差异 | log/diff 两种维度对比 | 分支对比 |
 | 定位引入 bug 的 commit | 二分查找 bad/good commit | Bisect 二分查找 |
 | 清理旧分支 | 列出 → 确认 → 删除 | 分支清理 |
+| 修改已有 PR 的分支 | 确认 PR 状态 → 同步基线 → 修改 → 推送 | PR 修改前状态确认 |
+| fork/upstream 双仓操作 | 模式〇：特性 PR → fork main（VM 评审门禁）→ 定期批量 upstream；或集成分支/逐特性 | references/fork-workflow.md |
 
 ## 铁律速查
 
@@ -42,6 +47,8 @@ description: >
 | R3 | 合并/切换前先 stash 或提交当前变更，零例外 | 合并冲突中混入无关改动，难以分离 |
 | R4 | 永远不要在公共分支上做 force push 或 hard reset | 其他协作者基于已删除的 commit 工作，仓库分裂 |
 | R5 | rebase 前先确认没有其他人基于当前分支工作 | 协作者的提交历史被破坏，需要强制同步 |
+| R6 | 修改已开 PR 的分支前，必须先确认 PR 当前状态（远程 head 一致、mergeable、CI 结论、目标分支是否又推进） | 基于过期状态操作：覆盖他人刚推的修复、重新引入已解决的冲突、CI 结论与实际代码脱节 |
+| R7 | API 令牌只存用户级固定位置（`~/.gitea-token`，ACL 仅本人），不进任何 git 仓库、脚注或会话输出 | 令牌泄漏进仓库历史或日志；轮换时找不到全部副本 |
 
 ## 分支命名与创建
 
@@ -55,6 +62,9 @@ description: >
 | 热修复 | `hotfix/<name>` | `hotfix/prod-login-crash` |
 | 文档 | `docs/<name>` | `docs/api-reference-update` |
 | 实验 | `exp/<name>` | `exp/switch-to-postgres` |
+
+> 项目级前缀约定优先于本表（如 QEDAgent 仓库：`qin/<主题>` 为人工主导分支、
+> `codex/<任务>` 为 agent 主导分支），见各仓库 AGENTS.md / 实际分支惯例。
 
 ### 工作区检查与分支创建
 
@@ -113,6 +123,125 @@ git rebase --skip                      # 跳过此 commit
 # 或
 git rebase --abort                     # 放弃整个 rebase，回到初始状态
 ```
+
+---
+
+## PR 修改前状态确认
+
+修改已开 PR 的分支（追加提交、rebase/merge 同步、强推更新）之前，先确认 PR 与基线的**当前**状态，再动手。
+
+### 检查清单（按顺序）
+
+```bash
+git fetch origin --prune                     # 1. 拉最新远程引用
+git fetch upstream --prune                   #    fork 工作流时同时拉上游
+git rev-list --count HEAD..upstream/main     # 2. 目标分支是否又推进；>0 先同步再改
+git ls-remote origin refs/heads/<pr-branch>  # 3. 远程 PR 分支 head 是否与本地一致
+```
+
+平台侧（Gitea/GitHub API 或页面）再确认三件事：
+
+| 检查项 | 关注点 | 异常时动作 |
+|--------|--------|-----------|
+| PR head/base | head 是否仍是自己的分支、指向的提交与本地是否一致、base 是否被人变更 | 远程领先本地先拉取；base 变更先评估影响 |
+| mergeable | 是否与目标分支冲突 | false 时先按「同步上游」解决，不要直接叠改动 |
+| CI / 评审 | 上一轮 checks 是否全绿、是否有未读的评审评论或新评审轮次 | 有未读评审先读——可能改变本次修改的方向 |
+
+### 确认通过后的推送纪律
+
+- 基线已推进：先合并/变基最新目标分支，再叠加本次修改
+- 远程 head 领先本地：先拉取合并，禁止直接覆盖
+- 快进更新用普通 push；确需改写 PR 分支历史时用 `--force-with-lease`，且仅限无协作者的自有分支（见 R4/R5）
+
+> 经验教训：目标分支在评审期高频推进时，「拉取 → 合并 → 推送」可能要做多轮；
+> 每轮推送后重新确认 mergeable 与 CI，不要沿用推送前的旧结论。
+
+---
+
+## Gitea API 令牌管理
+
+自托管 Gitea 的 API 写操作（发评论、改 PR 描述、重跑 CI）不能依赖 git 凭据管理器：
+GCM 的 OAuth JWT 每小时过期且刷新可能挂起。用固定 API 令牌。
+
+### 固定位置（唯一主存）
+
+```bash
+# 主存：用户级、仓库外、ACL 仅本人
+~/.gitea-token        # 即 C:\Users\<user>\.gitea-token
+icacls "$env:USERPROFILE\.gitea-token" /inheritance:r /grant:r "$env:COMPUTERNAME\<user>:F"
+```
+
+- 生成入口：Gitea 网页 → 头像 → 设置 → 应用 → 生成新令牌；scope 按需最小化
+  （评论/改 PR 用 `write:issue` + `write:repository` 即可，不必给 `read:user`）。
+- 读取顺序约定：脚本本地副本（如 `pr-watch.token`）→ `~/.gitea-token` → 环境变量 →
+  GCM 兜底（仅应急，见上）。
+- 令牌不入 git 仓库、不写进提交信息、不完整回显到会话输出（展示只留前 6 位）。
+
+### 常用操作
+
+```bash
+TOKEN=$(cat ~/.gitea-token)
+# 验证（注意 /user 需要 read:user scope，最小 scope 下用业务端点验证）
+curl -sk -H "Authorization: token $TOKEN" \
+  "https://<host>/api/v1/repos/<owner>/<repo>/pulls/<n>" -o /dev/null -w "%{http_code}\n"
+# 轮换：网页生成新令牌 → 覆盖 ~/.gitea-token 与各脚本本地副本 → 立即删除旧令牌
+```
+
+### 使用模式（脚本内）
+
+```js
+const token = readFileSync(join(process.env.USERPROFILE, '.gitea-token'), 'utf8').trim();
+fetch(url, { headers: { Authorization: `token ${token}` } });
+```
+
+---
+
+## pr-watch：PR 状态监控工具
+
+本 skill 附带 `tools/pr-watch.mjs`——R6（PR 修改前状态确认）的自动化实现。
+
+### 配置（必须，脚本不做任何默认假设）
+
+```bash
+# 方式一：配置文件（推荐，放 skill tools 目录下）
+echo '{"server":"https://<host>","repo":"<owner>/<repo>","login":"<用户名>"}' \
+  > $SKILL_DIR/tools/pr-watch.config.json
+
+# 方式二：环境变量
+export GITEA_SERVER=https://<host> GITEA_REPO=<owner>/<repo> GITEA_LOGIN=<用户名>
+```
+
+缺任何一项脚本报错退出（fail-loud），不做静默降级。
+
+### 用法
+
+```bash
+SKILL_DIR=~/.cc-switch/skills/independent-tools/branch-manager
+
+node $SKILL_DIR/tools/pr-watch.mjs                # 扫描配置仓库下自己全部开 PR
+node $SKILL_DIR/tools/pr-watch.mjs 94              # 只监控指定 PR（不需要 login）
+node $SKILL_DIR/tools/pr-watch.mjs 94 owner/repo  # 指定 PR + 覆盖仓库
+```
+
+### 监控内容
+
+每个 PR 报告：state / head / mergeable / 评论数（最新评论者与时间）/ CI 各项状态。
+与上次快照 diff，有变化才输出详情；无变化静默（cron 友好）；CI 失败自动给日志直链。
+状态按 `repo#PR` 分键，跨仓库不冲突。
+
+### 运行时文件
+
+| 文件 | 用途 | 位置 |
+|---|---|---|
+| `pr-watch.config.json` | 环境配置 | 脚本同目录（不进 git） |
+| `pr-watch.state.json` | 快照基线（删除即重置） | 脚本同目录 |
+| `pr-watch.token` | 令牌副本（备用） | 脚本同目录 |
+| `~/.gitea-token` | 令牌主存（R7 约定） | 用户级 |
+
+### 结合定时任务
+
+在任意会话中说「建一个定时监控 PR #N」，即可创建一个每 30 分钟的自动检查。
+建议每个 PR 一个独立任务（上下文嵌入 PR 背景，变化时报告能「懂行」）。
 
 ---
 
