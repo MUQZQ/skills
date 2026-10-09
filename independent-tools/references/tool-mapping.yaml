@@ -15,6 +15,12 @@
       ],
       "skill_name": "branch-manager"
     },
+    "datasheet-params": {
+      "intent": [
+        "数据手册参数提取"
+      ],
+      "skill_name": "datasheet-params"
+    },
     "dida-task-manager": {
       "intent": [
         "滴答任务管理"

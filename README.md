@@ -6,7 +6,7 @@
 ## AGENTS.md 的职责
 
 根目录 `AGENTS.md` 只保存通用约束，例如 TDD、代码审查、Git 安全、输出语言和平台约定。
-它会由 `agents-sync` 同步到 Codex、Claude Code 和 OpenCode，因此不承载本仓库专属的领域清单、
+它会由 `agents-sync` 同步到 Codex、Claude Code、OpenCode、ZCode 和 Pi，因此不承载本仓库专属的领域清单、
 目录说明或维护手册。
 
 本仓库专属说明由本 README 维护；领域、Skill 名称、描述和物理路径的唯一注册源是
@@ -28,7 +28,7 @@
 根注册表负责领域、规范 `skill_name`、描述和仓库相对路径。领域映射只负责将领域内意图映射到
 规范 `skill_name`，不重复保存物理路径。父 Skill 读取领域映射后，再通过根注册表解析实际路径。
 
-当前根注册表包含 8 个领域、74 个注册 Skill；其中 `method-router` 注册 48 个方法论 Skill，按 10 个功能块组织。
+当前根注册表包含 8 个领域、75 个注册 Skill；其中 `method-router` 注册 48 个方法论 Skill，按 10 个功能块组织。
 `method-router/references/method-mapping.yaml` 是意图路由的权威配置，负责分类、上下文和路由链，
 不应以 README 或父 Skill 中的静态清单替代。
 
@@ -76,14 +76,14 @@ skill-domain-architecture.drawio 可编辑的领域总览
 1. 将 Skill 放入职责匹配的领域目录，确保 `SKILL.md` 包含 `name` 和 `description`。
 2. 更新 `skill-domain-mapping.yaml` 中的规范名称、描述和仓库相对路径。
 3. 只有领域意图发生变化时，才更新该领域的意图映射；领域映射只引用 `skill_name`。
-4. 运行仓库路由契约测试并使用 `agents-sync` 同步三套客户端入口。
+4. 运行仓库路由契约测试并使用 `agents-sync` 同步五套客户端入口。
 5. 不修改 `AGENTS.md`，除非通用 Agent 约束本身发生变化。
 
 ## 跨客户端同步
 
-`meta-skills/agents-sync` 为 Codex、Claude Code 和 OpenCode 创建一级领域 Junction。具体 Skill
+`meta-skills/agents-sync` 为 Codex、Claude Code、OpenCode、ZCode 和 Pi 创建一级领域 Junction。具体 Skill
 通过父域目录树发现，不创建顶层叶子别名。同步器同时把 `skill-domain-mapping.yaml` 以文件链接
-暴露到三个消费者的 skills 根目录，使父域可解析仓库内 Skill 路径。同步流程不会删除普通目录；
+暴露到五个消费者的 skills 根目录，使父域可解析仓库内 Skill 路径。同步流程不会删除普通目录；
 发生冲突时先停止并要求人工处理。
 
 ## 架构图

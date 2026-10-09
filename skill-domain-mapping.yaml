@@ -442,6 +442,11 @@
           "description": "Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、 hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、 交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理。 当用户提到\"创建分支\"、\"切换分支\"、\"stash\"、\"暂存\"、\"checkpoint\"、 \"工作区检查\"、\"回退点\"、\"feature 分支\"、\"hotfix\"、\"cherry-pick\"、 \"整理提交\"、\"rebase\"、\"merge 冲突\"、\"bisect\"时触发。",
           "path": "independent-tools/branch-manager/SKILL.md"
         },
+        "datasheet-params": {
+          "skill_name": "datasheet-params",
+          "description": "从器件数据手册（IC datasheet）提取结构化、可信、可溯源的器件参数，把 merged.json 中间产物加工为 *_ai_params.yaml（每条参数带 Page/layout_type/Block 证据地址）。当用户提到\"提取器件参数\"、\"数据手册参数\"、\"datasheet 参数\"、\"merged.json 参数\"、\"ai_params.yaml\"、\"芯片参数溯源\"、\"PDF 参数提取\"时使用。",
+          "path": "independent-tools/datasheet-params/SKILL.md"
+        },
         "dida-task-manager": {
           "skill_name": "dida-task-manager",
           "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
