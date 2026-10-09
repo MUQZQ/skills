@@ -17,11 +17,12 @@
  * 状态快照写在脚本同目录 pr-watch.state.json（按 repo#PR 分键）；删除即重置。
  *
  * 认证顺序：
- *   1. 脚本同目录 pr-watch.token
- *   2. ~/.gitea-token（用户级主存，branch-manager skill R7 约定）
- *   3. 环境变量 GITEA_TOKEN
- *   4. git 凭据管理器（GCM，可能过期，仅应急）
+ *   1. ~/.gitea-token（唯一存放位置，branch-manager skill R7 约定；不进任何仓库）
+ *   2. 环境变量 GITEA_TOKEN
+ *   3. git 凭据管理器（GCM，可能过期，仅应急）
  * 仓库匿名可读时无令牌也可用（自动降级匿名）。
+ *
+ * TLS：默认严格校验证书；自签证书环境显式设置 GITEA_INSECURE=1（等价 curl -k）。
  * 退出码：0 正常；1 配置缺失或运行时错误；2 全部监控 PR 已关闭/合并。
  */
 import { execFileSync } from 'node:child_process';
@@ -46,15 +47,12 @@ if (!DEFAULT_REPO) { console.error('缺少 repo 配置。请设置 GITEA_REPO �
 if (!MY_LOGIN && !process.argv[2]) { console.error('缺少 login 配置（扫描自己的 PR 需要知道用户名）。请设置 GITEA_LOGIN 或在 pr-watch.config.json 中写入 {"login":"<用户名>",...}，或指定 PR 号跳过扫描。'); process.exit(1); }
 
 const STATE_FILE = join(HERE, 'pr-watch.state.json');
-const TOKEN_FILE = join(HERE, 'pr-watch.token');
 const USER_TOKEN_FILE = join(process.env.USERPROFILE ?? process.env.HOME ?? '', '.gitea-token');
+const TLS_INSECURE = process.env.GITEA_INSECURE === '1';
 
-// ── 令牌（可选，匿名可读仓库不需要）──
+// ── 令牌（可选，匿名可读仓库不需要；只读用户级唯一位置）──
 function readTokenFile() {
-  for (const file of [TOKEN_FILE, USER_TOKEN_FILE]) {
-    try { return readFileSync(file, 'utf8').trim(); } catch { /* 下一位置 */ }
-  }
-  return '';
+  try { return readFileSync(USER_TOKEN_FILE, 'utf8').trim(); } catch { return ''; }
 }
 function readTokenFromGcm() {
   try {
@@ -71,7 +69,7 @@ const token = readTokenFile() || process.env.GITEA_TOKEN || readTokenFromGcm();
 
 // ── HTTP（令牌优先，失败降级匿名）──
 function curl(path, useToken = Boolean(token)) {
-  const args = ['-sk', '--max-time', '30'];
+  const args = [TLS_INSECURE ? '-sk' : '-s', '--max-time', '30'];
   if (useToken && token) args.push('-H', `Authorization: token ${token}`);
   args.push(`${SERVER}${path}`);
   const out = execFileSync('curl', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe'] });

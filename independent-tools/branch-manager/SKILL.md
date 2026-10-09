@@ -173,18 +173,18 @@ icacls "$env:USERPROFILE\.gitea-token" /inheritance:r /grant:r "$env:COMPUTERNAM
 
 - 生成入口：Gitea 网页 → 头像 → 设置 → 应用 → 生成新令牌；scope 按需最小化
   （评论/改 PR 用 `write:issue` + `write:repository` 即可，不必给 `read:user`）。
-- 读取顺序约定：脚本本地副本（如 `pr-watch.token`）→ `~/.gitea-token` → 环境变量 →
-  GCM 兜底（仅应急，见上）。
+- 读取顺序约定：`~/.gitea-token`（唯一存放位置）→ 环境变量 `GITEA_TOKEN` →
+  GCM 兜底（仅应急，见上）。不设任何仓库内令牌副本，避免随 Junction 同步扩散。
 - 令牌不入 git 仓库、不写进提交信息、不完整回显到会话输出（展示只留前 6 位）。
 
 ### 常用操作
 
 ```bash
 TOKEN=$(cat ~/.gitea-token)
-# 验证（注意 /user 需要 read:user scope，最小 scope 下用业务端点验证）
-curl -sk -H "Authorization: token $TOKEN" \
+# 验证（注意 /user 需要 read:user scope，最小 scope 下用业务端点验证；自签证书环境才加 -k）
+curl -s -H "Authorization: token $TOKEN" \
   "https://<host>/api/v1/repos/<owner>/<repo>/pulls/<n>" -o /dev/null -w "%{http_code}\n"
-# 轮换：网页生成新令牌 → 覆盖 ~/.gitea-token 与各脚本本地副本 → 立即删除旧令牌
+# 轮换：网页生成新令牌 → 覆盖 ~/.gitea-token → 立即删除旧令牌
 ```
 
 ### 使用模式（脚本内）
@@ -235,8 +235,10 @@ node $SKILL_DIR/tools/pr-watch.mjs 94 owner/repo  # 指定 PR + 覆盖仓库
 |---|---|---|
 | `pr-watch.config.json` | 环境配置 | 脚本同目录（不进 git） |
 | `pr-watch.state.json` | 快照基线（删除即重置） | 脚本同目录 |
-| `pr-watch.token` | 令牌副本（备用） | 脚本同目录 |
-| `~/.gitea-token` | 令牌主存（R7 约定） | 用户级 |
+| `~/.gitea-token` | 令牌唯一位置（R7 约定） | 用户级 |
+
+令牌自动从 `~/.gitea-token` 读取（亦可用 `GITEA_TOKEN` 覆盖，匿名可读时自动降级匿名）；
+TLS 默认严格校验证书，自签证书环境需显式设置 `GITEA_INSECURE=1`。
 
 ### 结合定时任务
 
