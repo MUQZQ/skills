@@ -222,7 +222,7 @@ routes:
   - skill_name: evidence-driven-dev
     order: 1
     mandatory: true
-  rationale: 用户明确要求全面测试/系统审计/证据驱动闭环或独立复核时，进入证据驱动开发全流程（黑盒探针→白盒根因→TDD修复→独立评审→防回退），与 project-reviewer 衔接
+  rationale: 因为用户明确要求全面测试或系统审计或证据驱动闭环而非通用渐进改进，选择 evidence-driven-dev 全流程（黑盒探针到白盒根因再到TDD修复与独立评审）而非 PDCA 通用改进循环，评审阶段衔接 project-reviewer
 - type: meta
   priority: 1000
   condition:
@@ -774,6 +774,8 @@ routes:
   rationale: 因为要追问反复问题背后的规则与假设，选择 Double-Loop Learning 而非只记录事件经过
 skill_registry:
   available:
+  - skill_name: evidence-driven-dev
+    category: improve
   - skill_name: deep-analysis
     category: diagnose
   - skill_name: pdca-tuning

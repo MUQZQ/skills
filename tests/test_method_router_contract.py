@@ -383,7 +383,7 @@ class MethodRouterContractTest(unittest.TestCase):
     def test_eight_leaf_routes_are_narrow_unique_and_learning_does_not_hit(
         self,
     ) -> None:
-        self.assertIn("version: '3.8'", self.mapping)
+        self.assertIn("version: '3.9'", self.mapping)
         self.assertIn("last_updated: '2026-09-01'", self.mapping)
         decide_block = self.mapping.split("\n  decide:\n", 1)[1].split(
             "\n  design:\n", 1
@@ -411,7 +411,7 @@ class MethodRouterContractTest(unittest.TestCase):
             leaf_sub_types,
             {route["condition"]["sub_type"] for route in leaf_routes},
         )
-        self.assertEqual(52, len(self.routes))
+        self.assertEqual(53, len(self.routes))
 
         with self.assertRaises(LookupError):
             _resolve(
