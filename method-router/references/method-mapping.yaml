@@ -1,11 +1,12 @@
-# 方法论路由映射表 v3.8
+# 方法论路由映射表 v3.9
+# v3.9: +evidence-driven-dev 证据驱动开发全流程(improve/evidence-driven-full-loop)
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
 # v3.8: +8 个独立芒格决策检查 Skill 与完整组合链
 # v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
 # v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.8'
+version: '3.9'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
@@ -87,6 +88,12 @@ classification:
     - 这个模块需要重构
   improve:
     keywords:
+    - 全面测试
+    - 证据驱动
+    - 独立复核
+    - 审计系统
+    - 方法论
+    - 先测后修
     - 优化
     - 提升
     - 改进
@@ -207,6 +214,15 @@ fallbacks:
   learning:
     action: ask_user_with_top_3
 routes:
+- type: improve
+  priority: 950
+  condition:
+    sub_type: evidence-driven-full-loop
+  chain:
+  - skill_name: evidence-driven-dev
+    order: 1
+    mandatory: true
+  rationale: 用户明确要求全面测试/系统审计/证据驱动闭环或独立复核时，进入证据驱动开发全流程（黑盒探针→白盒根因→TDD修复→独立评审→防回退），与 project-reviewer 衔接
 - type: meta
   priority: 1000
   condition:

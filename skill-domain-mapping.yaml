@@ -396,6 +396,11 @@
           "skill_name": "double-loop",
           "description": "双环学习：改行为+改规则假设，防重复犯错",
           "path": "method-router/double-loop/SKILL.md"
+        },
+        "evidence-driven-dev": {
+          "skill_name": "evidence-driven-dev",
+          "description": "证据驱动开发方法论:黑盒抓问题、白盒定根因、TDD 固修复、评审工程防回退、独立复核防自欺、证据链贯穿。适用于交易系统/长期演化项目的测试、验收、审计与修复全流程。由 method-router 路由触发,或用户直接说\"证据驱动\"\"全面测试\"\"方法论\"\"审计系统符合性\"\"独立复核\"时触发。与 project-reviewer 互补。",
+          "path": "method-router/evidence-driven-dev/SKILL.md"
         }
       }
     },
