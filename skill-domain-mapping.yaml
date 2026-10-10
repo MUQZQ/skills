@@ -411,7 +411,7 @@
       "skills": {
         "agents-sync": {
           "skill_name": "agents-sync",
-          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"时触发。",
+          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"\"同步到 zcode\"\"同步到 pi\"时触发。",
           "path": "meta-skills/agents-sync/SKILL.md"
         },
         "skill-creator": {
