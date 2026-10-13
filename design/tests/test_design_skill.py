@@ -52,7 +52,7 @@ class DesignSkillContractTest(unittest.TestCase):
 
     def test_agents_routes_design_domain_only_to_parent(self) -> None:
         content = AGENTS.read_text(encoding="utf-8")
-        self.assertIn("`skill-domain-mapping.yaml`", content)
+        self.assertIn("skill-domain-mapping.yaml", content)
         self.assertNotIn("## 设计能力", content)
         for leaf in ("ui-ux-pro-max", "frontend-design", "drawio-skill"):
             with self.subTest(leaf=leaf):

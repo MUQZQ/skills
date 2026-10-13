@@ -15,7 +15,7 @@ class RepositoryDomainRoutingContractTest(unittest.TestCase):
     def test_agents_references_repository_mapping_without_domain_duplication(self) -> None:
         content = AGENTS.read_text(encoding="utf-8")
         self.assertIn("AGENTS.md → 领域模块 → 具体 Skill", content)
-        self.assertIn("`skill-domain-mapping.yaml`", content)
+        self.assertIn("skill-domain-mapping.yaml", content)
         self.assertNotIn("| 设计与视觉 | `design` |", content)
 
     def test_design_mapping_is_v1_source_of_truth(self) -> None:

@@ -400,7 +400,7 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 48 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 49 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|

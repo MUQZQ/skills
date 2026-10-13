@@ -462,6 +462,11 @@
           "description": "ParamCompare 项目 Playwright 浏览器端到端测试。当用户提到\"浏览器测试\"、\"UI自动化测试\"、\"E2E测试\"、\"页面测试\"、\"Playwright测试\"、\"端到端\"、\"端对端\"、\"测试页面操作\"、\"操作浏览器\"、\"写UI测试\"、\"截图验证\"、\"browser test\"时必须使用。用于编写、运行和调试基于 Playwright 的 NiceGUI 应用浏览器测试，包括 Monaco Editor、AG Grid、Quasar 组件的交互测试。",
           "path": "independent-tools/playwright-testing/SKILL.md"
         },
+        "project-reviewer": {
+          "skill_name": "project-reviewer",
+          "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
+          "path": "independent-tools/project-reviewer/SKILL.md"
+        },
         "usb-git-manager": {
           "skill_name": "usb-git-manager",
           "description": "本地硬盘与 U 盘之间的 git 仓库双向同步。当用户提到\"推到 U 盘\"、\"从 U 盘拉代码\"、\"U 盘同步\"、\"usb git\"、\"U盘备份\"、\"U盘git\"时必须使用。处理 FAT32/exFAT 文件系统的 safe.directory 权限问题，支持裸仓库和非裸仓库两种模式。",
