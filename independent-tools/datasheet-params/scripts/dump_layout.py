@@ -10,7 +10,7 @@
 import json
 import re
 import sys
-import os
+from pathlib import Path
 
 
 def html_to_text(h: str) -> str:
@@ -38,15 +38,19 @@ def main() -> None:
         data = json.load(f)
 
     lay = data.get("layout", [])
-    pages = {}
+    pages: dict = {}
     for b in lay:
-        pages.setdefault(b.get("page_index"), []).append(b)
+        pg = b.get("page_index")
+        pages.setdefault(pg if isinstance(pg, int) else None, []).append(b)
+
+    def page_key(pg):
+        return (pg is None, pg if isinstance(pg, int) else 0)
 
     lines = []
-    for pg in sorted(pages):
+    for pg in sorted(pages, key=page_key):
         lines.append("=" * 100)
-        lines.append(f"===== PAGE {pg} =====")
-        for b in sorted(pages[pg], key=lambda x: x.get("block_id", 0)):
+        lines.append(f"===== PAGE {pg if pg is not None else '?（block 缺 page_index）'} =====")
+        for b in sorted(pages[pg], key=lambda x: x.get("block_id") or 0):
             bid, lt, hl, sn = (
                 b.get("block_id"),
                 b.get("layout_type"),
@@ -59,8 +63,11 @@ def main() -> None:
             else:
                 lines.append(clean(html_to_text(b.get("block_content") or "")))
 
-    out = sys.argv[2] if len(sys.argv) > 2 else os.path.splitext(src)[0] + "_dump.txt"
-    with open(out, "w", encoding="utf-8") as f:
+    out = (
+        sys.argv[2] if len(sys.argv) > 2
+        else str(Path(src).with_name(Path(src).stem + "_dump.txt"))
+    )
+    with open(out, "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines))
     print(f"wrote {len(lines)} lines -> {out}")
 

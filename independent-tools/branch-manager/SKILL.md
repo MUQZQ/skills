@@ -211,7 +211,8 @@ echo '{"server":"https://<host>","repo":"<owner>/<repo>","login":"<用户名>"}'
 export GITEA_SERVER=https://<host> GITEA_REPO=<owner>/<repo> GITEA_LOGIN=<用户名>
 ```
 
-缺任何一项脚本报错退出（fail-loud），不做静默降级。
+缺 server 或 repo 时脚本报错退出（fail-loud）；login 仅扫描自己的全部 PR 时必需，
+指定 PR 号可省。不做静默降级。
 
 ### 用法
 

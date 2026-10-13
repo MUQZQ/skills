@@ -23,6 +23,8 @@ CONSUMERS = (
     Path.home() / ".codex" / "skills",
     Path.home() / ".claude" / "skills",
     Path.home() / ".config" / "opencode" / "skills",
+    Path.home() / ".zcode" / "skills",
+    Path.home() / ".pi" / "agent" / "skills",
 )
 
 

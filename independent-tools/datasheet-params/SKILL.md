@@ -8,12 +8,6 @@ description: >
   "给 PDF 建参数证据"、"MOSFET/MOS/射频合成器/PLL/ADC 的规格参数"，或训练评测里要求
   "不借助 MCP 复现参数提取"、"和 *_ai_params.yaml 基准对齐"时使用。输入可以是 merged.json，
   也可以直接给数据手册 PDF（先解析出合并 JSON）。注意：简单单步"读某个 PDF 摘要"不需要此 Skill。
-license: MIT
-compatibility: claude code, opencode
-metadata:
-  audience: engineer
-  category: datasheet-parameter-extraction
-  tags: datasheet,datasheet参数提取,器件参数,数据手册,ai_params,merged.json,evidence,pdf
 ---
 
 # Datasheet 器件参数提取

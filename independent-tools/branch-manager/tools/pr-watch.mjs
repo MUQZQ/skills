@@ -7,7 +7,7 @@
  *     {"server":"https://<host>","repo":"<owner>/<repo>","login":"<你的用户名>"}
  *   方式二：环境变量 GITEA_SERVER + GITEA_REPO + GITEA_LOGIN
  *   方式三：命令行参数 node pr-watch.mjs <PR号> <owner>/<repo>
- *     （server 和 login 仍需从配置或环境变量提供）
+ *     （server 仍需从配置或环境变量提供；login 仅扫描自己的全部 PR 时必需）
  *
  * 用法：
  *   node pr-watch.mjs                    # 扫描配置仓库下自己的全部开 PR
@@ -68,15 +68,35 @@ function readTokenFromGcm() {
 const token = readTokenFile() || process.env.GITEA_TOKEN || readTokenFromGcm();
 
 // ── HTTP（令牌优先，失败降级匿名）──
+// 令牌经 --config stdin 传入，避免出现在进程命令行参数中（同机进程列表可窥）。
 function curl(path, useToken = Boolean(token)) {
   const args = [TLS_INSECURE ? '-sk' : '-s', '--max-time', '30'];
-  if (useToken && token) args.push('-H', `Authorization: token ${token}`);
-  args.push(`${SERVER}${path}`);
-  const out = execFileSync('curl', args, { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, stdio: ['pipe', 'pipe', 'pipe'] });
-  return JSON.parse(out);
+  const input = `url = "${SERVER}${path}"\n`;
+  if (useToken && token) args.push('--config', '-');
+  else args.push(`${SERVER}${path}`);
+  const out = execFileSync('curl', args, {
+    encoding: 'utf8',
+    maxBuffer: 16 * 1024 * 1024,
+    input: useToken && token ? input + `header = "Authorization: token ${token}"\n` : undefined,
+    stdio: ['pipe', 'pipe', 'pipe'],
+  });
+  try {
+    return JSON.parse(out);
+  } catch {
+    throw new Error(`非 JSON 响应（HTTP 可能 4xx/5xx 或超时）: ${out.slice(0, 120)}`);
+  }
 }
 function curlSafe(path) {
-  try { return curl(path, true); } catch { try { return curl(path, false); } catch (e) { throw e; } }
+  try {
+    return curl(path, true);
+  } catch (tokenedError) {
+    try {
+      return curl(path, false);
+    } catch {
+      // 带令牌与匿名都失败时，抛首次（带令牌）错误：真实原因（如 401）不被匿名 404 掩盖
+      throw tokenedError;
+    }
+  }
 }
 
 // ── 状态（按 repo#PR 分键，跨仓库不冲突）──
