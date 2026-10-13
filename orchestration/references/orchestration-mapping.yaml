@@ -6,7 +6,8 @@
     "auto-code-generator": {
       "intent": [
         "规格驱动实施",
-        "跨阶段自动化开发管线"
+        "跨阶段自动化开发管线",
+        "推送分支、开 fork PR 与评审修复循环"
       ],
       "skill_name": "auto-code-generator"
     },

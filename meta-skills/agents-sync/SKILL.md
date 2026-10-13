@@ -1,9 +1,9 @@
 ---
 name: agents-sync
 description: >
-  检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode）与权威 AGENTS.md，
+  检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md，
   以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。
-  当用户提到"同步 agents""检查 agents""AGENTS.md 更新了""软链接 agents""同步 skills""同步 skill"时触发。
+  当用户提到"同步 agents""检查 agents""AGENTS.md 更新了""软链接 agents""同步 skills""同步 skill""同步到 zcode""同步到 pi"时触发。
 ---
 
 # Agents 同步器
@@ -45,16 +45,20 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 | Codex | 固定路径 `$env:USERPROFILE\.codex\` | `AGENTS.md` |
 | Claude Code | 检测 `$env:USERPROFILE\CLAUDE.md` 或 `$env:USERPROFILE\.claude\CLAUDE.md`（优先已存在的路径） | `CLAUDE.md` |
 | OpenCode | 检测 `$env:USERPROFILE\.opencode\` 或 `$env:USERPROFILE\.config\opencode\`（扫描两个候选目录，优先已存在的路径） | `AGENTS.md` |
+| ZCode | 固定路径 `$env:USERPROFILE\.zcode\` | `AGENTS.md` |
+| Pi | 固定路径 `$env:USERPROFILE\.pi\agent\` | `AGENTS.md` |
 
 ### Skill 目录目标
 
-固定三组 skills 目录，目录存在才同步：
+固定五组 skills 目录，目录存在才同步：
 
 | Agent 工具 | 目标目录 |
 |-----------|---------|
 | OpenCode | `$env:USERPROFILE\.config\opencode\skills` |
 | Codex | `$env:USERPROFILE\.codex\skills` |
 | Claude Code | `$env:USERPROFILE\.claude\skills` |
+| ZCode | `$env:USERPROFILE\.zcode\skills` |
+| Pi | `$env:USERPROFILE\.pi\agent\skills` |
 
 注意：目标 skills 目录中不在权威源列表内的条目（如 Codex 的 `.system`）一律保留不动。
 只为根注册表中的一级领域 Skill 创建 Junction。领域子 Skill 通过父 Skill Junction 的目录树发现，不创建顶层叶子别名。
@@ -101,13 +105,15 @@ if ($domainEntry.LinkType -eq "Junction") {
 $targets = @(
     "$env:USERPROFILE\.config\opencode\skills",
     "$env:USERPROFILE\.codex\skills",
-    "$env:USERPROFILE\.claude\skills"
+    "$env:USERPROFILE\.claude\skills",
+    "$env:USERPROFILE\.zcode\skills",
+    "$env:USERPROFILE\.pi\agent\skills"
 )
 ```
 
 ### 步骤 2：检查指令文件目标
 
-对每个指令文件目标，以及三个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
+对每个指令文件目标，以及五个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
 套安全文件同步。注册表源为 `$srcRoot\skill-domain-mapping.yaml`，目标分别为
 `<consumer-skills>\skill-domain-mapping.yaml`：
 
@@ -118,7 +124,9 @@ $opencodeCandidates = @(
 )
 $fileSyncPairs = @(
     [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Codex AGENTS.md>" },
-    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Claude CLAUDE.md>" }
+    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Claude CLAUDE.md>" },
+    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<ZCode AGENTS.md>" },
+    [pscustomobject]@{ Source = (Join-Path $srcRoot "AGENTS.md"); Target = "<Pi AGENTS.md>" }
 )
 foreach ($ocRoot in $opencodeCandidates) {
     $fileSyncPairs += [pscustomobject]@{
@@ -213,6 +221,8 @@ foreach ($t in $targets) {
 | Codex       | ~\.codex\AGENTS.md         | ✅   | 符号链接已指向源     |
 | Claude Code | ~\CLAUDE.md                | ⚠️  | 内容不一致，需更新   |
 | OpenCode    | ~\.opencode\AGENTS.md / ~\.config\opencode\AGENTS.md      | ⊘   | 两个候选目录均不存在或未创建，跳过     |
+| ZCode       | ~\.zcode\AGENTS.md         | ✅   | 硬链接已指向源       |
+| Pi          | ~\.pi\agent\AGENTS.md      | ✅   | 硬链接已指向源       |
 
 Skill 目录：
 | Target   | Skill             | 状态 | 说明                    |
@@ -332,6 +342,6 @@ Skill: agents-sync
 
 ---
 
-*版本：2.1*
-*最后更新：2026-08-26*
-*变更：OpenCode 指令文件目标由固定 `~\.opencode` 扩展为 `~\.opencode` 与 `~\.config\opencode` 多候选目录扫描，每个候选目录独立生成同步对，父目录不存在者跳过。*
+*版本：2.2*
+*最后更新：2026-09-15*
+*变更：新增 ZCode（`~\.zcode\skills`、`~\.zcode\AGENTS.md`）与 Pi（`~\.pi\agent\skills`、`~\.pi\agent\AGENTS.md`）两个同步目标；指令文件与注册表在无管理员权限时降级为硬链接。*

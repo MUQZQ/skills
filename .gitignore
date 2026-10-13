@@ -3,3 +3,6 @@ code-review/review-issues.md
 __pycache__/
 method-router/pdca-tuning-workspace/
 method-router/munger-methods-workspace/
+independent-tools/branch-manager/tools/pr-watch.config.json
+independent-tools/branch-manager/tools/pr-watch.state.json
+independent-tools/branch-manager/tools/pr-watch.token

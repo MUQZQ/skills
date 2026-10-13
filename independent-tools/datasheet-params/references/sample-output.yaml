@@ -1,0 +1,670 @@
+electrical_characteristics:
+  current_consumption:
+    source: 'Page: 5, layout_type: table, Block: 61'
+    ICC:
+      symbol: ICC
+      name: Total current in synthesizer mode (internal VCO)
+      unit: mA
+      condition: fOUT=480MHz, SE OSCin
+      variants:
+      - condition: Configuration A(1)
+        typ: 39
+      - condition: Configuration B(2)
+        typ: 44
+      - condition: Configuration C(3)
+        typ: 46
+      - condition: Configuration D(4)
+        typ: 51
+      - condition: Configuration E(5)
+        typ: 9
+    IPLL:
+      symbol: IPLL
+      name: Total current in PLL mode (external VCO)
+      unit: mA
+      condition: fOUT=480MHz
+      variants:
+      - condition: Configuration F(6)
+        typ: 15
+      - condition: Configuration G(7)
+        typ: 21
+    ICCPD:
+      symbol: ICCPD
+      name: Total current in powerdown mode
+      typ: 0.9
+      unit: mA
+      condition: CE=0V or POWERDOWN bit=1, VCC=3.3V, Push-pull output
+  oscin_reference:
+    source: 'Page: 5, layout_type: table, Block: 61'
+    fOSCin:
+      symbol: fOSCin
+      name: OSCin frequency range
+      min: 10
+      max: 150
+      unit: MHz
+      condition: Single-ended or differential input
+    VOSCin:
+      symbol: VOSCin
+      name: OSCin input voltage
+      unit: V
+      variants:
+      - condition: Single-ended input
+        min: 1.4
+        max: 3.3
+      - condition: Differential input
+        min: 0.15
+        max: 1.5
+  crystal_reference:
+    source: 'Page: 5, layout_type: table, Block: 61'
+    fXTAL:
+      symbol: fXTAL
+      name: Crystal frequency range
+      min: 10
+      max: 40
+      unit: MHz
+      condition: Fundamental model, ESR<200Ω
+    CIN:
+      symbol: CIN
+      name: OSCin input capacitance
+      typ: 1
+      unit: pF
+  mult:
+    source: 'Page: 5, layout_type: table, Block: 61'
+    fMULTin:
+      symbol: fMULTin
+      name: MULT input frequency
+      min: 10
+      max: 30
+      unit: MHz
+      condition: MULT>Pre-divider
+    fMULTout:
+      symbol: fMULTout
+      name: MULT output frequency
+      min: 60
+      max: 130
+      unit: MHz
+      condition: Not supported with crystal reference input
+  pll:
+    source: 'Page: 5, layout_type: table, Block: 61'
+    fPD:
+      symbol: fPD
+      name: Phase detector frequency
+      max: 130
+      unit: MHz
+    KPD:
+      symbol: KPD
+      name: Charge pump current
+      unit: μA
+      variants:
+      - condition: Programmable minimum value, Internal charge pump
+        min: 312.5
+      - condition: Programmable minimum value, 5-V charge pump
+        min: 625
+      - condition: Per programmable step, Internal charge pump
+        typ: 312.5
+      - condition: Per programmable step, 5-V charge pump
+        typ: 625
+      - condition: Programmable maximum value, Internal charge pump
+        max: 7187.5
+      - condition: Programmable maximum value, 5-V charge pump
+        max: 6875
+  pll_noise:
+    source: 'Page: 6, layout_type: table, Block: 74'
+    PNPLL1_f:
+      symbol: PNPLL1/f
+      name: Normalized PLL 1/f noise
+      unit: dBc/Hz
+      condition: At maximum charge pump current
+      variants:
+      - condition: Internal charge pump
+        typ: -124
+      - condition: 5-V charge pump
+        typ: -120
+    PNPLLFlat:
+      symbol: PNPLLFlat
+      name: Normalized PLL noise floor
+      unit: dBc/Hz
+      condition: At maximum charge pump current
+      variants:
+      - condition: Internal charge pump
+        typ: -231
+      - condition: 5-V charge pump
+        typ: -226
+    fRFin:
+      symbol: fRFin
+      name: External VCO input frequency
+      min: 100
+      max: 1400
+      unit: MHz
+    PRFin:
+      symbol: PRFin
+      name: External VCO input power
+      unit: dBm
+      variants:
+      - condition: fRFin<1GHz
+        min: -10
+      - condition: fRFin≥1GHz
+        min: -5
+  vco:
+    source: 'Page: 6, layout_type: table, Block: 74'
+    fVCO:
+      symbol: fVCO
+      name: VCO frequency
+      min: 4300
+      max: 5376
+      unit: MHz
+    KVCO:
+      symbol: KVCO
+      name: VCO gain
+      typ: 56
+      unit: MHz/V
+      condition: fVCO=4800MHz
+    delta_TCL:
+      symbol: '|ΔTCL|'
+      name: Allowable temperature drift
+      max: 125
+      unit: ℃
+      condition: VCO not being re-calibrated, -40℃≤TA≤85℃
+    tVCOCal:
+      symbol: tVCOCal
+      name: VCO calibration time
+      max: 140
+      unit: μs
+      condition: fOSCin=fPD=100MHz
+    PNVCO:
+      symbol: PNVCO
+      name: Open loop VCO phase noise
+      unit: dBc/Hz
+      condition: fOUT=480MHz
+      variants:
+      - condition: 100Hz offset
+        typ: -32.4
+      - condition: 1kHz offset
+        typ: -62.3
+      - condition: 10kHz offset
+        typ: -92.1
+      - condition: 100kHz offset
+        typ: -121.1
+      - condition: 1MHz offset
+        typ: -144.5
+      - condition: 10MHz offset
+        typ: -156.8
+  rf_output:
+    source: 'Page: 6, layout_type: table, Block: 74'
+    fOUT:
+      symbol: fOUT
+      name: RF output frequency
+      unit: MHz
+      variants:
+      - condition: Synthesizer mode
+        min: 10
+        max: 1344
+      - condition: PLL mode, RF output from buffer
+        min: 10
+        max: 1400
+    PTX_PRX:
+      symbol: PTX,PRX
+      name: RF output power
+      typ: 0
+      unit: dBm
+      condition: fOUT=480MHz, Power control bit=6
+    H2RFout:
+      symbol: H2RFout
+      name: Second harmonic
+      max: -25
+      unit: dBc
+      condition: fOUT=480MHz, Power control bit=6
+  fsk_modulation:
+    source: 'Page: 6, layout_type: table, Block: 74'
+    FSKLevel:
+      symbol: FSKLevel
+      name: FSK level
+      min: 2
+      max: 8
+      condition: FSK PIN mode
+    FSKBaud:
+      symbol: FSKBaud
+      name: FSK baud rate
+      typ: 100
+      unit: kSPs
+      condition: Loop bandwidth=200kHz
+    FSKDev:
+      symbol: FSKDev
+      name: FSK deviation
+      typ: ±39
+      unit: kHz
+      condition: Configuration H(15)
+  digital_interface:
+    source: 'Page: 6, layout_type: table, Block: 74'
+    VIH:
+      symbol: VIH
+      name: High level input voltage
+      min: 1.4
+      max_ref: VIO
+      unit: V
+    VIL:
+      symbol: VIL
+      name: Low level input voltage
+      max: 0.4
+      unit: V
+    IiH:
+      symbol: IiH
+      name: High level input current
+      min: -25
+      max: 25
+      unit: μA
+      condition: VIH=1.75V
+    IIL:
+      symbol: IIL
+      name: Low level input current
+      min: -25
+      max: 25
+      unit: μA
+      condition: VIL=0V
+    VOH:
+      symbol: VOH
+      name: High level output voltage
+      min: 2
+      unit: V
+      condition: IOH=500μA
+    VOL:
+      symbol: VOL
+      name: Low level output voltage
+      min: 0
+      max: 0.4
+      unit: V
+      condition: IOL=-500μA
+device_info:
+  source: 'Page: 1, layout_type: text, Block: 0'
+  device_name: LMX2571
+  manufacturer: Texas Instruments
+  device_type: RF频率合成器
+  device_family: PLLatinum
+basic_info:
+  source: 'Page: 1, layout_type: text, Block: 25'
+  description: LMX2571是一款低功耗、高性能、宽带PLLatinum™射频（RF）合成器，该合成器集成了Δ-Σ分数NPLL、多核压控振荡器（VCO）、可编程输出分压器以及两个输出缓冲器。VCO内核的工作频率高达5.376GHz，持续输出频率范围为10MHz至1344MHz。
+  highlights:
+  - 低功耗、高性能、宽带PLLatinum RF合成器
+  - 集成Δ-Σ分数NPLL、多核VCO和两个输出缓冲器
+  - VCO内核工作频率高达5.376GHz
+  - 持续输出频率范围10MHz至1344MHz
+features:
+  source: 'Page: 1, layout_type: text, Block: 1'
+  items:
+  - 输出频率范围：10MHz 至 1344MHz
+  - 低相位噪声和毛刺
+  - 12.5kHz偏移@480MHz时为-123dBc/Hz
+  - 1MHz偏移 @480MHz时为-145dBc/Hz
+  - 标准化锁相环（PLL）噪底为-231dBc/Hz
+  - 杂散优于 -75dBc/Hz
+  - 新型 FastLock 技术，缩短了锁定时间
+  - 新型整数边界毛刺去除技术
+  - 集成5V电荷泵和输出驱动器，用于外部压控振荡器（VCO）操作
+  - 2、4和8电平或任意电平数直接数字移频键控(FSK)调制
+  - 一个 TX/RX 输出或两个扇出输出
+  - 晶振、XO或差分参考时钟输入
+  - 低电流消耗
+  - 39mA典型合成器模式（内部VCO）/ 9mA典型PLL模式（外部VCO）
+  - 24位分数N Δ-Σ调制器
+operating_current:
+  source: 'Page: 5, layout_type: table, Block: 61'
+  ICC:
+    symbol: ICC
+    name: Total current in synthesizer mode (internal VCO)
+    unit: mA
+    condition: fOUT=480MHz SE OSCin
+    variants:
+    - name: Configuration A
+      typ: 39
+    - name: Configuration B
+      typ: 44
+    - name: Configuration C
+      typ: 46
+    - name: Configuration D
+      typ: 51
+    - name: Configuration E
+      typ: 9
+  IPLL:
+    symbol: IPLL
+    name: Total current in PLL mode (external VCO)
+    unit: mA
+    variants:
+    - name: Configuration F
+      typ: 15
+    - name: Configuration G
+      typ: 21
+  ICCPD:
+    symbol: ICCPD
+    name: Power down current
+    unit: mA
+    typ: 0.9
+    condition: CE=0V or POWERDOWN bit=1, VCC=3.3V, Push-pull output
+operating_temperature_range:
+  source: 'Page: 4, layout_type: table, Block: 55'
+  TA:
+    symbol: T_A
+    name: Ambient temperature
+    min: -40
+    max: 85
+    unit: ℃
+  TJ:
+    symbol: T_J
+    name: Junction Temperature
+    max: 125
+    unit: ℃
+package_info:
+  source: 'Page: 57, layout_type: table, Block: 752'
+  type: WQFN
+  code: NJK
+  leads: 36
+pin_configuration:
+  source: 'Page: 3, layout_type: table, Block: 42'
+  pins:
+  - num: 2
+    name: Bypass1
+    type: Bypass
+    desc: Place a 100-nF capacitor to GND.
+  - num: 3
+    name: Bypass2
+    type: Bypass
+    desc: Place a 100-nF capacitor to GND.
+  - num: 19
+    name: CE
+    type: Input
+    desc: Chip Enable input. Active HIGH powers on the device.
+  - num: 11
+    name: CLK
+    type: Input
+    desc: MICROWIRE clock input.
+  - num: 25
+    name: CPout
+    type: Output
+    desc: Internal VCO charge pump access point to connect to a 2ndorder loop filter.
+  - num: 30
+    name: CPoutExt
+    type: Output
+    desc: 5-V charge pump output used in PLL mode (external VCO).
+  - num: 0
+    name: DAP
+    type: GND
+    desc: The DAP should be grounded.
+  - num: 12
+    name: DATA
+    type: Input
+    desc: MICROWIRE serial data input.
+  - num: 24
+    name: Fin
+    type: Input
+    desc: High frequency AC coupled input pin for an external VCO. Leave it open or AC coupled to GND if not being used.
+  - num: 7
+    name: FSK_D0
+    type: Input
+    desc: FSK data bit 0 (FSK PIN mode) / I2S FS input (FSK I2S mode).
+  - num: 6
+    name: FSK_D1
+    type: Input
+    desc: FSK data bit 1 (FSK PIN mode) / I2S DATA input (FSK I2S mode).
+  - num: 5
+    name: FSK_D2
+    type: Input
+    desc: FSK data bit 2 (FSK PIN mode).
+  - num: 4
+    name: FSK_DV
+    type: Input
+    desc: FSK data valid input (FSK PIN mode) / I2S CLK input (FSK I2S mode).
+  - num: 29
+    name: FLout1
+    type: Output
+    desc: FastLock output control 1 for external switch. Output is HIGH when F1 is selected.
+  - num: 28
+    name: FLout2
+    type: Output
+    desc: FastLock output control 2 for external switch. Output is HIGH when F2 is selected.
+  - num: 23
+    name: GND
+    type: GND
+    desc: VCO ground.
+  - num: 31
+    name: GND
+    type: GND
+    desc: Charge pump ground.
+  - num: 35
+    name: GND
+    type: GND
+    desc: OSCin ground.
+  - num: 13
+    name: LE
+    type: Input
+    desc: MICROWIRE latch enable input.
+  - num: 10
+    name: MUXout
+    type: Output
+    desc: Multiplexed output that can be assigned to lock detect or readback serial data output.
+  - num: 8,14,26
+    name: NC
+    type: NC
+    desc: Do not connect these pins.
+  - num: 34
+    name: OSCin
+    type: Input
+    desc: Reference clock input.
+  - num: 36
+    name: OSCin*
+    type: Input
+    desc: Complementary reference clock input.
+  - num: 16
+    name: RFoutRx
+    type: Output
+    desc: RF output used to drive receive mixer. Selectable open drain or push-pull output.
+  - num: 17
+    name: RFoutTx
+    type: Output
+    desc: RF output used to drive transmit signal. Selectable open drain or push-pull output.
+  - num: 18
+    name: TrCtl
+    type: Input
+    desc: Transmit/Receive control. This pin controls the RF output port and the output frequency selection.
+thermal_resistance:
+  source: 'Page: 5, layout_type: table, Block: 57'
+  R_theta_JA:
+    symbol: RθJA
+    name: Junction-to-ambient thermal resistance
+    typ: 32.9
+    unit: °C/W
+  R_theta_JC_top:
+    symbol: RθJC_top
+    name: Junction-to-case(top) thermal resistance
+    typ: 14.5
+    unit: °C/W
+  R_theta_JB:
+    symbol: RθJB
+    name: Junction-to-board thermal resistance
+    typ: 6.3
+    unit: °C/W
+  psi_JT:
+    symbol: ψJT
+    name: Junction-to-top characterization parameter
+    typ: 0.2
+    unit: °C/W
+  psi_JB:
+    symbol: ψJB
+    name: Junction-to-board characterization parameter
+    typ: 6.3
+    unit: °C/W
+  R_theta_JC_bot:
+    symbol: RθJC_bot
+    name: Junction-to-case(bottom) thermal resistance
+    typ: 2
+    unit: °C/W
+absolute_maximum_ratings:
+  source: 'Page: 4, layout_type: table, Block: 48'
+  VCC:
+    symbol: VCC
+    name: Power supply voltage
+    min: -0.3
+    max: 3.6
+    unit: V
+  VIO:
+    symbol: VIO
+    name: IO supply voltage
+    min: -0.3
+    max: 3.6
+    unit: V
+  VIN:
+    symbol: VIN
+    name: IO input voltage
+    max_ref: VCC+0.3
+    unit: V
+  VCP:
+    symbol: VCP
+    name: Charge pump supply voltage
+    max: 5.25
+    unit: V
+  TJ:
+    symbol: TJ
+    name: Junction temperature
+    max: 150
+    unit: °C
+  TSTG:
+    symbol: TSTG
+    name: Storage temperature
+    min: -65
+    max: 150
+    unit: °C
+applications:
+  source: 'Page: 1, layout_type: text, Block: 17'
+  items:
+  - 双工模式数字专业双向无线电 dPMR、DMR、PDT、P25 Phase I
+  - 低功耗无线电通信系统
+  - 卫星通信调制解调器
+  - 无线麦克风
+  - 专有无线连接
+  - 手持式测试和测量设备
+applications_information:
+  source: 'Page: 43, layout_type: text, Block: 586'
+  circuits:
+  - name: Synthesizer Duplex Mode
+    components:
+    - LMX2571 (内部VCO)
+    - TrCtl 引脚 (频率F1/F2与RF输出端口切换)
+    - MULT 乘法器 (R-divider 内, 值为4)
+    - 4FSK 直接数字调制 (FSK PIN 模式)
+    formulas:
+    - VCO 频率 = F1 × CHDIV = 902 MHz × 5 = 4510 MHz
+    - fPD = MULT × fOSCin / Post-divider = 104 MHz (MULT=4, Post-divider=1)
+    - N-divider = 21.68269231 (Ninteger=21, Nfrac=0.68269231)
+    - DEN = 2^24 = 16777216
+    - NUM = Nfrac × DEN = 11453676
+    - FSK step = [频偏 × DEN / (fPD × 10^6)] × (CHDIV1/2)
+    - 'FSK step: +10kHz=4033, -10kHz=61502, +30kHz=12099, -30kHz=53436'
+  - name: PLL Duplex Mode
+    components:
+    - LMX2571 (外部VCO, 内部VCO旁路)
+    - TS5A21366 双SPST模拟开关 (用于FastLock)
+    - 外部VCO
+    formulas:
+    - PDF = 28 MHz (Pre-divider=1, MULT=5, Post-divider=3)
+    - 'F1: N-divider=15.35714286 (Ninteger=15), F2: N-divider=17.14285714 (Ninteger=17)'
+    - DEN = 1234567
+    - NUM(F1)=440917, NUM(F2)=176367
+    - '寄存器: EXTVCO_CP_IUP/IDN=8(1250μA), EXTVCO_SEL_F1/F2=1(外部VCO), CHDIV3旁路, R0.FCAL_EN=1启用FastLock'
+  - name: Synthesizer/PLL Duplex Mode
+    components:
+    - LMX2571 (内部+外部VCO)
+    - TrCtl 引脚 (切换内部/外部VCO)
+    - 直接数字FSK调制 (FSK I2S模式)
+    formulas:
+    - RFoutRX = 440 MHz (外部VCO = F1)
+    - RFoutTX = 540 MHz (内部VCO = F2)
+    - FSK_MODE_SEL1=1, FSK_MODE_SEL=0, FSK_EN_F2=1
+theory_of_operation:
+  source: 'Page: 10, layout_type: text, Block: 127'
+  principle: LMX2571是一款带低噪声高性能集成VCO的频率合成器。5-GHz VCO核配合输出通道分频器可产生10 MHz至1344 MHz频率。支持两种工作模式：合成器模式（使用整个器件）和PLL模式（旁路内部VCO，需外部VCO实现完整合成器）。PLL为分数-N
+    PLL，带可编程Delta Sigma调制器（一阶至四阶），分数分母变长最高24位，提供极细频率步进分辨率。
+  architecture: 参考时钟输入支持晶振（片上振荡器）、AC耦合差分时钟、DC耦合单端时钟（如XO/CMOS）。R-divider集成独特可编程乘法器（MULT），用于减少整数边界杂散或提高鉴相频率；内部VCO可旁路以使用外部VCO，并有独立5V电荷泵专供外部VCO（无需运放）；新型FastLock技术可将锁定时间缩短至1.5
+    ms以下。输出含集成T/R开关，分频后的内部/外部VCO信号可输出至TX口或RX口，开关也可配置为1:2扇出缓冲器同时输出，且输出频率可在F1/F2间切换，适合FDD双工系统。仅需单一3.3V电源，数字逻辑接口1.8V输入兼容，模拟块电源用集成LDO；通过MICROWIRE接口编程，可通过寄存器编程或切换CE引脚断电。
+device_specific:
+  source: 'Page: 7, layout_type: table, Block: 87'
+  timing:
+    tES:
+      symbol: tES
+      name: Clock to enable low time
+      min: 5
+      unit: ns
+      condition: See Figure 1
+    tCS:
+      symbol: tCS
+      name: Data to clock setup time
+      min: 2
+      unit: ns
+      condition: See Figure 1
+    tCH:
+      symbol: tCH
+      name: Data to clock hold time
+      min: 2
+      unit: ns
+      condition: See Figure 1
+    tCWH:
+      symbol: tCWH
+      name: Clock pulse width high
+      min: 5
+      unit: ns
+      condition: See Figure 1
+    tCWL:
+      symbol: tCWL
+      name: Clock pulse width low
+      min: 5
+      unit: ns
+      condition: See Figure 1
+    tCES:
+      symbol: tCES
+      name: Enable to clock setup time
+      min: 5
+      unit: ns
+      condition: See Figure 1
+    tEWH:
+      symbol: tEWH
+      name: Enable pulse width high
+      min: 2
+      unit: ns
+      condition: See Figure 1
+ordering_information:
+  source: 'Page: 57, layout_type: table, Block: 752'
+  model: LMX2571NJKR
+  package: WQFN(NJK)
+  package_drawing: NJK
+  pins: 36
+  package_qty: 2500
+  status: ACTIVE
+  eco_plan: Green(RoHS & no Sb/Br)
+  lead_ball_finish: CU SN
+  msl_peak_temp: Level-3-260C-168HR
+  op_temp: -40 to 85
+  device_marking: LMX2571
+family_info:
+  source: 'Page: 57, layout_type: table, Block: 752'
+  models:
+  - model: LMX2571NJKR
+    status: ACTIVE
+    package: WQFN
+    package_drawing: NJK
+    pins: 36
+    package_qty: 2500
+    eco_plan: Green(RoHS & no Sb/Br)
+    lead_ball_finish: CU SN
+    msl_peak_temp: Level-3-260C-168HR
+    op_temp: -40 to 85
+    device_marking: LMX2571
+  - model: LMX2571NJKT
+    status: ACTIVE
+    package: WQFN
+    package_drawing: NJK
+    pins: 36
+    package_qty: 250
+    eco_plan: Green(RoHS & no Sb/Br)
+    lead_ball_finish: CU SN
+    msl_peak_temp: Level-3-260C-168HR
+    op_temp: -40 to 85
+    device_marking: LMX2571
+additional_info:
+  source: 'Page: 55, layout_type: text, Block: 726'
+  trademark: PLLatinum is a trademark of Texas Instruments.
