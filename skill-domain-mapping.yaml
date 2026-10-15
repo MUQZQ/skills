@@ -119,6 +119,11 @@
           "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
           "path": "design/frontend-design/SKILL.md"
         },
+        "hifi-prototype-implementation": {
+          "skill_name": "hifi-prototype-implementation",
+          "description": "从高保真原型生成实际前端代码并做到像素级对齐：翻译纪律（原型精确值优先、颜色走项目令牌）、三档验证（静态 token 对账、真机计算样式、并排视觉审查）、审查结论甄别与用户裁定同步退役清单",
+          "path": "design/hifi-prototype-implementation/SKILL.md"
+        },
         "ui-ux-pro-max": {
           "skill_name": "ui-ux-pro-max",
           "description": "UI/UX design intelligence for web, mobile, and desktop. Use for UI/UX research, visual specifications, design-system guidance, accessibility and consistency review, interaction recommendations, responsive-layout guidance, typography, color, charts, and stack-specific implementation guidance. Actual UI code creation or modification is owned by frontend-design.",

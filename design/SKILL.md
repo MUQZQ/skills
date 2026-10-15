@@ -40,6 +40,7 @@ description: >
 |-----------|----------|
 | `ui-ux-pro-max` | UI/UX 知识检索、评审、设计系统建议与实现指导；不直接负责项目文件修改 |
 | `frontend-design` | 创建或修改实际前端界面、页面与组件 |
+| `hifi-prototype-implementation` | 有高保真原型/设计稿作权威视觉答案时的像素级实现与对照收敛（翻译纪律+三档验证+裁定同步） |
 | `drawio-skill` | 流程图、架构图、UML、ER 与 Draw.io 产物 |
 | `visualize:visualize` | 对话内交互式可视化、图表、模拟器与解释工具 |
 | `presentations:Presentations` / `documents:documents` / `pdf:pdf` | 对应办公文档产物 |
@@ -58,6 +59,7 @@ description: >
 | 场景 | 处理 |
 |------|------|
 | 同时命中研究与实现 | 最终产物需要代码时选择 `frontend-design`，否则选择 `ui-ux-pro-max` |
+| 同时命中高保真对齐与一般前端实现 | 有明确原型或设计稿作权威答案时选择 `hifi-prototype-implementation`，否则 `frontend-design` |
 | 同时命中系统方法与视觉产物 | 需要系统决策方法时选择 `method-router`，需要具体视觉或图示产物时选择 `design` |
 | 主 Skill 不可用 | 说明缺失项并给出职责最接近的可用 Skill，由用户确认 |
 | 项目规范与 Skill 冲突 | 项目规范优先，记录被覆盖的 Skill 规则 |
