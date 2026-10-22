@@ -94,6 +94,9 @@ classification:
     - 审计系统
     - 方法论
     - 先测后修
+    - 实机验收
+    - 实机验证
+    - 上机验收
     - 优化
     - 提升
     - 改进
@@ -222,7 +225,7 @@ routes:
   - skill_name: evidence-driven-dev
     order: 1
     mandatory: true
-  rationale: 因为用户明确要求全面测试或系统审计或证据驱动闭环而非通用渐进改进，选择 evidence-driven-dev 全流程（黑盒探针到白盒根因再到TDD修复与独立评审）而非 PDCA 通用改进循环，评审阶段衔接 project-reviewer
+  rationale: 因为用户明确要求实机验收、全面测试、系统审计或证据驱动闭环，而非通用渐进改进，选择 evidence-driven-dev 全流程（黑盒探针到白盒根因再到TDD修复与独立评审）而非 PDCA 通用改进循环，评审阶段衔接 project-reviewer
 - type: meta
   priority: 1000
   condition:

@@ -125,7 +125,7 @@ Phase 1: 意图分类 ──▶ route_context（type / urgency / domain / has_da
 | **diagnose** | 为什么、报错、失败、异常、不对、bug、排查、定位、原因 | "匹配率为什么这么低" |
 | **decide** | 选哪个、要不要、优先级、对比、方案、技术选型 | "用 Redis 还是 Kafka" |
 | **design** | 从零、没思路、先调研、网上实践、头脑风暴、设计、架构、重构、新功能、怎么实现、搭建 | "我只有一个粗略想法，先查网上实践并头脑风暴" |
-| **improve** | 优化、提升、改进、加速、减少、自动化、太慢 | "这个接口太慢了" |
+| **improve** | 优化、提升、改进、加速、减少、自动化、太慢、全面测试、实机验收、实机验证、上机验收、先测后修、证据驱动 | "这个接口太慢了" |
 | **risk** | 风险、安全、漏洞、事故、万一、上线、有问题吗 | "这个改动能上线吗" |
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
 | **goal** | 目标、OKR、KPI、flag、减肥、学习计划、愿景、里程碑、定目标、达成 | "帮我定个季度减肥目标" |
@@ -199,6 +199,7 @@ route_context:
 | **design** | `scope=user_insight` | JTBD → Design Thinking（可选） |
 | **design** | `scope=enhance_existing` | SCAMPER → Impact/Effort（可选） |
 | **design** | `scope=requirement_classify` | Kano |
+| **improve** | `sub_type=evidence-driven-full-loop` | evidence-driven-dev（实机验收/全面测试/系统审计的完整证据闭环） |
 | **improve** | `domain=process` | PDCA → A3（可选） |
 | **improve** | `domain=data` | DMAIC → A3（可选） |
 | **improve** | `sub_type=focus` | Pareto |

@@ -2,9 +2,9 @@
 name: evidence-driven-dev
 description: >
   证据驱动开发方法论:黑盒抓问题、白盒定根因、TDD 固修复、评审工程防回退、
-  独立复核防自欺、证据链贯穿始终。适用于交易系统/长期演化项目的测试、验收、
-  审计与修复全流程。由 method-router 路由触发(improve/evidence-driven-full-loop),或用户直接说
-  "证据驱动开发""全面测试""审计系统符合性""独立复核""先测后修"时触发;
+  独立复核防自欺、证据链贯穿始终。适用于交易系统/长期演化项目及桌面、前端应用的
+  实机验收、测试、审计与修复全流程。由 method-router 路由触发(improve/evidence-driven-full-loop),或用户直接说
+  "证据驱动开发""全面测试""实机验收""实机验证""上机验收""审计系统符合性""独立复核""先测后修"时触发;
   仅说"方法论"不触发(路由到 method-router 分类)。
   与 project-reviewer 互补——project-reviewer 建评审工程,本 skill 规定贯穿
   开发全程的证据纪律与修复策略。
