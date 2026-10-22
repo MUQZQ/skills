@@ -131,6 +131,82 @@
         }
       }
     },
+    "feature-replication-methodology": {
+      "display_name": "功能复刻方法论",
+      "responsibility": "跨仓库功能复刻的系统化流程：装配链先通、声明面四处一致、证据驱动验证",
+      "intents": [
+        "复刻功能",
+        "搬运功能",
+        "像素级对齐",
+        "跨仓库移植",
+        "装配链",
+        "声明面",
+        "工具面挂载",
+        "face 装配",
+        "源码级还原"
+      ],
+      "entry_path": "feature-replication-methodology/SKILL.md",
+      "routing_source": "feature-replication-methodology/SKILL.md",
+      "skills": {}
+    },
+    "independent-tools": {
+      "display_name": "独立工具",
+      "responsibility": "边界清晰的专业工具能力路由",
+      "intents": [
+        "专业单用途工具",
+        "媒体转换",
+        "任务与环境管理"
+      ],
+      "entry_path": "independent-tools/SKILL.md",
+      "routing_source": "independent-tools/references/tool-mapping.yaml",
+      "skills": {
+        "bilibili-convert": {
+          "skill_name": "bilibili-convert",
+          "description": "将 Bilibili 客户端下载的分离音视频 m4s 文件无损合并为通用 MP4 格式",
+          "path": "independent-tools/bilibili-convert/SKILL.md"
+        },
+        "branch-manager": {
+          "skill_name": "branch-manager",
+          "description": "Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、 hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、 交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理。 当用户提到\"创建分支\"、\"切换分支\"、\"stash\"、\"暂存\"、\"checkpoint\"、 \"工作区检查\"、\"回退点\"、\"feature 分支\"、\"hotfix\"、\"cherry-pick\"、 \"整理提交\"、\"rebase\"、\"merge 冲突\"、\"bisect\"时触发。",
+          "path": "independent-tools/branch-manager/SKILL.md"
+        },
+        "datasheet-params": {
+          "skill_name": "datasheet-params",
+          "description": "从器件数据手册（IC datasheet）提取结构化、可信、可溯源的器件参数，把 merged.json 中间产物加工为 *_ai_params.yaml（每条参数带 Page/layout_type/Block 证据地址）。当用户提到\"提取器件参数\"、\"数据手册参数\"、\"datasheet 参数\"、\"merged.json 参数\"、\"ai_params.yaml\"、\"芯片参数溯源\"、\"PDF 参数提取\"时使用。",
+          "path": "independent-tools/datasheet-params/SKILL.md"
+        },
+        "dida-task-manager": {
+          "skill_name": "dida-task-manager",
+          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
+          "path": "independent-tools/dida-task-manager/SKILL.md"
+        },
+        "playwright-testing": {
+          "skill_name": "playwright-testing",
+          "description": "ParamCompare 项目 Playwright 浏览器端到端测试。当用户提到\"浏览器测试\"、\"UI自动化测试\"、\"E2E测试\"、\"页面测试\"、\"Playwright测试\"、\"端到端\"、\"端对端\"、\"测试页面操作\"、\"操作浏览器\"、\"写UI测试\"、\"截图验证\"、\"browser test\"时必须使用。用于编写、运行和调试基于 Playwright 的 NiceGUI 应用浏览器测试，包括 Monaco Editor、AG Grid、Quasar 组件的交互测试。",
+          "path": "independent-tools/playwright-testing/SKILL.md"
+        },
+        "prhelp-review-to-guide": {
+          "skill_name": "prhelp-review-to-guide",
+          "description": "PrHelp 检视取证与成文：API 直连提取 PR 评审全文、场景验证步骤与实机截图，产出带图操作指导文档（Markdown/Word），含 docx 生产与视觉验收链",
+          "path": "independent-tools/prhelp-review-to-guide/SKILL.md"
+        },
+        "project-reviewer": {
+          "skill_name": "project-reviewer",
+          "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
+          "path": "independent-tools/project-reviewer/SKILL.md"
+        },
+        "usb-git-manager": {
+          "skill_name": "usb-git-manager",
+          "description": "本地硬盘与 U 盘之间的 git 仓库双向同步。当用户提到\"推到 U 盘\"、\"从 U 盘拉代码\"、\"U 盘同步\"、\"usb git\"、\"U盘备份\"、\"U盘git\"时必须使用。处理 FAT32/exFAT 文件系统的 safe.directory 权限问题，支持裸仓库和非裸仓库两种模式。",
+          "path": "independent-tools/usb-git-manager/SKILL.md"
+        },
+        "uv-env": {
+          "skill_name": "uv-env",
+          "description": "Python 虚拟环境管理（uv）。当用户提到\"安装依赖\"、\"添加包\"、\"移除包\"、\"创建虚拟环境\"、\"Python版本\"、\"uv sync\"、\"pip install\"、\"package\"、\"依赖\"、\"venv\"、\"环境管理\"、\"uv add\"、\"uv remove\"、\"uv run\"、\"uv lock\"时必须使用。用于使用 uv 管理 Python 项目依赖和虚拟环境。",
+          "path": "independent-tools/uv-env/SKILL.md"
+        }
+      }
+    },
     "literary-creation": {
       "display_name": "文学创作",
       "responsibility": "小说、网文、短篇故事与微短剧的选题和创作能力路由",
@@ -147,6 +223,28 @@
           "skill_name": "novel-topic-discovery",
           "description": "中文网络小说、短篇爽文、短视频故事与微短剧方向的原创选题工作流。用户要求小说选题、题材头脑风暴、30章左右完结、短视频适配、反转爽点或避免撞题时使用；负责联网核验、结构化发散、四层相似风险扫描、候选收敛和最小验证实验，不负责正文写作。",
           "path": "literary-creation/novel-topic-discovery/SKILL.md"
+        }
+      }
+    },
+    "meta-skills": {
+      "display_name": "元技能",
+      "responsibility": "Skill 创建、优化、评估与多客户端同步路由",
+      "intents": [
+        "创建或优化 Skill",
+        "同步 AGENTS 与 Junction"
+      ],
+      "entry_path": "meta-skills/SKILL.md",
+      "routing_source": "meta-skills/references/meta-skill-mapping.yaml",
+      "skills": {
+        "agents-sync": {
+          "skill_name": "agents-sync",
+          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"\"同步到 zcode\"\"同步到 pi\"时触发。",
+          "path": "meta-skills/agents-sync/SKILL.md"
+        },
+        "skill-creator": {
+          "skill_name": "skill-creator",
+          "description": "创建新 skill、修改和优化现有 skill、评估 skill 性能。当用户想要从零创建 skill、编辑或优化现有 skill、通过 eval 测试 skill、用方差分析对比 skill 性能、或优化 skill 描述以提高触发准确率时使用。",
+          "path": "meta-skills/skill-creator/SKILL.md"
         }
       }
     },
@@ -409,86 +507,6 @@
           "skill_name": "evidence-driven-dev",
           "description": "证据驱动开发方法论:黑盒抓问题、白盒定根因、TDD 固修复、评审工程防回退、独立复核防自欺、证据链贯穿。适用于交易系统/长期演化项目及桌面、前端应用的实机验收、测试、审计与修复全流程。由 method-router 路由触发,或用户直接说\"证据驱动开发\"\"全面测试\"\"实机验收\"\"实机验证\"\"上机验收\"\"审计系统符合性\"\"独立复核\"\"先测后修\"时触发;仅说\"方法论\"不触发。与 project-reviewer 互补。",
           "path": "method-router/evidence-driven-dev/SKILL.md"
-        }
-      }
-    },
-    "meta-skills": {
-      "display_name": "元技能",
-      "responsibility": "Skill 创建、优化、评估与多客户端同步路由",
-      "intents": [
-        "创建或优化 Skill",
-        "同步 AGENTS 与 Junction"
-      ],
-      "entry_path": "meta-skills/SKILL.md",
-      "routing_source": "meta-skills/references/meta-skill-mapping.yaml",
-      "skills": {
-        "agents-sync": {
-          "skill_name": "agents-sync",
-          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"\"同步到 zcode\"\"同步到 pi\"时触发。",
-          "path": "meta-skills/agents-sync/SKILL.md"
-        },
-        "skill-creator": {
-          "skill_name": "skill-creator",
-          "description": "创建新 skill、修改和优化现有 skill、评估 skill 性能。当用户想要从零创建 skill、编辑或优化现有 skill、通过 eval 测试 skill、用方差分析对比 skill 性能、或优化 skill 描述以提高触发准确率时使用。",
-          "path": "meta-skills/skill-creator/SKILL.md"
-        }
-      }
-    },
-    "independent-tools": {
-      "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由",
-      "intents": [
-        "专业单用途工具",
-        "媒体转换",
-        "任务与环境管理"
-      ],
-      "entry_path": "independent-tools/SKILL.md",
-      "routing_source": "independent-tools/references/tool-mapping.yaml",
-      "skills": {
-        "bilibili-convert": {
-          "skill_name": "bilibili-convert",
-          "description": "将 Bilibili 客户端下载的分离音视频 m4s 文件无损合并为通用 MP4 格式",
-          "path": "independent-tools/bilibili-convert/SKILL.md"
-        },
-        "branch-manager": {
-          "skill_name": "branch-manager",
-          "description": "Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、 hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、 交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理。 当用户提到\"创建分支\"、\"切换分支\"、\"stash\"、\"暂存\"、\"checkpoint\"、 \"工作区检查\"、\"回退点\"、\"feature 分支\"、\"hotfix\"、\"cherry-pick\"、 \"整理提交\"、\"rebase\"、\"merge 冲突\"、\"bisect\"时触发。",
-          "path": "independent-tools/branch-manager/SKILL.md"
-        },
-        "datasheet-params": {
-          "skill_name": "datasheet-params",
-          "description": "从器件数据手册（IC datasheet）提取结构化、可信、可溯源的器件参数，把 merged.json 中间产物加工为 *_ai_params.yaml（每条参数带 Page/layout_type/Block 证据地址）。当用户提到\"提取器件参数\"、\"数据手册参数\"、\"datasheet 参数\"、\"merged.json 参数\"、\"ai_params.yaml\"、\"芯片参数溯源\"、\"PDF 参数提取\"时使用。",
-          "path": "independent-tools/datasheet-params/SKILL.md"
-        },
-        "dida-task-manager": {
-          "skill_name": "dida-task-manager",
-          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
-          "path": "independent-tools/dida-task-manager/SKILL.md"
-        },
-        "playwright-testing": {
-          "skill_name": "playwright-testing",
-          "description": "ParamCompare 项目 Playwright 浏览器端到端测试。当用户提到\"浏览器测试\"、\"UI自动化测试\"、\"E2E测试\"、\"页面测试\"、\"Playwright测试\"、\"端到端\"、\"端对端\"、\"测试页面操作\"、\"操作浏览器\"、\"写UI测试\"、\"截图验证\"、\"browser test\"时必须使用。用于编写、运行和调试基于 Playwright 的 NiceGUI 应用浏览器测试，包括 Monaco Editor、AG Grid、Quasar 组件的交互测试。",
-          "path": "independent-tools/playwright-testing/SKILL.md"
-        },
-        "prhelp-review-to-guide": {
-          "skill_name": "prhelp-review-to-guide",
-          "description": "PrHelp 检视取证与成文：API 直连提取 PR 评审全文、场景验证步骤与实机截图，产出带图操作指导文档（Markdown/Word），含 docx 生产与视觉验收链",
-          "path": "independent-tools/prhelp-review-to-guide/SKILL.md"
-        },
-        "project-reviewer": {
-          "skill_name": "project-reviewer",
-          "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
-          "path": "independent-tools/project-reviewer/SKILL.md"
-        },
-        "usb-git-manager": {
-          "skill_name": "usb-git-manager",
-          "description": "本地硬盘与 U 盘之间的 git 仓库双向同步。当用户提到\"推到 U 盘\"、\"从 U 盘拉代码\"、\"U 盘同步\"、\"usb git\"、\"U盘备份\"、\"U盘git\"时必须使用。处理 FAT32/exFAT 文件系统的 safe.directory 权限问题，支持裸仓库和非裸仓库两种模式。",
-          "path": "independent-tools/usb-git-manager/SKILL.md"
-        },
-        "uv-env": {
-          "skill_name": "uv-env",
-          "description": "Python 虚拟环境管理（uv）。当用户提到\"安装依赖\"、\"添加包\"、\"移除包\"、\"创建虚拟环境\"、\"Python版本\"、\"uv sync\"、\"pip install\"、\"package\"、\"依赖\"、\"venv\"、\"环境管理\"、\"uv add\"、\"uv remove\"、\"uv run\"、\"uv lock\"时必须使用。用于使用 uv 管理 Python 项目依赖和虚拟环境。",
-          "path": "independent-tools/uv-env/SKILL.md"
         }
       }
     },

@@ -53,7 +53,7 @@ class AdditionalSkillDomainContractTest(unittest.TestCase):
         self.assertNotIn("| 元技能 | `meta-skills` |", agents)
         mapping = json.loads(ROOT_MAPPING.read_text(encoding="utf-8"))
         self.assertEqual(
-            {"code-review", "coding-standards", "design", "method-router", *DOMAIN_CHILDREN},
+            {"code-review", "coding-standards", "design", "method-router", "feature-replication-methodology", *DOMAIN_CHILDREN},
             set(mapping["domains"]),
         )
         for domain, children in DOMAIN_CHILDREN.items():
