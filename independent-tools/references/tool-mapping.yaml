@@ -39,6 +39,14 @@
       ],
       "skill_name": "project-reviewer"
     },
+    "prhelp-review-to-guide": {
+      "intent": [
+        "PrHelp 检视取证与成文",
+        "PR 评审全文与截图提取",
+        "操作指导文档产出"
+      ],
+      "skill_name": "prhelp-review-to-guide"
+    },
     "usb-git-manager": {
       "intent": [
         "U 盘 Git 双向同步"
