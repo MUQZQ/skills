@@ -6,3 +6,5 @@ method-router/munger-methods-workspace/
 independent-tools/branch-manager/tools/pr-watch.config.json
 independent-tools/branch-manager/tools/pr-watch.state.json
 independent-tools/branch-manager/tools/pr-watch.token
+.zcode/
+.zcodeignore
