@@ -1,5 +1,8 @@
 code-review/review-issues.md
 .opencode/skills/code-review/review-issues.md
+# 项目专属参考：本地保留供进行中的对齐任务读取，永不入库（收尾后迁到项目仓库）
+feature-replication-methodology/references/visual-spec.md
+feature-replication-methodology/references/test-porting.md
 __pycache__/
 method-router/pdca-tuning-workspace/
 method-router/munger-methods-workspace/
