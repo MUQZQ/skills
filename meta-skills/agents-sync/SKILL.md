@@ -10,7 +10,7 @@ description: >
 
 ## 概述
 
-维护权威 `AGENTS.md`（位于 ``<skill-dir>/../../AGENTS.md`（即 .cc-switch/skills/AGENTS.md）`）与权威
+维护权威 `AGENTS.md`（位于 `<skill-dir>/../../AGENTS.md`，即 `.cc-switch/skills/AGENTS.md`）与权威
 skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入到各 agent 工具的全局配置；skill 目录
 通过 Junction 链接到各 agent 的 skills 目录。当权威内容更新后，检查所有目标是否同步，未同步则自动修复。
 
@@ -69,7 +69,8 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 
 | 状态 | 条件 | 处理方式 |
 |------|------|---------|
-| ✅ 已同步 | 符号链接指向权威源，或硬链接/普通副本内容与权威源一致 | 无需操作 |
+| ✅ 已同步 | 符号链接指向权威源，或硬链接且内容与权威源一致 | 无需操作 |
+| ⚠️ 链接已断 | 普通文件（非链接）但内容与权威源一致——通常是编辑工具重写权威文件后硬链接被断开 | 备份 → 重建链接（内容已一致，只需恢复传播能力） |
 | ⚠️ 内容过期 | 普通文件，且内容与权威源不一致 | 备份旧文件 → 创建符号链接，失败时恢复 |
 | ⛔ 外部链接 | 符号链接指向其他位置 | 停止并报告，禁止自动覆盖 |
 | ❌ 缺失 | 目标文件不存在（但父目录存在） | 直接创建符号链接 |
@@ -162,9 +163,9 @@ if ($null -ne $item) {
     if ($item.PSIsContainer -or ($null -ne $item.LinkType -and $item.LinkType -ne "HardLink")) {
         return "conflict"
     }
-    if ((Get-FileHash -LiteralPath $target).Hash -eq (Get-FileHash -LiteralPath $source).Hash) {
-        return "ok"
-    }
+    $same = (Get-FileHash -LiteralPath $target).Hash -eq (Get-FileHash -LiteralPath $source).Hash
+    if ($item.LinkType -eq "HardLink" -and $same) { return "ok" }
+    if ($same) { return "stale-link" }
     return "stale"
 } else {
     return "missing"
@@ -232,9 +233,13 @@ Skill 目录：
 | claude   | independent-tools | 缺失 | 创建父域 Junction       |
 ```
 
+> `⚠️ 链接已断` 表示内容一致但已不是链接（编辑工具重写权威文件会断开硬链接）。必须重建链接，
+> 否则此后权威更新不再自动传播到该副本。
+
 ### 步骤 5：自动修复
 
-仅处理 ⚠️ 和 ❌ 状态。
+仅处理 ⚠️ 和 ❌ 状态。`stale-link` 与 `stale` 走同一条修复路径：备份原文件 → 重建链接；
+前者内容已一致，重建后即恢复自动传播，无需再写内容。
 
 指令文件修复（文件符号链接）：
 
@@ -342,6 +347,6 @@ Skill: agents-sync
 
 ---
 
-*版本：2.2*
-*最后更新：2026-09-15*
-*变更：新增 ZCode（`~\.zcode\skills`、`~\.zcode\AGENTS.md`）与 Pi（`~\.pi\agent\skills`、`~\.pi\agent\AGENTS.md`）两个同步目标；指令文件与注册表在无管理员权限时降级为硬链接。*
+*版本：2.3*
+*最后更新：2026-10-25*
+*变更：新增「链接已断」状态——普通文件即使内容一致也重建为链接，避免编辑工具重写权威文件后消费者副本静默失联；修复概述段反引号格式。*
