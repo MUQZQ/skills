@@ -217,3 +217,5 @@ description: >
 |------|------|
 | `references/parity-ledger.md` | 一致性台账模板（复制到调用方项目后使用，含粒度示例） |
 | `references/project-binding.md` | 项目绑定模板（复制到调用方项目后填写；本 skill 不含具体项目信息） |
+| `references/visual-spec.md` | **项目专属（待迁出）**：进行中的界面对齐任务所需的视觉与交互规格 |
+| `references/test-porting.md` | **项目专属（待迁出）**：该任务的测试移植状态台账 |
