@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import unittest
 from pathlib import Path
 
@@ -11,9 +12,60 @@ AUTO_ROOT = SKILLS_ROOT / "orchestration" / "auto-code-generator"
 PROVIDER_ROOT = SKILLS_ROOT / "_providers" / "sol-luna"
 
 
+CONTRACT_REFERENCES = (
+    "references/fallback.md",
+    "references/git-delivery.md",
+    "references/project-workflows.md",
+    "references/execution-providers/sol-luna.md",
+)
+
+
+def read_contract_text() -> str:
+    # 仅测试展开参考，运行时仍按当前阶段加载。
+    paths = (AUTO_ROOT / "SKILL.md", *(AUTO_ROOT / path for path in CONTRACT_REFERENCES))
+    return "\n".join(path.read_text(encoding="utf-8") for path in paths)
+
+
 class AutoCodeGeneratorContractTests(unittest.TestCase):
-    def test_project_policy_overrides_fallback_at_execution_boundaries(self) -> None:
+    def test_skill_provider_contract_path_is_resolved_from_skill_directory(self) -> None:
+        adapter = (AUTO_ROOT / "references/execution-providers/sol-luna.md").read_text(
+            encoding="utf-8"
+        )
+        relative_root = re.search(r"按 `([^`]+)`（向上两级）定位权威 skills 根目录", adapter)
+        self.assertIsNotNone(relative_root)
+        provider_contract = (
+            AUTO_ROOT / relative_root.group(1) / "_providers/sol-luna/CONTRACT.md"
+        ).resolve()
+        self.assertEqual(PROVIDER_ROOT.resolve(), provider_contract.parent)
+        self.assertTrue(provider_contract.is_file())
+
+    def test_all_explicit_skill_reference_links_resolve(self) -> None:
         skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        references = re.findall(r"\[[^]]+\]\((references/[^)#]+)(?:#[^)]+)?\)", skill)
+        self.assertTrue(references)
+        for reference in references:
+            self.assertTrue((AUTO_ROOT / reference).is_file(), reference)
+        for reference in CONTRACT_REFERENCES:
+            self.assertTrue((AUTO_ROOT / reference).is_file(), reference)
+
+    def test_project_workflow_reference_carries_live_project_gates(self) -> None:
+        reference = (AUTO_ROOT / "references" / "project-workflows.md").read_text(encoding="utf-8")
+        for phrase in (
+            "先读项目入口",
+            "VIBE_ACTIVE",
+            "准备提交前",
+            "保持 BLOCKED，不降为协调者自实施",
+            "check --task-group",
+            "check --closeout review|final",
+            "--execution-log",
+            "不能退化成只检查报告文字",
+            "Strict 的实现复核与整体验证分别使用全新上下文",
+            "彼此不同且都不同于规划复核",
+        ):
+            self.assertIn(phrase, reference)
+
+    def test_project_policy_overrides_fallback_at_execution_boundaries(self) -> None:
+        skill = read_contract_text()
         adapter = (
             AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
         ).read_text(encoding="utf-8")
@@ -31,7 +83,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("适用 TDD 时", adapter)
 
     def test_planning_git_and_verification_have_separate_state_rules(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         for phrase in (
             "与当前决定无关的变化不要求重新确认",
             "QEDA 规划不建立持久指纹",
@@ -45,7 +97,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, skill)
 
     def test_design_necessity_is_checked_in_planning_and_acceptance(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         self.assertIn("删除或内联后哪个具体结果会失败", skill)
         self.assertIn("未来扩展、模式名称和文件长度不能单独", skill)
         self.assertIn("新增的重要设计项是否仍满足 2.2 的必要性检查", skill)
@@ -79,7 +131,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
 
         for path in active_files:
             content = path.read_text(encoding="utf-8")
-            self.assertIn("gpt-5.6-luna", content, path)
+            self.assertIn("gpt-6-luna", content, path)
             for retired in (
                 "deepseek",
                 "DeepSeek",
@@ -99,7 +151,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         ):
             content = path.read_text(encoding="utf-8")
             self.assertIn("spawn_agent", content, path)
-            self.assertIn('model="gpt-5.6-luna"', content, path)
+            self.assertIn('model="gpt-6-luna"', content, path)
             self.assertIn("reasoning_effort", content, path)
             self.assertIn('fork_turns="none"', content, path)
             self.assertIn("由 Sol 直接执行", content, path)
@@ -143,7 +195,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertFalse((PROVIDER_ROOT / retired).exists(), retired)
 
     def test_maintained_view_initialization_and_drift_contract_is_explicit(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
 
         for phrase in (
             "维护视图契约",
@@ -164,7 +216,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         for phrase in (
             "Luna 默认开启",
             "只用 Sol",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "完整内聚场景组",
             "六字段任务卡",
             "不得拆分 RED、GREEN、REFACTOR",
@@ -183,7 +235,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertTrue((PROVIDER_ROOT / "references" / "result-schema.json").is_file())
 
     def test_provider_result_statuses_match_auto_code_contract(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         schema = json.loads(
             (PROVIDER_ROOT / "references" / "result-schema.json").read_text(
                 encoding="utf-8"
@@ -209,7 +261,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(f"`{status}`", skill)
 
     def test_shared_dag_method_and_auto_code_projection_are_explicit(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         router = (SKILLS_ROOT / "method-router" / "SKILL.md").read_text(
             encoding="utf-8"
         )
@@ -294,7 +346,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("预留", reservation_eval["expected_output"])
 
     def test_fallback_archive_not_applicable_can_reach_authorized_commit(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         eval_names = {
             item["name"]
             for item in json.loads(
@@ -311,7 +363,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("fallback_verified_local_commit_without_archive", eval_names)
 
     def test_incremental_delivery_checkpoint_commit_contract(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         evals = json.loads(
             (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
         )["evals"]
@@ -386,7 +438,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, closeout["expected_output"])
 
     def test_time_management_reaches_assignment_provider_and_result_contract(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         adapter = (
             AUTO_ROOT / "references" / "execution-providers" / "sol-luna.md"
         ).read_text(encoding="utf-8")
@@ -425,7 +477,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         )
 
     def test_demo_fast_is_default_and_spec_intent_selects_full(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         skill = " ".join(skill.split())
 
         for phrase in (
@@ -449,7 +501,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, skill)
 
     def test_demo_fast_preserves_minimum_tdd_and_blocks_strict_boundary(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
 
         for phrase in (
             "本地、可逆、单一可演示 happy path",
@@ -484,7 +536,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             self.assertIn(phrase, skill)
 
     def test_demo_fast_report_is_not_production_or_git_authorization(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         evals = json.loads(
             (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
         )["evals"]
@@ -556,7 +608,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("明确 spec/FULL", standard["expected_output"])
 
     def test_fork_pr_delivery_and_review_repair_loop_contract(self) -> None:
-        skill = (AUTO_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        skill = read_contract_text()
         stage6 = skill.split("## Stage 6：Fork PR 交付与评审戴明环", maxsplit=1)[1].split(
             "## Git 与外部动作边界", maxsplit=1
         )[0]
@@ -590,7 +642,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "循环状态取 `进行中 | COMPLETE | INCOMPLETE | BLOCKED`",
             "`BLOCKED` 优先于 `INCOMPLETE`",
             "`pending` 或未注册时不得视为通过",
-            "既有自动合入机制",
+            "合入等待用户当场明确确认",
+            "不得开启自动合并",
             # 不执行的边界
             "禁止直接覆盖远程",
             "不把当前工作分支合入目标分支",
@@ -644,7 +697,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         merge = eval_by_name[
             "pr_merge_and_upstream_export_stay_with_existing_mechanisms"
         ]
-        self.assertIn("既有自动合入机制", merge["expected_output"])
+        self.assertIn("当场明确确认", merge["expected_output"])
+        self.assertIn("不得开启自动合并", merge["expected_output"])
 
 
 if __name__ == "__main__":

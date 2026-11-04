@@ -268,7 +268,8 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
             / "execution-providers"
             / "sol-luna.md"
         ).read_text(encoding="utf-8")
-        self.assertIn("向上三级", provider)
+        self.assertIn("按 `../..`（向上两级）", provider)
+        self.assertNotIn("向上三级", provider)
 
     def test_code_review_routes_design_documents_through_design_domain(self) -> None:
         review = (ROOT / "code-review" / "SKILL.md").read_text(encoding="utf-8")

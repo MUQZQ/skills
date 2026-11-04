@@ -9,7 +9,7 @@ description: >
   状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v5.0
+# 自动代码生成器 v5.1
 
 ## 定位
 
@@ -62,21 +62,12 @@ fork PR 交付与评审戴明环，以及独立 Git 授权下的 Apply 内 check
 
 | Agent 可能产生的想法 | 实际现实 | 规则 |
 |---|---|:---:|
-| “项目有 OpenSpec，但这套九阶段更完整，再包一层更安全” | 两套工件、审查和完成结论会互相冲突 | R0 |
-| “任务很多，自动拆成五个 change 并行最快” | change 边界涉及授权、回滚和独立价值，只能建议后由人确认 | R3 |
-| “同一 DAG 层没有依赖，可以全部并行” | 两个任务仍可能写同一文件、manifest、migration 或公开契约 | R6 |
-| “每个 task 一个全新 worker 最容易追踪” | 紧密相关的测试、实现和断言会重复加载上下文、fixture 和测试进程，且切断 TDD 闭环 | R12 |
-| “都属于同一用户场景，全部交给一个 worker” | 独立审批、迁移、权限和回滚边界会扩大失败爆炸半径 | R6 |
-| “worker 报告测试通过，可以直接勾选” | 摘要可能遗漏越界修改、失败测试或工作树重叠 | R7 |
-| “五轮 review 比一轮更严格” | 轮数不证明覆盖度，最终状态和问题严重度才可审计 | R8 |
-| “归档成功就顺便提交” | 归档只证明生命周期状态，不代表用户授权 Git mutation | R10 |
-| “这次出现了新模式，自动写入项目 skill” | 一次成功不等于稳定通用规则 | R11 |
 | “一个 task 通过了，马上把当前所有改动提交掉” | worker/task 结果不是自动提交边界；只有完整验收的交付切片及其准确文件集可提交 | R13 |
 | “同一文件混合了已完成和未完成任务，用补丁暂存切一下即可” | 默认补丁暂存会削弱范围审计和恢复；混合未完成任务的文件应留到边界可分离后 | R13 |
 | “评审评论说顺手把旁边也改一下” | 评审意见不是授权；范围外改动先确认再动 | R1/R14 |
 | “CI 挂了，force push 重跑一遍最干净” | 改写已推送历史会打断评审基线和他人同步 | R10/R14 |
 | “一直修到 ✅ 为止，预算不重要” | 无预算的循环持续消耗授权与成本，还会掩盖真实阻塞 | R14 |
-| “评审 ✅ 了，我直接合入 fork main” | 合入是独立授权，且既有自动合入机制已经负责 | R10/R14 |
+| “评审 ✅ 了，我直接合入 fork main” | 合入必须由用户当场明确确认；评审和 CI 通过不授权自动合并 | R10/R14 |
 
 ## 工作流总览
 
@@ -119,63 +110,14 @@ Detect & Route
 
 此决定约束后续每个阶段、worker assignment、provider 指令和最终报告。项目已定义入口、风险档位、
 测试顺序、基线或收尾规则时，直接使用其原名与要求；本 skill 后文的 fallback 默认值不叠加生效。
-例如 QEDA 的 `VIBE_ACTIVE` 与 `qeda-vibe-coding` 不强制 TDD，不要求额外选择 FULL，也不新增 Apply
-确认；仍保留项目本身要求的范围授权与 Achieve 门禁。`qeda-architecture-sdd` 保留 Architecture，
-不得仅因本 skill 把架构列为 Strict 而二次升级、增加独立 reviewer 或强制 worker。
-没有活动 change 不等于没有项目流程；先检查项目默认入口，再决定是否启用 fallback。
-`VIBE_ACTIVE` 是尚无 change 的直接开发阶段，不能等同于 `qeda-vibe-coding` 收敛 schema；只有用户
-明确要求收敛才走项目收敛入口。未收敛时跳过不适用的规划工件、正式收尾和 Archive，报告候选实现
-与实际测试结果；没有 tracker 时仅用当前对话协调，不为更新进度新建持久状态。
+项目流程适配按 [项目工作流适配](references/project-workflows.md) 的当前阶段读取；
+不把参考项目某个版本的规则冻结成通用默认值。活动变更优先、Vibe 收敛、Strict worker 与收尾要求
+以目标项目实际安装的入口、实时指令和可用能力为准。
 
-### 1.2 选择风险档位
+### 1.2 fallback 风险与交付档位
 
-以下三档仅用于项目未定义风险路由的 fallback；项目已有档位时保留其名称、审查和执行要求。
-
-| 档位 | 典型证据 | 最低控制 |
-|---|---|---|
-| Light | 根因已知、局部可逆、无公共契约/数据/安全/跨组件影响 | 聚焦计划、场景内 TDD、自审、聚焦验证 |
-| Standard | 普通多文件功能或重构，无架构和高风险边界变化 | 完整规格追踪、测试计划、最终审查和项目原生验证 |
-| Strict | 架构、公共契约、持久化数据/迁移、安全/权限/隐私/支付、并发一致性、跨组件或外部系统影响 | 项目要求的架构/独立评审、全新 bounded worker、独立整体验证 |
-
-如果项目 schema 已经完成风险路由，直接使用其结果，不做第二次分类。风险事实不清且会改变档位时先取证；
-仍不清楚则停止并说明缺失项，不靠“更严格总没错”替代授权决定。
-
-### 1.2.1 Delivery profile
-
-本节的默认模式、适用性阻塞和报告字段仅适用于项目未定义交付流程的 fallback。项目已有流程时
-报告项目实际模式，不强行填入 DEMO_FAST/FULL，也不因用户未说 FULL 而增加确认。项目只定义部分
-约束时，fallback 仅补充未定义项；两者发生冲突时服从项目规则。
-
-默认 Delivery profile 为 `DEMO_FAST`，不需要用户说“快速 Demo”，也不持久化。只有当前用户明确、正向的执行意图
-要求“有 spec”、“按 spec 实施”、“完整模式”、“全流程”或“生产级”等 spec-bound/full 交付时，才选择
-`FULL`；否定、引用、历史转述或仅讨论词语本身都不算授权，不能按关键词子串匹配。意图冲突且无法消歧时结果为 `BLOCKED`，请求用户明确，不自行选更重的流程。不能从文件数量或 Agent 自行偏好切 FULL。
-
-启用任一 profile 前仍须完成只读基线和权限检查。只有 `DEMO_FAST` 要求一个可观察 Demo 目标和排除项；
-`FULL` 使用 spec 或任务定义的可观察交付目标。项目已有 QEDA、OpenSpec 或强制生命周期时仍由其拥有权威，
-任何 profile 都不能绕过其状态、审批和工件。
-
-`FULL` 只改变交付深度，不改变生命周期所有者或风险档位；选择后必须同时输出生命周期所有者和 `Light | Standard | Strict` 风险档位，并按该档位保留相应门禁。
-
-`DEMO_FAST` 只允许 `Light` 风险档位，且只适用于本地、可逆、单一可演示 happy path；风险档位门禁优先于 Delivery profile。
-若收敛后的候选范围为 Standard 或 Strict，必须停止并报告 `BLOCKED`，要求用户把 Demo 目标缩小到 Light，或明确
-改为 spec/FULL 后按对应最低控制执行；不得静默缩减需求、降低风险档位或升级 FULL。文件数量本身不能自动选择
-`FULL`，但仍可按 1.2 的事实参与风险分类。若候选范围不能收敛为一个本地、可逆、单一可演示 happy path，也按
-同一规则阻塞并要求用户缩小 Demo 目标或明确改为 spec/FULL。
-
-若命中架构、公共契约、数据迁移、安全权限隐私支付、并发一致性、不可逆外部操作或项目强制门禁，而用户没有
-明确 spec/FULL 意图，必须停止并报告 `BLOCKED`，说明需要用户明确改为 spec/FULL；不得静默升级 FULL，也不得
-继续极速实施。无权威生命周期时计划留在当前对话；默认只形成一个场景组，不构造 DAG 或多 worker。
-
-`DEMO_FAST` 的最小流程仍保留：同一场景组有效执行 `RED → GREEN → REFACTOR`；不能合理测试的脚手架使用可重复 smoke，
-不虚构 RED；完成聚焦自审、项目原生聚焦测试和本地 Demo smoke。不得做未要求的生产加固、全量回归或多轮
-review，不得自行创建额外归档工件；这不能跳过项目官方归档、关闭或强制门禁，项目规则或实际影响要求更广验证时
-不得省略。保留既有 `VERIFIED`、`BLOCKED`、`INCOMPLETE` 状态。
-
-报告必须写明 Delivery profile：`DEMO_FAST | FULL`。`PLAN_AND_APPLY` 实际完成验证时，`DEMO_FAST` 报告明确
-`production_ready=false`、已验证 happy path、延期项/风险和运行 Demo 命令；`PLAN_ONLY` 只能报告计划的 happy path、
-`validation=PENDING`、延期项/风险和拟运行 Demo 命令；`PLAN_ONLY` 的最终结果为 `INCOMPLETE`，不得写 `VERIFIED`
-或声称已经运行。`Demo VERIFIED` 只代表
-演示场景证据，不代表生产就绪，也不推导 commit/push/PR/deploy。
+仅项目未定义风险或交付路由时完整读取 [fallback 规则](references/fallback.md)，
+选择风险档位与 Delivery profile。已有项目档位直接沿用，不叠加 DEMO_FAST/FULL 确认。
 
 ### 1.3 锁定基线和权限
 
@@ -195,7 +137,7 @@ Git 暂存/提交仍单独遵守“Git 与外部动作边界”的精确快照�
   `INCREMENTAL_CHECKPOINT`；
 - Delivery authority：`NONE | PUSH_BRANCH | FORK_PR | PR_REPAIR_LOOP | MERGE` 及其明确的目标分支；
   每个取值只覆盖同名动作：`FORK_PR` 含该 PR 分支的首推，`PR_REPAIR_LOOP` 含循环内为修复产生的本地提交与该
-  分支的非强制推送，`MERGE` 只表示允许触发或等待既有合入机制，本 skill 仍不自行执行合入；
+  分支的非强制推送；`MERGE` 仅记录用户当场对具体合入动作与目标的明确确认，不能预授权自动合并；
 - Repair loop budget：`loop_budget` 的轮次或时限上限，仅在 `PR_REPAIR_LOOP` 时记录。
 
 不要另建 baseline ledger。规划前、Apply 前和 Achieve 前比较当前状态；预先存在的非流程改动、HEAD 或
@@ -405,6 +347,8 @@ worker 返回后，协调者必须检查共享工作树中的：
 - 是否覆盖预先存在或其他任务的改动；
 - 聚焦测试的真实命令和结果；
 - 每个 task 的需求、设计决定、独立验收及组级场景是否满足；
+- 行为是否经真实调用入口接入，成功与失败处理是否完成；测试观察对象与需求结果是否相同；
+- 映射要求的测试代码是否交付；未执行的测试保持待验证，不能把缺测试代码归因为环境不可用；
 - 新增的重要设计项是否仍满足 2.2 的必要性检查；
 - 是否出现新的依赖、边界变化或疑虑。
 
@@ -414,51 +358,21 @@ worker 返回后，协调者必须检查共享工作树中的：
 
 ### 3.7 增量交付检查点
 
-只有 Git authority 为 `LOCAL_COMMIT` 且 Commit mode 为 `INCREMENTAL_CHECKPOINT` 时，才在 DAG 执行中评估
-阶段提交。用户说“分批提交”“阶段性提交”“做完一部分先提交”或明确要求避免最后一次提交过多文件，表示
-授权当前任务产生多个本地提交；不推导 push、PR、部署或其他仓库权限。
-
-每次 Sol 完成 3.6 验收后，按以下门禁形成一个完整验收的交付切片：
-
-1. 切片包含一个或多个已满足的底层 task/场景组，提交后自身行为有效、可解释、可回退，不依赖未完成代码
-   才能成立；单个 worker 返回、RED/GREEN 中间态或仅部分通过的场景组不合格；
-2. 为下一次 commit 从实际 diff 重新计算准确的 `AUTHORIZED_COMMIT_SET`，其中每个文件的全部当前改动只属于
-   该切片；排除
-   预先存在、范围外、其他参与者以及混合未完成任务改动的文件，默认不使用补丁暂存绕过混合边界；
-3. 对该切片执行项目规定的聚焦审查和必要验证，Critical/Important 清零；共享契约、manifest、生成链或
-   测试证据不能独立归属时，继续累积到边界完整，不为减少文件数强行提交；
-4. 暂停会修改该切片文件或目标仓库 Git 状态的调度，把 `AUTHORIZED_COMMIT_SET` 交给“Git 与外部动作边界”
-   的统一事务协议；使用 conventional commit 记录已完成结果，不使用 `WIP:` 表示已验收交付；
-5. 统一事务成功后更新完整 Target baseline 并恢复 `ready_queue`；保留原始 Change base，确保 Stage 4 对累计
-   提交和剩余改动做 whole-change 审查。事务失败时保持冻结并按统一错误状态恢复，不复制另一套 Git 规则。
-
-阶段提交只减少安全工作树中的累计改动，不触发归档、不把整个 change 标记完成，也不替代 3.6 的验收或
-完成事件；DAG 后继是否释放仍只由真实任务/场景组验收决定。没有合格文件集时继续实施或重划边界，不创建
-空提交，不把未完成改动硬塞进本批次。
+仅用户已授权 `LOCAL_COMMIT + INCREMENTAL_CHECKPOINT` 时，读取
+[Git 与交付](references/git-delivery.md) 的“增量交付检查点”及“Git 与外部动作边界”；
+只有完整验收的交付切片才可提交，不触发归档，也不替代逐 task 验收。
 
 ### 3.8 Luna 执行模式
 
-Luna 默认开启，固定且唯一使用原生模型 `gpt-5.6-luna`；没有模型列表、别名、后端选择或 CLI 兼容通道。
-用户在当前任务明确说“不用 Luna”“只用 Sol”时不委派且不写持久配置。选择与委派规则见
-`references/execution-providers/sol-luna.md`：
-
-1. 从当前 `spawn_agent` 工具说明读取 `gpt-5.6-luna` 是否可用及宿主实际能力面；不得从 CLI、缓存或历史会话推断；
-2. 任务卡不是安全边界。若任务要求只读工具白名单、路径沙箱或命令限制，且宿主无法强制，则由 Sol 直接执行；
-3. 模型可用且宿主能力未超出用户与项目对当前任务的授权时，调用 `spawn_agent`，显式传入 `model="gpt-5.6-luna"`、适合任务的
-   `reasoning_effort`、`fork_turns="none"` 和六字段任务卡；
-4. 模型不可用或宿主能力超出当前授权时由 Sol 直接执行当前场景组，不换成其他模型，也不调用外部 runner；
-5. `spawn_agent` 返回 Agent 标识即记为已启动；此后失败由 Sol 检查共享工作树和证据后恢复，不自动重跑。
-
-把完整内聚场景组压缩为一个六字段任务卡；assignment 的 `time_management` 必须进入六字段任务卡的“约束”，
-由同一个 `luna-worker` 完成 `RED → GREEN → REFACTOR`，不得
-拆分 TDD；provider 不拥有生命周期、任务状态或 Git 授权；完整场景组无法在限额内保持语义时 provider
-不适用，回退 Sol 或项目原生执行，不得切碎 TDD。
-
-原生 Luna 使用统一返回验收规则：结果必须映射到 provider 的
-`result-schema.json`，由 Sol 在更新 tracker 前检查逐 task 证据、`time_management` 与 assignment 一致性。
-带 timebox 的结果不得使用 `N/A`；时间盒到期只能选择“完成验收”“带证据重排”或“升级阻塞”，不能
-静默延长或跳过验证。`TIMEBOX_EXPIRED + 完成验收` 必须对应 `DONE` / `DONE_WITH_CONCERNS`；重排或
-升级动作不得对应完成态。结构不完整或语义矛盾时不得验收，返回补充上下文、重排或阻塞。
+委派前完整读取 [Luna 原生执行适配](references/execution-providers/sol-luna.md) 及其指向的
+共享契约。默认使用宿主当前支持的 `gpt-6-luna`；调用 `spawn_agent` 时显式传入
+`model="gpt-6-luna"`、适合任务的 `reasoning_effort` 和 `fork_turns="none"`。
+任务卡不是安全边界；任务要求只读工具白名单、路径沙箱或命令限制而宿主无法强制时，
+不得把自然语言约束当作隔离。模型不可用或宿主能力超出当前授权时，只有项目允许协调者实施
+才由 Sol 直接执行；项目要求独立 worker 时保持 BLOCKED，不使用 fallback 绕过。
+原生 Luna 使用适配文档的统一返回验收规则，由 Sol 在更新 tracker 前核对实际 diff、逐 task
+证据与时间盒；带 timebox 的结果不得使用 `N/A`。已启动任务失败时先检查现场，再恢复原 worker、
+重划边界或按项目允许的方式接管，不自动重复执行。
 
 ## Stage 4：Review & Verify final state
 
@@ -472,19 +386,14 @@ Luna 默认开启，固定且唯一使用原生模型 `gpt-5.6-luna`；没有模
 - 对照确认边界、需求/场景、设计、任务、测试计划和项目规则；
 - 将问题分为当前变更相关或既有/范围外，再分为 Critical、Important、Minor；
 - Critical 和 Important 必须在授权边界内解决；需要扩边界时先获得确认；
-- Strict 使用一次上下文独立的 whole-change reviewer；不要叠加任务级独立 reviewer；
+- Strict 使用独立的整变更实现复核者；整体验证的独立上下文另按所属流程执行，不叠加任务级 reviewer；
 - 修复影响实现或验证后，重新审查受影响部分。
 
 ### 4.2 项目原生验证
 
 项目提供验证状态捕获/检查时直接复用官方命令和报告，不创建通用指纹脚本或第二证据账本。
-QEDA 项目先读取项目内 `openspec/references/qeda/qeda-verification.md` 的当前要求：对明确的目标
-分支，在已有 Git 授权覆盖同步动作时先完成 `目标分支 → 当前工作分支` 同步与冲突处理，再做实现
-复核和正式验证；不得猜测目标分支或反向更新它。缺少必要同步授权时报告具体阻塞，不擅自合并。
-检查通过后，使用项目内 `openspec/scripts/qeda/qeda-verification-state.mjs` 的 `capture` 输出写入
-官方 verification 报告，并在 Apply 收尾及归档预检运行 `check`。参数、状态覆盖范围、排除项和
-失效后的恢复步骤以项目实时指令为准。源码变化或目标分支推进导致 check 失败时，旧 VERIFIED
-不可沿用，返回项目要求的复核与验证后重新 capture/check；不能只刷新指纹来恢复通过。
+已有项目验证机制时按 [项目工作流适配](references/project-workflows.md) 读取当前要求，
+先完成必要同步、复核，再执行验证与状态检查；不能只刷新指纹来恢复通过。
 没有该机制的项目沿用原生验证与下述结果失效规则，不安装 QEDA 脚本或自行引入状态协议。
 
 只有当前最终审查不阻塞时才执行最终验证：
@@ -503,6 +412,14 @@ QEDA 项目先读取项目内 `openspec/references/qeda/qeda-verification.md` �
 
 不得用“真实数据 100%”“测试数量”或“审查轮数”代替按场景验证。
 
+缺陷修复和关键回归还须证明测试能抓住目标错误：使用独立于被测实现的预期，观察实际目标，
+在有证据的旧错误条件与修复条件下使用同一测试；旧错误应使目标断言失败，修复后通过。
+缺依赖、启动失败或零用例不是有效反例。旧错误仍绿时检查恒真断言、预期同源、错误观察对象
+及未触发的生产路径；不得按当前输出改答案或放宽验收。无法构造可靠反例时明确证据限制，
+不宣称已证明拦截回归。复用项目已有测试与报告，不新建验证框架。
+UI 场景按项目要求保留可重跑步骤、断言和当前截图，实际看图核对场景与结果；脚本 PASS
+不能证明图像正确，浏览器证据也不能代替涉及桌面或安装包的原生行为证据。
+
 ## Stage 5：Achieve, closeout and report
 
 最终归档状态统一记录为 `archive=SUCCESS | N/A | FAILED`。项目生命周期存在官方归档/关闭操作时，只有
@@ -510,7 +427,8 @@ QEDA 项目先读取项目内 `openspec/references/qeda/qeda-verification.md` �
 没有官方生命周期归档操作的 fallback 项目记录 `archive=N/A`，不得为满足流程发明归档目录或伪造结果。
 归档前再次检查 baseline、最终审查、验证结论和任务状态；由生命周期所有者同步 spec 和移动 change。
 
-归档状态确定后，若有对应 Git authority，先按“Git 与外部动作边界”执行最终 closeout；无 Git 授权或
+归档状态确定后，若有对应 Git authority，先读取 [Git 与交付](references/git-delivery.md) 的“Git 与外部动作边界”，
+按其事务协议执行最终 closeout；无 Git 授权或
 `AUTHORIZED_COMMIT_SET` 为空时不创建 commit。closeout 成功、不适用或明确失败后，再输出简洁最终报告，
 确保其中的 hash/status 是当前事实：
 
@@ -523,7 +441,7 @@ QEDA 项目先读取项目内 `openspec/references/qeda/qeda-verification.md` �
 验证：命令/方法、退出状态、关键结果
 归档：位置或未归档原因
 Git：未授权 / 无剩余授权内 diff / checkpoints [<hash>...] + closeout <hash|N/A> / 提交失败 <状态/原因>
-PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash> | CI <状态> | 评审 <N 轮：✅|未决> | 修复提交 <hash...> | 循环 <N/预算：进行中|COMPLETE|INCOMPLETE|BLOCKED> | 合入 <既有机制|未合入原因>
+PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash> | CI <状态> | 评审 <N 轮：✅|未决> | 修复提交 <hash...> | 循环 <N/预算：进行中|COMPLETE|INCOMPLETE|BLOCKED> | 合入 <当场确认与实际状态|未合入原因>
 范围外发现：仅列候选，不写入当前任务状态
 ```
 
@@ -532,111 +450,10 @@ PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash
 
 ## Stage 6：Fork PR 交付与评审戴明环
 
-只有用户明确要求推送分支、开 PR、盯着评审修到过或合入时才进入本阶段；没有这些授权时，Stage 5 的报告就是终点，
-只给出建议动作。本阶段不建立第二套 Git 或 PR 流程：分支创建、推送纪律、PR 修改前状态确认和 `pr-watch` 监控由
-`independent-tools/branch-manager` 拥有，本阶段只规定进入条件、修复循环和终止判定。项目规则优先；QEDA 规定交付
-动作必须由用户另行明确授权并命名目标分支，也不允许把当前工作分支合入目标分支当成验证或归档的一部分。
-
-### 6.1 进入条件
-
-- 最终结论为 `VERIFIED`，且 closeout 已完成或明确不适用；
-- `Delivery authority` 已记录具体动作与**目标分支**：推送分支、开 PR、评审修复循环、合入分别是独立授权，
-  不能从提交权限、验证结论或归档结果推导；
-- `PR_REPAIR_LOOP` 缺少 `loop_budget` 或缺少目标分支时不进入循环，报告 `BLOCKED` 并要求用户给出上限，
-  不自行设定预算；
-- 目标分支取自用户指令或项目证据，不猜测；fork 集成主线的证据（分支归属、PR 基线惯例）通常指向 fork 的
-  `main`，`upstream` 只用于用户另行要求的批量出口，并把所选依据写进报告；
-- 分支命名沿用项目惯例（如 `qin/<主题>`、`codex/<任务>`），并说明本 PR 的基线分支；
-- PR base 必须是验证时命名的目标分支；base 不同或目标分支在归档后推进时，按项目规则使用托管平台的
-  合入候选检查或 linked follow-up change，不把归档报告当作该交付对象的证据。
-
-### 6.2 推送与开 PR
-
-1. 推送与开 PR 前按 branch-manager 的“PR 修改前状态确认”确认远程 head、目标分支是否推进和 PR 当前状态；
-   需要同步才能继续时，只有 Git 授权已覆盖该方向（目标分支或远程 PR 分支 → 当前分支）才执行同步与冲突处理，
-   缺少这项许可时报告 `BLOCKED` 并请求授权；同步完成后重新确认，不沿用旧结论；
-2. 只推送授权范围内的分支，不使用 `--force`；需要 `--force-with-lease` 的窄边界情形必须先取得用户明确授权，
-   再按 branch-manager 与项目 Git 规则执行，本阶段不自行决定；
-3. 明确 base 与 head 后开 PR；PR 描述由既有 change、任务状态、审查与验证结论拼成，不新造报告、
-   不建立第二份验收结论；
-4. fork 模式下 PR 在 fork 内闭环评审，跨仓出口由既有机制或用户决定；
-5. 推送和开 PR 不改变归档状态，也不把当前工作分支合入目标分支。
-
-### 6.3 监控
-
-用 `pr-watch`（指定本 PR 所属的 fork 仓库与 PR 号）建立快照基线，每轮读取本 PR 的 `state`、`head`、
-`mergeable`、CI 和评论计数，无变化不打扰；它只给出变化信号，评论正文与评审结论按 branch-manager 的用法
-另行读取。会话内可以轮询，也复用已有监控任务；只有用户明确要求时才新建定时监控任务，且不修改无关任务。
-快照基线和轮次计数随会话与同一份报告记录，跨会话恢复时从 PR 上的评审结论重建轮次，本阶段不写第二套状态账本。
-
-### 6.4 戴明环修复
-
-每轮按 Plan → Do → Check → Act 闭环，只处理本轮新增证据：
-
-1. **Plan**：把新评论与 CI 失败逐条归类为“当前变更相关 / 范围外”，再分 Critical、Important、Minor；
-   范围外或需要扩授权边界的条目只报告，不顺手修；
-2. **Do**：在授权和已确认边界内做最小修复，遵守项目测试策略、场景组粒度和文件归属；change 已经归档时
-   先按项目对归档后更正的规则建立或继续 linked follow-up change，再在其 Apply 边界内修复，不把更正追加在
-   已归档候选的报告下；
-3. **Check**：重跑受影响的项目原生聚焦验证。项目有验证状态机制时，源码变化使旧结果失效：change 仍活动时
-   返回复核与验证后重新 capture/check，不得只刷新指纹；已归档时不得声称可以对原 change 重新 capture/check，
-   当前候选的复核与验证在 linked follow-up change 上完成；
-4. **Act**：以追加提交推送修复，随后等待下一轮评审；同步更新轮次计数与本轮结论。
-
-### 6.5 终止判定
-
-| 情况 | 处理 |
-|---|---|
-| 评审 ✅ 绑定当前 head，且已注册的 CI 检查全部成功 | 交付动作完成；合入交给既有自动合入机制或人工，本阶段不自行合入；该 PR 没有注册 CI 时必须明确记录这一点，不能当作已通过 |
-| 达到 `loop_budget` 的轮次或时限 | 循环状态记 `INCOMPLETE`，保留 PR 与工作树现场，列出剩余问题 |
-| 同一根因连续修复失败、需要扩边界或需要人类裁决 | 循环状态记 `BLOCKED`，停止叠加猜测性修复 |
-| CI 失败来自基线噪音或与本变更无关 | 如实标注，不改代码掩盖；重跑使用项目原生方式 |
-| `mergeable=false` 或目标分支已推进 | 按 branch-manager 的“PR 修改前状态确认”处理；在 Git 授权覆盖该同步方向时先把目标分支同步到当前分支再叠加修复，缺少许可时报 `BLOCKED`，候选变更后的复核与验证按 6.4 的 Check 处置；禁止直接覆盖远程 |
-
-循环状态取 `进行中 | COMPLETE | INCOMPLETE | BLOCKED`，只写入报告的 PR 字段；`结果` 字段始终描述 change 的
-验证结论，不因循环状态改变。同一情形命中多行时按最需要人类介入的一行判定，`BLOCKED` 优先于 `INCOMPLETE`。
-评审 ✅ 必须绑定当前 head：结论里给出的 head 或评审提交要与当前 head 一致，之后有新推送即失效，不能只看
-“最新 commit 之后没有新评论”；CI 为 `pending` 或未注册时不得视为通过，如实记录并按项目原生方式确认。不执行：不改写已推送历史（Stage 6.2 明确授权的 `--force-with-lease` 除外）、不自行合入、不部署、不用 PR 描述或修订记录掩盖历史。
-完成后把最终 PR 事实补进同一份 Stage 5 报告，不新开报告。
-
-## Git 与外部动作边界
-
-- 默认不 stage、不 commit、不 push、不创建 PR、不部署；
-- `AUTHORIZED_COMMIT_SET` 始终表示“下一次 commit 的准确文件及内容集合”，每次提交前重新计算：增量模式
-  从 3.7 已完整验收的切片得到，closeout 模式从最终已确认 diff 得到；两种模式都排除预先存在、范围外或
-  其他参与者的改动；
-- Commit mode 默认为 `CLOSEOUT_ONCE`；只有用户明确要求多个本地提交、分批提交或阶段性提交时才设置
-  `INCREMENTAL_CHECKPOINT`，该授权仅在当前任务和目标仓库/分支有效；
-- 紧邻暂存前重新读取 branch、HEAD 和 status，并与 Target baseline 比较；发生漂移时停止。当前分支是
-  `main`/`master` 时停止提交，只有项目分支工作流或用户另行授权后才能创建或切换分支；
-- 暂存前拒绝进行中的 merge/rebase/cherry-pick/revert（`MERGE_HEAD`、rebase state、`CHERRY_PICK_HEAD`、
-  `REVERT_HEAD`）；普通本地 commit 授权不包含完成这些 Git 操作的权限；
-- 从暂存开始到 commit/tree 核验完成，目标仓库的 Git index 和当前分支必须由协调者独占；其他 Agent、hook
-  或流程造成的 HEAD/index 漂移都必须停止本次提交；
-- 只暂存 `AUTHORIZED_COMMIT_SET` 中的明确路径，不改动预先存在的 staged 状态；暂存后必须检查
-  `git diff --cached --name-status` 和 `git diff --cached`，文件集合或内容不完全匹配就停止提交；
-- 提交前执行项目规定的审查与验证，并证明结果对应精确暂存快照；剩余工作树改动参与过的测试结果不能单独
-  证明 staged tree 有效；不得 `--force`（Stage 6.2 明确授权的 `--force-with-lease` 情形除外）；
-- 记录 `pre_commit_head` 和 `reviewed_tree = git write-tree`，紧邻 commit 前复核二者及完整 cached diff；
-  提交后读取完整 parent 列表，验证新提交恰好一个 parent 且该 parent 等于 `pre_commit_head`，同时验证
-  `HEAD^{tree}` 等于 `reviewed_tree`；任一不一致时报告 `COMMIT_TREE_MISMATCH` 并停止，不自动 amend、reset
-  或 push；
-- 一个 task、worker 返回、TDD transition 或 artifact 完成不会自动成为 commit 边界；
-- `INCREMENTAL_CHECKPOINT` 按 3.7 的 `AUTHORIZED_COMMIT_SET` 提交完整验收切片，门禁是切片验收通过、
-  切片必要审查/验证通过、准确暂存集、工作分支和独立 Git 授权；它不要求整个 change 已归档；
-- 用户只要求“一个本地 commit”或未明确要求分批时使用 `CLOSEOUT_ONCE`，只创建一个 closeout commit；
-- closeout commit 的统一门禁是 `VERIFIED + archive SUCCESS/N/A + 独立 Git 授权`；官方归档存在时必须
-  `archive=SUCCESS`，fallback 无归档操作时允许 `archive=N/A`。提交后报告 hash 和 status；
-- `INCREMENTAL_CHECKPOINT` 表示“零到多个 checkpoint + 一个最终 closeout”：Stage 4 修复、Stage 5 归档或
-  其他剩余授权内 diff 在上述 closeout 门禁通过后形成最终 closeout；若没有剩余 diff，不创建空 commit，
-  只报告已有 checkpoint hashes；
-- 每次增量提交后更新完整 Target baseline，但保留原始 Change base；最终审查和验证必须覆盖 Change base
-  以来的全部 checkpoint commits 与剩余 diff；
-- push、PR、评审修复循环、合入和部署各自需要明确授权，不能从 commit 权限推导，也不能从验证或归档结论推导；
-  授权必须命中用户指定的目标分支；
-- 交付动作按 Stage 6 执行：分支、推送纪律、PR 状态确认和 `pr-watch` 归 `independent-tools/branch-manager`，
-  本文件不复制其 Git 规则，也不建立第二套 PR 或监控账本；
-- 本 skill 不自行合入目标分支、不改写已推送历史、不部署；合入交给既有机制或用户明确授权。
+只有已有明确交付授权时读取 [Git 与交付](references/git-delivery.md) 的 Stage 6 和
+“Git 与外部动作边界”，执行对应推送、PR 或有预算的修复循环。默认不 stage、不 commit、
+不 push、不创建 PR、不部署；评审和 CI 通过不授权合入，合入须用户当场明确确认。
+本地 checkpoint 与 closeout 也遵守该参考的精确暂存快照和 Git 事务检查。
 
 ## 错误与恢复
 
@@ -664,22 +481,11 @@ PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash
 | commit 前 HEAD/index 漂移 | 停止提交并重新取证；不得沿用旧 `reviewed_tree` |
 | commit tree 与 `reviewed_tree` 不同 | 返回 `COMMIT_TREE_MISMATCH`，保留现场并停止；不自动改写历史或 push |
 
-## 输出质量指标
+## 收尾自检
 
-| 指标 | 目标 | 检查方法 |
-|---|---|---|
-| 生命周期唯一性 | 1 个 owner、1 个任务真相源、1 个最终结论 | 检查是否新增平行 phase/ledger/verdict |
-| 调度可追踪 | 每个本轮 task 恰好映射到一个临时场景组，组完成后逐项验收 | 检查 assignment 与 tracker 更新 |
-| 调度收益 | 合组节省的上下文/准备/测试成本大于并行、失败、协调和回滚成本 | 记录分组理由与反例边界 |
-| 并行效率 | 无不必要的拓扑层屏障；安全后继在验收后立即进入 ready queue | 检查完成事件、卡槽释放和调度日志 |
-| 范围可追踪 | 每个改动可追溯到已确认场景或必要实现细节 | 对照 diff 与规格/任务 |
-| 测试策略真实性 | 项目测试策略优先；适用 TDD 时有有效 RED、GREEN、必要 REFACTOR，否则如实记录测试补齐 | 检查实际顺序、失败原因和聚焦命令 |
-| 并行安全 | 并行场景组满足五项隔离条件 | 检查写入、契约、资源和测试归属 |
-| 审查闭环 | 当前变更 Critical/Important 为 0 | 读取最终审查 |
-| 验证真实性 | 每项必要验证有实际命令/方法、状态和关键结果 | 读取最终验证 |
-| Git 授权 | 每个 Git/外部动作都有对应明确授权 | 对照用户指令和动作日志 |
-| 交付授权边界 | 推送、PR、评审修复循环和合入各有对应明确授权与目标分支 | 对照用户指令和 PR 记录 |
-| 修复循环闭环 | 每轮有归类、修复、受影响验证重跑和终止判定 | 读取轮次记录与验证结果 |
+确认只有一个生命周期与任务真相源；范围与场景可追踪；任务完成有实际 diff 和行为证据；
+必要检查全部执行且结果仍有效；Git 与交付动作符合具体授权。审查轮数、测试数量、工具退出码
+或格式检查均不单独证明功能完成。按 Stage 5 报告真实结果及尚未解决的限制。
 
 ## 规则更新
 
@@ -688,7 +494,7 @@ PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash
 
 ---
 
-*版本：5.0*
-*最后更新：2026-09-17*
-*变更：新增 Stage 6 fork PR 交付与评审戴明环（独立交付授权、pr-watch 监控、Plan-Do-Check-Act 修复循环和终止判定），
-并把交付权限、循环预算、PR 报告字段接入基线、错误恢复与质量指标。*
+*版本：5.1*
+*最后更新：2026-11-04*
+*变更：按阶段加载项目、fallback 与交付规则；修正 QEDA Vibe 收敛、Strict 执行与验证适配，
+补充真实行为与回归证明，更新 Luna 原生模型与 provider 路径，并统一人工合入边界。*
