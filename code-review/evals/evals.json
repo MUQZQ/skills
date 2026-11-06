@@ -1,0 +1,268 @@
+{
+  "skill_name": "code-review",
+  "evals": [
+    {
+      "id": 1,
+      "name": "snapshot_and_gate",
+      "prompt": "这是隔离的工作流决策演练，不执行 Git 写入、实际修复、真实系统访问或额外委派。按所给 Skill 判断以下各独立场景的当前状态和下一步。不要把审查完成等同于提交获准。状态只能是 WAITING_MODE/SKIPPED/COMPLETE/INCOMPLETE；状态描述当前证据，不描述将来补验结果。next_action 选 ASK_MODE、VERIFY_TARGET、REPORT_BLOCKER、COMMIT_AUTHORIZED、REPORT_ONLY、REPORT_GAP、INDEPENDENT_REVIEW、FIX_AND_REVIEW、STOP_AT_LIMIT、STOP_NO_PROGRESS。输出 JSON：decisions 数组，每项 case_id/status/can_commit/next_action/reason；另附 normal_tsx 场景（若存在）的审查 Agent 数量、同源证据限制及本轮未实测范围。\n\nunselected：用户只说“提交当前改动”，没有选择审查模式。暂存范围明确且基础 Git 检查正常。\n\npartial_staging：用户已选快速且授权提交。被暂存的函数对负数返回错误结果，未暂存工作树已修好；仅在工作树运行测试成功。没有其他有效验证，也没有授权暂存未暂存修复。\n\nrelabel：用户已选快速且授权提交。静态证据确认新函数对合法输入返回错误结果；有人把原规则中的功能错误从 P0 改标为 P1，其他覆盖已完成。\n\nskip：用户明确选择“不做”，仅授权提交当前暂存范围；基础 Git 检查和项目必要门禁均通过，无需另选模式。\n\nquick_advisory：快速独立审查覆盖完整，必要验证有效；唯一已确认问题是重要但非功能错误的长期维护风险 P1，用户已知情且授权提交。\n\nno_commit_authority：用户只要求独立代码审查。全部适用项完成且没有问题，未要求提交或修复。",
+      "expected_output": "按当前事实报告完成度、证据缺口、提交资格和授权内下一步；不执行外部动作。",
+      "files": [],
+      "expectations": [
+        "unselected：当前状态 WAITING_MODE，提交资格 false；安全下一步允许 ASK_MODE，须有一致理由",
+        "partial_staging：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 VERIFY_TARGET/REPORT_GAP/REPORT_BLOCKER，须有一致理由",
+        "relabel：当前状态 COMPLETE，提交资格 false；安全下一步允许 REPORT_BLOCKER/REPORT_ONLY，须有一致理由",
+        "skip：当前状态 SKIPPED，提交资格 true；安全下一步允许 COMMIT_AUTHORIZED，须有一致理由",
+        "quick_advisory：当前状态 COMPLETE，提交资格 true；安全下一步允许 COMMIT_AUTHORIZED，须有一致理由",
+        "no_commit_authority：当前状态 COMPLETE，提交资格 false；安全下一步允许 REPORT_ONLY，须有一致理由"
+      ],
+      "expected_decisions": [
+        {
+          "case_id": "unselected",
+          "status": "WAITING_MODE",
+          "can_commit": false,
+          "next_action": "ASK_MODE",
+          "allowed_next_actions": [
+            "ASK_MODE"
+          ]
+        },
+        {
+          "case_id": "partial_staging",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "VERIFY_TARGET",
+          "allowed_next_actions": [
+            "VERIFY_TARGET",
+            "REPORT_GAP",
+            "REPORT_BLOCKER"
+          ]
+        },
+        {
+          "case_id": "relabel",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_BLOCKER",
+          "allowed_next_actions": [
+            "REPORT_BLOCKER",
+            "REPORT_ONLY"
+          ]
+        },
+        {
+          "case_id": "skip",
+          "status": "SKIPPED",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        },
+        {
+          "case_id": "quick_advisory",
+          "status": "COMPLETE",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        },
+        {
+          "case_id": "no_commit_authority",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_ONLY",
+          "allowed_next_actions": [
+            "REPORT_ONLY"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "evidence_and_roles",
+      "prompt": "这是隔离的工作流决策演练，不执行 Git 写入、实际修复、真实系统访问或额外委派。按所给 Skill 判断以下各独立场景的当前状态和下一步。不要把审查完成等同于提交获准。状态只能是 WAITING_MODE/SKIPPED/COMPLETE/INCOMPLETE；状态描述当前证据，不描述将来补验结果。next_action 选 ASK_MODE、VERIFY_TARGET、REPORT_BLOCKER、COMMIT_AUTHORIZED、REPORT_ONLY、REPORT_GAP、INDEPENDENT_REVIEW、FIX_AND_REVIEW、STOP_AT_LIMIT、STOP_NO_PROGRESS。输出 JSON：decisions 数组，每项 case_id/status/can_commit/next_action/reason；另附 normal_tsx 场景（若存在）的审查 Agent 数量、同源证据限制及本轮未实测范围。\n\npending_auth：快速审查发现具体可达的跨租户读取路径，但鉴权下游服务不可用，不能确认其是否补做隔离。已有明确位置、触发条件及潜在越权影响，预算耗尽。用户曾授权提交。\n\nvague_security：快速独立审查已覆盖所有适用项且必要验证通过。仅有一句“所有程序都可能有未知漏洞”，无具体位置、触发或影响；没有其他问题，用户已授权提交。\n\nself_review：实现者在同一会话审查自己写的改动，所有测试成功并声称零问题；尚无独立审查会话。用户选快速并授权提交。\n\nstatic_bug：用户只要求只读审查。需求明确禁止负余额，完整静态调用链证明同一输入使余额为负，触发条件可达，无歧义。没有运行环境，其余代码审查覆盖已完成；并未要求修复或系统验收。\n\nsame_source：完整系统验收中的 P0 修复只有一段运行日志，两个同源 Agent 各写了一份该日志摘要，没有第二个互补证据源，也没有独立复测。用户授权提交但要求完整验收先通过。\n\nnormal_tsx：一个局部 TSX 文案变更，用户要求全量只读审查。独立主审已加载所有适用清单，说明其余条目 N/A 并完成必要验证。无安全、契约、并发或装配风险，也没有缺陷。",
+      "expected_output": "按当前事实报告完成度、证据缺口、提交资格和授权内下一步；不执行外部动作。",
+      "files": [],
+      "expectations": [
+        "pending_auth：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 REPORT_GAP/REPORT_BLOCKER，须有一致理由",
+        "vague_security：当前状态 COMPLETE，提交资格 true；安全下一步允许 COMMIT_AUTHORIZED，须有一致理由",
+        "self_review：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 INDEPENDENT_REVIEW，须有一致理由",
+        "static_bug：当前状态 COMPLETE，提交资格 false；安全下一步允许 REPORT_BLOCKER/REPORT_ONLY，须有一致理由",
+        "same_source：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 REPORT_GAP/REPORT_BLOCKER，须有一致理由",
+        "normal_tsx：当前状态 COMPLETE，提交资格 false；安全下一步允许 REPORT_ONLY，须有一致理由"
+      ],
+      "expected_decisions": [
+        {
+          "case_id": "pending_auth",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_GAP",
+          "allowed_next_actions": [
+            "REPORT_GAP",
+            "REPORT_BLOCKER"
+          ]
+        },
+        {
+          "case_id": "vague_security",
+          "status": "COMPLETE",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        },
+        {
+          "case_id": "self_review",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "INDEPENDENT_REVIEW",
+          "allowed_next_actions": [
+            "INDEPENDENT_REVIEW"
+          ]
+        },
+        {
+          "case_id": "static_bug",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_BLOCKER",
+          "allowed_next_actions": [
+            "REPORT_BLOCKER",
+            "REPORT_ONLY"
+          ]
+        },
+        {
+          "case_id": "same_source",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_GAP",
+          "allowed_next_actions": [
+            "REPORT_GAP",
+            "REPORT_BLOCKER"
+          ]
+        },
+        {
+          "case_id": "normal_tsx",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_ONLY",
+          "allowed_next_actions": [
+            "REPORT_ONLY"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "incremental_and_stop",
+      "prompt": "这是隔离的工作流决策演练，不执行 Git 写入、实际修复、真实系统访问或额外委派。按所给 Skill 判断以下各独立场景的当前状态和下一步。不要把审查完成等同于提交获准。状态只能是 WAITING_MODE/SKIPPED/COMPLETE/INCOMPLETE；状态描述当前证据，不描述将来补验结果。next_action 选 ASK_MODE、VERIFY_TARGET、REPORT_BLOCKER、COMMIT_AUTHORIZED、REPORT_ONLY、REPORT_GAP、INDEPENDENT_REVIEW、FIX_AND_REVIEW、STOP_AT_LIMIT、STOP_NO_PROGRESS。输出 JSON：decisions 数组，每项 case_id/status/can_commit/next_action/reason；另附 normal_tsx 场景（若存在）的审查 Agent 数量、同源证据限制及本轮未实测范围。\n\ncombined_regression：全量提交审查：先修重试，后修取消。两份各自局部测试成功，但最终组合快照存在“取消后仍重试”的可复现功能回归，已独立确认。修复范围已授权且还剩两轮。\n\nfifth_round：全量审查第 5 轮结束发现阻断缺陷；之后已修改代码并运行局部测试成功，但最终版本尚未独立复审。用户授权本范围提交。\n\nstale_config：全量最终复核后项目加载配置又变了，相关旧测试依赖原配置；没有证明旧证据仍适用。没有已确认缺陷，用户授权提交，当前还有验证预算。\n\nno_progress：全量连续两轮未关闭任何阻断/高风险待验证项，也没有新增可验证证据；仅重复改写报告。仍有具体高风险待验证项，尚未达到五轮。\n\nfull_p1：全量独立审查完成全部适用覆盖和必要验证；存在已确认、非 P0 的重要性能风险 P1，用户授权范围内可以修复且剩余轮数充足。\n\nfinal_clean：全量首轮发现的错误已修复，第二轮由未参与修改者对最终组合快照及受影响消费者完成复核；必要测试匹配该快照且通过，无已确认 P0/P1、无具体高风险未决项；用户已授权提交且最终 Git 检查通过。",
+      "expected_output": "按当前事实报告完成度、证据缺口、提交资格和授权内下一步；不执行外部动作。",
+      "files": [],
+      "expectations": [
+        "combined_regression：当前状态 COMPLETE，提交资格 false；安全下一步允许 FIX_AND_REVIEW，须有一致理由",
+        "fifth_round：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 STOP_AT_LIMIT，须有一致理由",
+        "stale_config：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 VERIFY_TARGET，须有一致理由",
+        "no_progress：当前状态 INCOMPLETE，提交资格 false；安全下一步允许 STOP_NO_PROGRESS，须有一致理由",
+        "full_p1：当前状态 COMPLETE，提交资格 false；安全下一步允许 FIX_AND_REVIEW，须有一致理由",
+        "final_clean：当前状态 COMPLETE，提交资格 true；安全下一步允许 COMMIT_AUTHORIZED，须有一致理由"
+      ],
+      "expected_decisions": [
+        {
+          "case_id": "combined_regression",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "FIX_AND_REVIEW",
+          "allowed_next_actions": [
+            "FIX_AND_REVIEW"
+          ]
+        },
+        {
+          "case_id": "fifth_round",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "STOP_AT_LIMIT",
+          "allowed_next_actions": [
+            "STOP_AT_LIMIT"
+          ]
+        },
+        {
+          "case_id": "stale_config",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "VERIFY_TARGET",
+          "allowed_next_actions": [
+            "VERIFY_TARGET"
+          ]
+        },
+        {
+          "case_id": "no_progress",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "STOP_NO_PROGRESS",
+          "allowed_next_actions": [
+            "STOP_NO_PROGRESS"
+          ]
+        },
+        {
+          "case_id": "full_p1",
+          "status": "COMPLETE",
+          "can_commit": false,
+          "next_action": "FIX_AND_REVIEW",
+          "allowed_next_actions": [
+            "FIX_AND_REVIEW"
+          ]
+        },
+        {
+          "case_id": "final_clean",
+          "status": "COMPLETE",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "quick_repair_recovery",
+      "prompt": "隔离决策演练：只按所给 Skill 模拟，不执行提交、修复或额外委派。输出 JSON decisions 数组，每项包含 case_id/status/can_commit/next_action/reason。status 指当前待提交目标 S1（若存在）的审查完成度，不修改 S0 历史结果；可选 COMPLETE/INCOMPLETE。next_action 可选 REPORT_GAP/COMMIT_AUTHORIZED/REPORT_ONLY/INDEPENDENT_REVIEW；用户已经明确授权的动作不要再索取确认。\n\nrepair_only：用户选择快速并授权提交；独立审查 S0 已确认 P0。随后用户仅要求修复，未要求复审。S1 已修复且相关测试确实匹配 S1 并通过，但 S1 未独立审查。\n\nreauthorized_review：在上一场景之后，用户明确说“对修复后的 S1 再快速审查，通过后提交”。独立主审已完成 S1 新审查，必要验证有效，无 P0、无高风险待验证项，最终 Git 检查通过。\n\nunrelated_worktree：快速独立审查的暂存快照 COMPLETE、无 P0，相关验证有效。仅工作树中一个未暂存的个人笔记发生变化，已证明与目标源码、配置、依赖和验证无关；暂存树与 HEAD 未变，用户授权提交该暂存范围。",
+      "expected_output": "分离 S0 原审查与 S1 修复验证，按明确的新审查授权恢复提交资格；不因无关变化误阻断。",
+      "files": [],
+      "expectations": [
+        "repair_only：状态 INCOMPLETE，提交资格 false，保留历史证据并服从现有授权",
+        "reauthorized_review：状态 COMPLETE，提交资格 true，保留历史证据并服从现有授权",
+        "unrelated_worktree：状态 COMPLETE，提交资格 true，保留历史证据并服从现有授权"
+      ],
+      "expected_decisions": [
+        {
+          "case_id": "repair_only",
+          "status": "INCOMPLETE",
+          "can_commit": false,
+          "next_action": "REPORT_GAP",
+          "allowed_next_actions": [
+            "REPORT_GAP",
+            "REPORT_ONLY",
+            "INDEPENDENT_REVIEW"
+          ],
+          "action_constraint": "INDEPENDENT_REVIEW 只能表示需要用户明确授权的新审查；不得自动启动，reason 必须说明尚缺复审授权。"
+        },
+        {
+          "case_id": "reauthorized_review",
+          "status": "COMPLETE",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        },
+        {
+          "case_id": "unrelated_worktree",
+          "status": "COMPLETE",
+          "can_commit": true,
+          "next_action": "COMMIT_AUTHORIZED",
+          "allowed_next_actions": [
+            "COMMIT_AUTHORIZED"
+          ]
+        }
+      ]
+    }
+  ]
+}

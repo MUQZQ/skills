@@ -528,7 +528,7 @@
         },
         "code-review-before-commit": {
           "skill_name": "code-review-before-commit",
-          "description": "提交代码前的审查选择闸门。用户请求 commit 且未明确审查模式时，只询问一次“1. 快速 / 2. 不做 / 3. 全量”；不得自动开启代码审查。快速模式执行单轮聚焦审查，不做模式跳过审查，全量模式执行最多 5 轮审查修复闭环。",
+          "description": "提交代码前的审查选择闸门。用户请求 commit 且未明确审查模式时，只询问一次“1. 快速 / 2. 不做 / 3. 全量”；不得自动开启代码审查。快速模式执行单轮聚焦审查，不做模式跳过审查，全量模式执行最多 5 轮证据驱动的审查修复与增量复审闭环。",
           "path": "orchestration/code-review-before-commit/SKILL.md"
         }
       }
