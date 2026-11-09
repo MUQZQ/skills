@@ -60,6 +60,10 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "已移除",
             "不保存、不解析宿主日志",
             "不能退化成只检查报告文字",
+            "特性与用户旅程变更进入下一阶段前确认",
+            "qeda-features.mjs check --change",
+            "qeda-microservice.md",
+            "不代为执行其他仓库",
             "Strict 的实现复核与整体验证分别使用全新上下文",
             "彼此不同且都不同于规划复核",
         ):

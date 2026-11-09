@@ -40,6 +40,27 @@
 QEDA 规划不建立持久指纹；与当前决定无关的变化不要求重新确认。规划阶段的实时读取
 不能用来豁免 Git 精确暂存检查或最终验证状态绑定。具体约束读取项目 `qeda-authorization.md`。
 
+## QEDA：特性、用户旅程与跨服务范围
+
+阶段交接涉及客户功能或用户旅程变化时，读取项目
+`qeda-authorization.md#特性与用户旅程变更进入下一阶段前确认`：新增或移除功能、改变操作步骤、
+入口、输入输出或取消行为、改变已确认验收条件，都需要用户明确确认；未确认不得用于生成下一阶段
+制品或开始相关实现。纯内部重构、文案纠错和恢复已确认行为的修复不重复确认，但仍要核对实际差异。
+确认范围记录在 requirements.md 或当前制品的决定/授权处，不复制第二份记录。
+
+当前 change 有 requirements.md 时，在规划、Apply 与验证中核对用户旅程、输入输出、范围和验收
+例子与规格及实际结果的对应关系，按项目 `qeda-apply.md` 与 `qeda-verification.md` 执行；缺失或
+不符继续处理，不用“可交接”代替证据。
+
+功能行为或阶段变化时，按 `qeda-features.md` 维护 feature.md 与 features.json 的阶段、说明、
+证据和问题关联；规划与正式收尾运行 `qeda-features.mjs check --change`，归档合并只在已有
+Archive 授权下执行。阶段与证据必须对应真实结果，不能把测试通过或提交修复当成已交付。
+
+跨服务或共享契约需求出现时，先按 `qeda-microservice.md` 判定是否进入微服务模式；只有用户明确
+选择、项目 schema 为该值，或有 store 引用且用户明确提出跨服务契约需求时才加载。进入后独立匹配
+各仓库的 change，共享 store change 只作为上游契约；本地 Apply 不带 `--store`，
+不代为执行其他仓库的 Apply 或修改其文件。普通本地工作流不要求 store、服务索引或全局扫描。
+
 ## QEDA：Apply 与 Strict 执行
 
 实施前读实时 Apply 指令及其上下文。Strict 完整读取项目的 `qeda-subagent-execution.md`；
