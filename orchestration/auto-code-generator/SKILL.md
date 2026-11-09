@@ -2,14 +2,16 @@
 name: auto-code-generator
 description: >
   规格驱动的自动代码实施编排器。用户提到“自动生成代码”“全流程实施”“一键实施变更”
-  “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用；用户明确要求
-  “推送分支”“开 PR”“盯着评审修到过”时，在独立交付授权下继续到 fork PR 交付与评审戴明环修复。
+  “按 spec 实施”“自动化开发管线”或希望从需求持续推进到验证、归档时使用；用户准备推送或
+  开 PR 前要求“先本地验一遍”“别等评审再发现问题”“跑过的场景不要重跑”，或抱怨评审反复循环、
+  一个 issue 要来回提很多轮时也使用；用户明确要求“推送分支”“开 PR”“盯着评审修到过”时，
+  在独立交付授权下继续到 fork PR 交付与评审戴明环修复。
   先识别项目已有的生命周期所有者和风险档位；有 OpenSpec、QEDA 或其他权威流程时服从其实时状态与指令，
   只提供场景组内 TDD、按场景组粒度调度、安全并行、审查和验证等阶段内能力，不建立第二套流程、
   状态账本或 Git 授权。
 ---
 
-# 自动代码生成器 v5.1
+# 自动代码生成器 v5.2
 
 ## 定位
 
@@ -79,6 +81,7 @@ Detect & Route
   → Review & Verify final state
   → Achieve and archive
   → Final closeout only with separate authority
+  → PR 前本地验证与增量复用（推送或更新 PR 前）
   → Fork PR delivery and review repair loop only with separate authority
   → Report final state
 ```
@@ -365,11 +368,12 @@ worker 返回后，协调者必须检查共享工作树中的：
 ### 3.8 Luna 执行模式
 
 委派前完整读取 [Luna 原生执行适配](references/execution-providers/sol-luna.md) 及其指向的
-共享契约。默认使用宿主当前支持的 `gpt-6-luna`；调用 `spawn_agent` 时显式传入
-`model="gpt-6-luna"`、适合任务的 `reasoning_effort` 和 `fork_turns="none"`。
+共享契约。Luna 是低成本执行档位，不绑定固定模型名：按宿主当前 `spawn_agent` 说明，优先使用
+宿主提供的低成本或快速模型；没有这种模型时，在同一模型上使用较低的 `reasoning_effort`。
+调用时显式传入所选模型或较低的精力档位、`fork_turns="none"` 和输入受限任务卡。
 任务卡不是安全边界；任务要求只读工具白名单、路径沙箱或命令限制而宿主无法强制时，
-不得把自然语言约束当作隔离。模型不可用或宿主能力超出当前授权时，只有项目允许协调者实施
-才由 Sol 直接执行；项目要求独立 worker 时保持 BLOCKED，不使用 fallback 绕过。
+不得把自然语言约束当作隔离。档位无法落实或宿主能力超出当前授权时，只有项目允许协调者实施
+才由 Sol 直接执行；项目要求独立 worker 时保持 BLOCKED，不调用外部通道绕过。
 原生 Luna 使用适配文档的统一返回验收规则，由 Sol 在更新 tracker 前核对实际 diff、逐 task
 证据与时间盒；带 timebox 的结果不得使用 `N/A`。已启动任务失败时先检查现场，再恢复原 worker、
 重划边界或按项目允许的方式接管，不自动重复执行。
@@ -455,6 +459,11 @@ PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash
 不 push、不创建 PR、不部署；评审和 CI 通过不授权合入，合入须用户当场明确确认。
 本地 checkpoint 与 closeout 也遵守该参考的精确暂存快照和 Git 事务检查。
 
+每次推送候选分支或更新 PR 前，按 [PR 前本地验证与增量复用](references/pre-pr-local-verification.md)
+执行交付前门禁：清零确定性检查、按影响面选择验证、只复用依赖输入未变的场景证据。它只决定
+交付前还要验证什么，不重复代码审查（由 `code-review` 负责）、提交资格（由
+`code-review-before-commit` 负责）或项目原生验证命令（由项目规则负责）。
+
 ## 错误与恢复
 
 | 场景 | 处理 |
@@ -494,7 +503,8 @@ PR：未授权 / 已授权未执行 / <url>（base <目标分支>）| head <hash
 
 ---
 
-*版本：5.1*
-*最后更新：2026-11-04*
-*变更：按阶段加载项目、fallback 与交付规则；修正 QEDA Vibe 收敛、Strict 执行与验证适配，
-补充真实行为与回归证明，更新 Luna 原生模型与 provider 路径，并统一人工合入边界。*
+*版本：5.2*
+*最后更新：2026-11-09*
+*变更：新增 PR 前本地验证与增量复用（确定性门禁、影响面选择、场景级复用），并明确与
+code-review、code-review-before-commit 的分层边界；按 V97 修正 Strict 收尾命令，移除已废弃的
+--task-group 与 --execution-log 及宿主日志要求。*

@@ -13,7 +13,7 @@
       "responsibility": "按文件和风险类型路由审查规则并汇总结论",
       "intents": [
         "代码审查",
-        "提交前质量检查",
+        "代码质量审查",
         "安全与权限审查"
       ],
       "entry_path": "code-review/SKILL.md",
@@ -512,11 +512,13 @@
     },
     "orchestration": {
       "display_name": "编排",
-      "responsibility": "跨领域、跨阶段和授权边界的工作流编排路由",
+      "responsibility": "跨领域、跨阶段和授权边界的工作流编排路由，含交付前本地验证",
       "intents": [
         "规格驱动实施",
+        "从需求持续推进到验证或开 PR",
         "提交前审查模式选择",
-        "跨域生命周期编排"
+        "PR 前本地验证与场景复用",
+        "评审反复循环的交付修复"
       ],
       "entry_path": "orchestration/SKILL.md",
       "routing_source": "orchestration/references/orchestration-mapping.yaml",

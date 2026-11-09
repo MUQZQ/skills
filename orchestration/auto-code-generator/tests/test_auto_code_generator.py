@@ -15,6 +15,7 @@ PROVIDER_ROOT = SKILLS_ROOT / "_providers" / "sol-luna"
 CONTRACT_REFERENCES = (
     "references/fallback.md",
     "references/git-delivery.md",
+    "references/pre-pr-local-verification.md",
     "references/project-workflows.md",
     "references/execution-providers/sol-luna.md",
 )
@@ -55,14 +56,15 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "VIBE_ACTIVE",
             "准备提交前",
             "保持 BLOCKED，不降为协调者自实施",
-            "check --task-group",
             "check --closeout review|final",
-            "--execution-log",
+            "已移除",
+            "不保存、不解析宿主日志",
             "不能退化成只检查报告文字",
             "Strict 的实现复核与整体验证分别使用全新上下文",
             "彼此不同且都不同于规划复核",
         ):
             self.assertIn(phrase, reference)
+        self.assertNotIn("check --task-group", reference)
 
     def test_project_policy_overrides_fallback_at_execution_boundaries(self) -> None:
         skill = read_contract_text()
@@ -113,6 +115,8 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
             "qeda_verification_state_rejects_stale_result",
             "single_implementation_avoids_speculative_layers",
             "verification_binding_respects_authority_and_availability",
+            "pre_pr_local_gate_clears_deterministic_issues",
+            "scenario_reuse_requires_unchanged_inputs",
         ):
             case = by_name[name]
             self.assertTrue(case["prompt"])
@@ -121,7 +125,41 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         self.assertIn("没有 QEDA/OpenSpec 或其他项目交付流程", fallback["prompt"])
         self.assertIn("BLOCKED", fallback["expected_output"])
 
-    def test_luna_is_one_native_model_without_catalog_or_fallback(self) -> None:
+    def test_pre_pr_verification_gate_and_incremental_reuse(self) -> None:
+        reference = (AUTO_ROOT / "references" / "pre-pr-local-verification.md").read_text(
+            encoding="utf-8"
+        )
+        for phrase in (
+            "从 spec 推导",
+            "测试 ↔ spec 场景，diff ↔ spec 场景",
+            "覆盖体检",
+            "残余风险",
+            "代码级缺陷、证据状态和严重程度由 `code-review` 负责",
+            "由 `code-review-before-commit` 负责",
+            "由项目规则负责",
+            "引用方向保持单向",
+            "按成本从低到高",
+            "未使用变量",
+            "依赖在包清单中声明",
+            "源码到生成物",
+            "按影响面选择",
+            "依赖输入不变",
+            "不新建第二份账本",
+            "代码问题清零不等于验收通过",
+            "环境或外部服务不可用导致的受阻",
+        ):
+            self.assertIn(phrase, reference)
+        evals = json.loads(
+            (AUTO_ROOT / "evals" / "evals.json").read_text(encoding="utf-8")
+        )["evals"]
+        by_name = {item["name"]: item for item in evals}
+        for name in (
+            "pre_pr_local_gate_clears_deterministic_issues",
+            "scenario_reuse_requires_unchanged_inputs",
+        ):
+            self.assertGreaterEqual(len(by_name[name]["expectations"]), 3)
+
+    def test_luna_tier_binds_to_host_capability_without_fallback(self) -> None:
         active_files = (
             AUTO_ROOT / "SKILL.md",
             AUTO_ROOT / "evals" / "evals.json",
@@ -131,7 +169,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
 
         for path in active_files:
             content = path.read_text(encoding="utf-8")
-            self.assertIn("gpt-6-luna", content, path)
+            self.assertIn("低成本执行档位", content, path)
             for retired in (
                 "deepseek",
                 "DeepSeek",
@@ -151,7 +189,6 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         ):
             content = path.read_text(encoding="utf-8")
             self.assertIn("spawn_agent", content, path)
-            self.assertIn('model="gpt-6-luna"', content, path)
             self.assertIn("reasoning_effort", content, path)
             self.assertIn('fork_turns="none"', content, path)
             self.assertIn("由 Sol 直接执行", content, path)
@@ -161,7 +198,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("宿主实际能力面", adapter)
         self.assertIn("宿主能力超出当前授权", adapter)
-        self.assertIn("不换模", adapter)
+        self.assertIn("不调用外部通道", adapter)
         self.assertIn("不调用外部 runner", adapter)
 
     def test_luna_permission_gate_fails_closed_without_host_enforcement(self) -> None:
@@ -216,7 +253,7 @@ class AutoCodeGeneratorContractTests(unittest.TestCase):
         for phrase in (
             "Luna 默认开启",
             "只用 Sol",
-            "gpt-6-luna",
+            "低成本执行档位",
             "完整内聚场景组",
             "六字段任务卡",
             "不得拆分 RED、GREEN、REFACTOR",

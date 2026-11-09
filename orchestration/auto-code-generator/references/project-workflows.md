@@ -52,10 +52,11 @@ assignment 传递当前项目/模块规则路径、测试设计、映射代码�
 不把环境限制当作缺少测试代码的豁免，也不把发现用例或编译成功当作场景通过。
 若已安装规则对执行时机等有实质冲突，核对实时指令并报告具体矛盾，不凭本参考替项目裁决。
 
-项目要求 Strict 执行记录时，保留其 QEDA project/change/role 标记、完整任务书与原始宿主日志。
-按当前命令执行 `check --task-group`、`check --closeout review|final` 及 `--execution-log` 检查；
-检查失败不勾选任务，不加工或伪造日志。宿主无法提供所需记录时如实保持 INCOMPLETE，
-不能退化成只检查报告文字；只有读取并核对完整返回与行为证据后才更新项目状态。
+项目要求 Strict 执行记录时，保留其 QEDA project/change/role 标记与完整任务书，并在报告中引用
+实际上下文与任务返回的位置。V97 及以后只使用 `check --closeout review|final`；旧的 `--execution-log`
+与 `--task-group` 参数已移除，不保存、不解析宿主日志，也不要求固定派遣标记或日志路径。
+检查失败不勾选任务；任务是否真实派遣由 Agent 在当前会话中核对创建调用、运行状态和完整返回，
+核对不了就保持 BLOCKED 或 INCOMPLETE，不能退化成只检查报告文字。
 
 ## QEDA：复核、验证与收尾
 

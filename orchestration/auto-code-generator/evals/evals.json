@@ -141,46 +141,46 @@
     {
       "id": 11,
       "name": "luna_default_auto_full_group_without_tdd_split",
-      "prompt": "Luna 默认开启。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡可保真表达。请说明 auto-code-generator 如何使用固定的 gpt-6-luna、委派粒度、返回验收与失败降级。评估模式：只输出适配流程，不修改文件。",
-      "expected_output": "默认选择固定的原生 gpt-6-luna；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若模型或权限不可用、或场景组无法保真表达，先按项目降级规则判断：允许协调者实施才由 Sol 直接执行，强制独立 worker 则 BLOCKED；不换模也不切碎 TDD。",
+      "prompt": "Luna 默认开启。权威 tracker 中一个场景组包含失败测试、最小实现和重构验收，三者共享 fixture 与写入范围；完整任务卡可保真表达。请说明 auto-code-generator 如何使用 Luna 档位、委派粒度、验收和失败处理。评估模式：只输出决策，不执行。",
+      "expected_output": "默认使用 Luna 低成本档位：优先宿主提供的低成本或快速模型，没有时在同一模型上使用较低的 reasoning_effort；把完整内聚场景组压缩为 provider 六字段任务卡并由一个 luna-worker 完成 RED-GREEN-REFACTOR，不按阶段拆分；provider 不拥有生命周期或 Git 权限；Sol 根据逐 task 结果、diff 和证据验收；若档位无法落实或权限不可用、或场景组无法保真表达，先按项目降级规则判断：允许协调者实施才由 Sol 直接执行，强制独立 worker 则 BLOCKED。",
       "files": [],
       "expectations": [
-        "当前任务未显式关闭时默认选择固定的原生 gpt-6-luna",
+        "默认选择 Luna 低成本档位，不绑定固定模型名",
         "将完整内聚场景组映射为一个六字段任务卡，由同一 worker 完成 RED-GREEN-REFACTOR",
         "明确 provider 不拥有生命周期、任务状态或 Git 授权，Sol 依据逐 task 结果、真实 diff 和证据验收",
-        "模型或权限不可用、或完整场景组无法保持语义时，只有项目允许协调者实施才由 Sol 直接执行；独立 worker 门禁不得降级"
+        "档位无法落实或权限不可用时，只有项目允许协调者实施才由 Sol 直接执行；独立 worker 门禁不得降级"
       ]
     },
     {
       "id": 12,
       "name": "no_view_and_default_auto_luna",
-      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，也没有显式关闭。当前 spawn_agent 原生支持 gpt-6-luna 及所需权限。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行模式选择、TDD 和权限边界，不修改文件。",
-      "expected_output": "没有维护视图契约时不创建或伪造投影；默认使用 spawn_agent 且固定 model=gpt-6-luna；保持直接 RED-GREEN-REFACTOR；不推断 commit、push、PR 或部署权限。",
+      "prompt": "一个普通小仓库没有任何维护视图契约，也没有声明投影；用户本会话没有提 Luna，也没有显式关闭。当前 spawn_agent 提供低成本模型 gpt-6-luna 及所需权限。请自动实施一个已知根因的局部修复。评估模式：只输出视图处理、执行模式选择和直接验证路线。",
+      "expected_output": "没有维护视图契约时不创建或伪造投影；默认使用 spawn_agent 的 Luna 低成本档位并绑定宿主提供的 gpt-6-luna（若宿主没有低成本模型则降低 reasoning_effort）；保持直接 RED-GREEN-REFACTOR；不推断 commit、push、PR 或部署权限。",
       "files": [],
       "expectations": [
         "没有生命周期维护视图契约时不创建投影、模板或第二套视图状态",
-        "未显式关闭时默认用 spawn_agent 委派固定的 gpt-6-luna",
+        "未显式关闭时默认用 spawn_agent 的 Luna 低成本档位",
         "选择项目适配的直接 RED-GREEN-REFACTOR 与原生验证路线",
         "不从实施请求推断 commit、push、PR 或部署权限"
       ]
     },
     {
       "id": 13,
-      "name": "single_native_luna_model",
-      "prompt": "Luna 默认开启，当前 spawn_agent 支持 gpt-6-luna 及所需权限。请说明模型、执行通道和失败处理。评估模式：只输出路由决策，不执行任务。",
-      "expected_output": "Luna 只有一个模型和一条执行通道：直接调用 spawn_agent 并显式传 model=gpt-6-luna 与角色权限边界；不维护候选列表、别名、其他后端或 CLI 回退。spawn_agent 返回 Agent 标识后，失败由 Sol 检查共享工作树并恢复，不自动重跑。",
+      "name": "luna_tier_binds_to_host_capability",
+      "prompt": "Luna 默认开启，当前 spawn_agent 提供低成本模型或较低的 reasoning_effort。请说明档位绑定、执行通道和失败处理。评估模式：只输出路由决策，不执行任务。",
+      "expected_output": "Luna 是低成本执行档位，不绑定固定模型名：优先绑定宿主提供的低成本或快速模型，没有时在同一模型上使用较低的 reasoning_effort；只通过 spawn_agent 执行，显式传入选定档位与角色权限边界；不维护候选列表、其他后端或 CLI 回退。spawn_agent 返回 Agent 标识后，失败由 Sol 检查共享工作树并恢复，不自动重跑。",
       "files": [],
       "expectations": [
-        "只使用原生 gpt-6-luna，不建立模型目录或别名",
+        "Luna 是执行档位，不绑定固定模型名",
+        "优先低成本模型，其次降低 reasoning_effort",
         "可用性与权限边界只来自当前 spawn_agent 工具说明",
-        "不使用其他后端或 CLI 回退",
-        "原生任务启动后失败不自动重跑，避免重复副作用"
+        "不使用其他后端或 CLI 回退"
       ]
     },
     {
       "id": 14,
       "name": "started_native_failure_does_not_fallback",
-      "prompt": "用户已在当前会话明确启用 Luna。Sol 为一个可写场景组调用 gpt-6-luna 后已经收到 Agent 标识；随后该 Agent 以失败状态结束，共享工作树可能已有部分改动。请说明 Sol 的恢复动作。评估模式：只输出恢复决策，不修改文件。",
+      "prompt": "用户已在当前会话明确启用 Luna。Sol 为一个可写场景组调用 spawn_agent 后已经收到 Agent 标识；随后该 Agent 以失败状态结束，共享工作树可能已有部分改动。请说明 Sol 的恢复动作。评估模式：只输出恢复决策，不修改文件。",
       "expected_output": "收到 Agent 标识即代表原生任务已经启动。Sol 必须读取 Agent 结果并检查共享工作树、diff 与测试证据，保留已有改动后决定补充上下文、重划任务或在项目允许时由 Sol 恢复；不自动重跑同一场景，避免重复写入和重复测试。",
       "files": [],
       "expectations": [
@@ -193,7 +193,7 @@
     {
       "id": 15,
       "name": "native_permission_mismatch",
-      "prompt": "项目允许协调者直接实施。Luna 固定使用 gpt-6-luna；当前 spawn_agent 支持该模型，但不提供 critic 要求的只读工具白名单、路径沙箱或命令限制，任务尚未启动。请说明执行选择。评估模式：只输出路由决策，不执行任务。",
+      "prompt": "项目允许协调者直接实施。Luna 档位要求较低的 reasoning_effort 或低成本模型；当前 spawn_agent 支持该档位，但不提供 critic 要求的只读工具白名单、路径沙箱或命令限制，任务尚未启动。请说明执行选择。评估模式：只输出路由决策，不执行任务。",
       "expected_output": "任务卡不是安全边界；原生委派必须确保宿主能力未超出当前任务授权。只读工具白名单、路径沙箱或命令限制无法由宿主强制时不启动 Luna，由 Sol 直接执行当前场景组，不换成其他模型，也不调用外部通道。",
       "files": [],
       "expectations": [
@@ -624,15 +624,15 @@
     },
     {
       "id": 49,
-      "name": "qeda_strict_independent_closeout_and_execution_log",
+      "name": "qeda_strict_independent_closeout_without_host_logs",
       "prompt": "QEDA Strict change 已实施。请描述收尾：implementation-review 与 verification 的上下文要求、状态检查及执行记录处理。评估模式：只输出步骤，不执行。",
-      "expected_output": "Apply closeout 使用彼此独立的 implementation-review 与 verification reviewer，且二者不同于 planning reviewer；按项目定义执行 check --closeout review/final。Strict 检查须提供 --execution-log 宿主原始会话 JSONL；缺失/不可读时报告 STRICT_EXECUTION_UNCONFIRMED 并保持 INCOMPLETE，不能用报告文字代替真实任务调用和返回检查。",
+      "expected_output": "Apply closeout 使用彼此独立的 implementation-review 与 verification reviewer，且二者不同于 planning reviewer；执行 check --closeout review 与 check --closeout final。Strict 任务是否真实派遣由当前 Agent 在会话中核对创建调用、运行状态与完整返回；不保存或解析宿主日志，不使用已移除的 --task-group、--execution-log。无法核对真实调用时保持 BLOCKED 或 INCOMPLETE，不能用报告文字代替。",
       "files": [],
       "expectations": [
         "两个独立 reviewer 上下文且不同于 planning reviewer",
         "执行 review/final closeout checks",
-        "Strict 使用 --execution-log 原始 JSONL",
-        "缺日志不得降级为文字检查或宣称完成"
+        "不要求宿主日志或已移除参数",
+        "无法核实时保持 BLOCKED/INCOMPLETE"
       ]
     },
     {
@@ -668,6 +668,32 @@
         "不自行合入",
         "合入前要求当场明确确认",
         "不启用自动合并"
+      ]
+    },
+    {
+      "id": 53,
+      "name": "pre_pr_local_gate_clears_deterministic_issues",
+      "prompt": "一个功能改完后准备开 PR：改了插件样式和依赖引用，新增测试里有一个未使用变量，发布目录没有重新生成。请决定推送前要做什么。评估模式：只输出决策，不执行。",
+      "expected_output": "先执行确定性本地门禁：类型/静态检查清除未使用变量，核对新增依赖已在包清单声明，重新生成并核对发布产物与源码一致；这些在本地修完再推送，不留到 PR 检视。",
+      "files": [],
+      "expectations": [
+        "未使用变量在本地清除",
+        "新增依赖核对包清单声明",
+        "发布产物与源码同步",
+        "本地修完再推送"
+      ]
+    },
+    {
+      "id": 54,
+      "name": "scenario_reuse_requires_unchanged_inputs",
+      "prompt": "上一轮已通过 20 条场景验证，本轮只改了另一个模块的一个文件，被改模块的样式和数据版本未变。请决定验证范围。评估模式：只输出决策，不执行。",
+      "expected_output": "先按影响面确认本轮改动触及的包、测试和场景，只重跑受影响场景；其余场景在预期、相关源码/测试/配置/数据版本/构建来源均未变时复用旧结果并注明依据。不能无条件全量重跑，也不能把旧结果当作已变化输入的当前证据。",
+      "files": [],
+      "expectations": [
+        "按影响面选择场景",
+        "依赖未变时复用旧结果并注明依据",
+        "不无条件全量重跑",
+        "不能把旧结果用于已变化输入"
       ]
     }
   ]
