@@ -274,10 +274,24 @@ PR 推出后默认进入值守：定时监控（pr-watch 或 API 四查）→ �
 
 推送 PR 后立即建定时任务（每 15–30 分钟一轮），提示词必须内嵌：
 
-1. PR 身份（仓库、编号、head 分支、base、本线背景一句话）
-2. 每轮四查清单（下节）与静默判据
-3. 处置路由表（下下节）与「连续红升格」规则
-4. 出口边界（R8）与停值守条件（PR merged/closed → 删任务并转收尾）
+1. PR 身份（仓库、编号、head 分支、base、当前 head 与评审基线、本线背景一句话、已知基线债）
+2. 必载 skill：`ccs` 的 `branch-manager` 与本地验证入口；要求执行前完整加载 SKILL.md
+3. 每轮四查清单（下节）与静默判据
+4. 处置路由表（下下节）与「连续红升格」规则
+5. 出口边界（R8）与停值守条件（PR merged/closed → 删任务并转收尾）
+
+**值守任务提示词的必备段落（PR 收敛 cron 统一写法）**：所有 PR 收敛定时任务的 prompt 按以下顺序自包含，不依赖会话上下文。
+
+| 段 | 必须写清 |
+|---|---|
+| 身份与基线 | 仓库/PR/head 分支/base、当前已知 head、最新评审 id 与绑定 head、已知基线债（点名文件与用例） |
+| 必载 skill | `ccs/independent-tools/branch-manager`（值守、R6、推送纪律）与 `ccs/orchestration/auto-code-generator` 的 `references/pre-pr-local-verification.md`（L0→L1→L2）；要求先完整加载再执行 |
+| 工作区与凭证 | 独立 worktree 路径与分支、勿切换他人分支、令牌只读、PrHelp 全文接口、中文评论用 node fetch 写盘脚本 |
+| 四查 | 逐项写端点、字段与判据；CI 状态字段是 `status` 而非 `state` |
+| 处置路由 | 新评审→全文→修复→L0/L1/L2→推送前 `pnpm run closeout` exit 0→非 force push→回帖；CI 红先判因；基线债只记录不修；mergeable=false 先同步；head 漂移按快进/回退分流 |
+| 收敛判据与出口 | 最新评审 ✅ 绑定当前 head + 必需车道零失败零 pending + mergeable=true + head 无漂移；不自行合入；merged/closed 停止并提示删除任务；静默轮只报「无变化」+ head/mergeable/评论数 |
+
+本地验证的层级、复用条件、缺陷修复取证与推送前门禁以 auto-code-generator 的 `pre-pr-local-verification.md` 为准；本 skill 不复制其规则。
 
 轮次纪律：静默轮只答「无变化」，不重复取证；处置轮先取证再动手，处置后回帖登记。
 
