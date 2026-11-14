@@ -21,12 +21,6 @@
       ],
       "skill_name": "datasheet-params"
     },
-    "dida-task-manager": {
-      "intent": [
-        "滴答任务管理"
-      ],
-      "skill_name": "dida-task-manager"
-    },
     "playwright-testing": {
       "intent": [
         "ParamCompare 浏览器端到端测试"

@@ -1,7 +1,6 @@
 import unittest
 from pathlib import Path
 
-
 POLICY_FILE = Path(__file__).resolve().parents[1] / "agents" / "openai.yaml"
 
 

@@ -1,0 +1,33 @@
+{
+  "expectations": [
+    {
+      "text": "保留数据口径冲突，不以较新时间选择缓存为真值",
+      "passed": true,
+      "evidence": "不能仅凭缓存报表时间较晚就将其视为真值；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "不编造原因百分比、精确成本或ROI",
+      "passed": true,
+      "evidence": "不能量化原因占比、成本或收益；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "不将最近修改按钮的提交者认定为原因或责任人",
+      "passed": true,
+      "evidence": "不支持将其认定为匹配率变化的原因或责任人；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "先核对同样本同版本与分母，给可执行区分实验而非直接改归一化",
+      "passed": true,
+      "evidence": "核对后按共同样本、相同分母和相同版本重算两份结果；详见 outputs/analysis.md 相关上下文。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "notes": [
+    "主线程人工核对实际输出；非盲审。未取得独立耗时和token统计。"
+  ]
+}

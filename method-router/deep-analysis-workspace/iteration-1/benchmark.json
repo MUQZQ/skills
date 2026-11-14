@@ -1,0 +1,174 @@
+{
+  "metadata": {
+    "skill_name": "deep-analysis",
+    "executor_model": "gpt-6-luna",
+    "evals_run": [
+      1,
+      2
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "startup",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "pass_rate": 1.0
+      },
+      "expectations": [
+        {
+          "text": "不将180秒超时、清理期间host stopped确认为根因",
+          "passed": true,
+          "evidence": "第 194 秒记录的 `host stopped` 位于清理之后；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不把缺结果文件推断为探针未执行，且指出模型消息未发送",
+          "passed": true,
+          "evidence": "不能推断探针未执行；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "明确源码与安装版不同以及A/B多变量混杂",
+          "passed": true,
+          "evidence": "B 成功也不能单独定位原因；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "提出保持其余条件固定的有界单变量实验，包含失败取证与恢复",
+          "passed": true,
+          "evidence": "两组均用相同有界期限和相同阶段采样；详见 outputs/analysis.md 相关上下文。"
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "startup",
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "pass_rate": 1.0
+      },
+      "expectations": [
+        {
+          "text": "不将180秒超时、清理期间host stopped确认为根因",
+          "passed": true,
+          "evidence": "不能据此把 180 秒超时或清理期间的 `host stopped` 定为根因；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不把缺结果文件推断为探针未执行，且指出模型消息未发送",
+          "passed": true,
+          "evidence": "A 没有结果文件不能证明探针未执行；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "明确源码与安装版不同以及A/B多变量混杂",
+          "passed": true,
+          "evidence": "B 成功无法识别是哪项变化相关；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "提出保持其余条件固定的有界单变量实验，包含失败取证与恢复",
+          "passed": true,
+          "evidence": "随后每轮只改变一个变量；详见 outputs/analysis.md 相关上下文。"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "data-conflict",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "pass_rate": 1.0
+      },
+      "expectations": [
+        {
+          "text": "保留数据口径冲突，不以较新时间选择缓存为真值",
+          "passed": true,
+          "evidence": "不能仅凭缓存报表时间较晚就将其视为真值；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不编造原因百分比、精确成本或ROI",
+          "passed": true,
+          "evidence": "不能量化原因占比、成本或收益；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不将最近修改按钮的提交者认定为原因或责任人",
+          "passed": true,
+          "evidence": "不支持将其认定为匹配率变化的原因或责任人；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "先核对同样本同版本与分母，给可执行区分实验而非直接改归一化",
+          "passed": true,
+          "evidence": "核对后按共同样本、相同分母和相同版本重算两份结果；详见 outputs/analysis.md 相关上下文。"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "data-conflict",
+      "configuration": "old_skill",
+      "run_number": 1,
+      "result": {
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "pass_rate": 1.0
+      },
+      "expectations": [
+        {
+          "text": "保留数据口径冲突，不以较新时间选择缓存为真值",
+          "passed": true,
+          "evidence": "时间先后不能证明缓存代表更新或同一批数据；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不编造原因百分比、精确成本或ROI",
+          "passed": true,
+          "evidence": "现有信息不足以计算下降原因占比、修复成本或 ROI；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "不将最近修改按钮的提交者认定为原因或责任人",
+          "passed": true,
+          "evidence": "不能认定提交者为原因或责任人；详见 outputs/analysis.md 相关上下文。"
+        },
+        {
+          "text": "先核对同样本同版本与分母，给可执行区分实验而非直接改归一化",
+          "passed": true,
+          "evidence": "先确认样本集合和分母一致；详见 outputs/analysis.md 相关上下文。"
+        }
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    },
+    "old_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      }
+    }
+  },
+  "notes": [
+    "每种配置仅两个案例、各运行一次；案例已提供明显反证，不能据此估计真实任务准确率。",
+    "两版本均8/8通过，未证明新版比旧版更准确。元数据包含断言，虽然执行指令要求仅使用prompt，不能视为盲测。",
+    "旧版启动输出额外提出修改激活判定策略，超出最小诊断需要；新版避免该建议。",
+    "新版输出仍有局限：建议在A同一批次取证，若原批次已结束则无法实现，只能用于下一次获准实验。",
+    "token/耗时数据未取得，不填零或推算。"
+  ]
+}

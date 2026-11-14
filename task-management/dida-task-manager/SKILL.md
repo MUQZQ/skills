@@ -40,12 +40,20 @@ heartbeat 仅在用户显式创建或启用后按绑定范围执行预览巡检�
 - 读取任务内容时只输出最小必要字段；发现密码、Token、API Key 或其他凭证模式时必须脱敏，敏感原文不得写入日志、摘要或任务回写。
 - 任务匹配不唯一、ETag 变化、项目 ID 不一致、OAuth/工具不可用或基线漂移时，停止写入并报告冲突。
 
+## 接入与授权
+
+- 后端固定为滴答官方远程 MCP `https://mcp.dida365.com`（HTTP + OAuth `authorization_code`，支持动态客户端注册，不需要自建应用或 clientId）。
+- ZCode：用户级 `~/.zcode/cli/config.json` 的 `mcp.servers.dida365` 配置 URL 与 `oauth.type`；首次或换账号后在「设置 → MCP → dida365 → 打开授权」完成浏览器登录。Codex：`~/.codex/config.toml` 配 `url`，首次调用触发 OAuth。凭据由客户端保存，不要手抄 token。
+- 连接成功判断：设置页 dida365 行显示绿点；日志出现 `mcp.server.connected` 且 `mcpServerName=dida365`、`toolCount` 大于 0。
+- 工具名以 `mcp__dida365__` 为前缀，工具集由服务端动态下发（2026-11-14 实测 59 个）；执行前先按会话实际可用工具确认，不要假设固定清单。
+- 无工具或 401：重新授权；设置页看不到该行：改用设置页「新建 MCP 服务器」，类型 HTTP、地址同上并开启 OAuth。
+
 ## 读取与写入工具
 
 - 读取优先使用 `mcp__dida365__list_projects`、`mcp__dida365__get_project_with_undone_tasks`、`mcp__dida365__list_undone_tasks_by_time_query` 和 `mcp__dida365__get_task_by_id`。
 - 用户确认写入后，使用 `mcp__dida365__create_task`、`mcp__dida365__update_task` 或 `mcp__dida365__batch_update_tasks`，始终带上 `projectId`、稳定 `taskId` 和最新 `etag`（若工具返回）。
 - 不调用 `delete_task`、`move_task`、`complete_task` 或项目结构写入工具，除非用户在当前请求中明确授权该具体动作。
-- Dida 工具不可见时，提示可能需要重新加载 Codex 会话；不要把“工具未加载”误判为“清单为空”。
+- Dida 工具不可见时，提示可能需要重新加载 Codex/ZCode 会话；不要把“工具未加载”误判为“清单为空”。
 
 ## 巡检输出
 

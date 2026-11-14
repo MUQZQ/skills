@@ -151,11 +151,11 @@
     },
     "independent-tools": {
       "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由",
+      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理）",
       "intents": [
         "专业单用途工具",
         "媒体转换",
-        "任务与环境管理"
+        "环境管理"
       ],
       "entry_path": "independent-tools/SKILL.md",
       "routing_source": "independent-tools/references/tool-mapping.yaml",
@@ -174,11 +174,6 @@
           "skill_name": "datasheet-params",
           "description": "从器件数据手册（IC datasheet）提取结构化、可信、可溯源的器件参数，把 merged.json 中间产物加工为 *_ai_params.yaml（每条参数带 Page/layout_type/Block 证据地址）。当用户提到\"提取器件参数\"、\"数据手册参数\"、\"datasheet 参数\"、\"merged.json 参数\"、\"ai_params.yaml\"、\"芯片参数溯源\"、\"PDF 参数提取\"时使用。",
           "path": "independent-tools/datasheet-params/SKILL.md"
-        },
-        "dida-task-manager": {
-          "skill_name": "dida-task-manager",
-          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
-          "path": "independent-tools/dida-task-manager/SKILL.md"
         },
         "playwright-testing": {
           "skill_name": "playwright-testing",
@@ -537,6 +532,29 @@
           "skill_name": "code-review-before-commit",
           "description": "提交代码前的审查选择闸门。用户请求 commit 且未明确审查模式时，只询问一次“1. 快速 / 2. 不做 / 3. 全量”；不得自动开启代码审查。快速模式执行单轮聚焦审查，不做模式跳过审查，全量模式执行最多 5 轮证据驱动的审查修复与增量复审闭环。",
           "path": "orchestration/code-review-before-commit/SKILL.md"
+        }
+      }
+    },
+    "task-management": {
+      "display_name": "任务管理",
+      "responsibility": "以滴答清单为唯一行动面板，路由每日任务与多源任务管家请求",
+      "intents": [
+        "滴答清单",
+        "TickTick",
+        "每日任务",
+        "任务管家",
+        "任务总览",
+        "晨报",
+        "日历待办",
+        "Git issue 转任务"
+      ],
+      "entry_path": "task-management/SKILL.md",
+      "routing_source": "task-management/references/task-mapping.yaml",
+      "skills": {
+        "dida-task-manager": {
+          "skill_name": "dida-task-manager",
+          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
+          "path": "task-management/dida-task-manager/SKILL.md"
         }
       }
     }

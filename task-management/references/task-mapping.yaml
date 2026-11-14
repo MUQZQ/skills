@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "domain": "task-management",
+  "source_of_truth": true,
+  "routes": {
+    "dida-task-manager": {
+      "intent": [
+        "滴答任务管理",
+        "每日任务总览与晨报",
+        "任务管家多源汇总"
+      ],
+      "skill_name": "dida-task-manager"
+    }
+  },
+  "authority_scope": "domain_intent_routing",
+  "registry_source": "../../skill-domain-mapping.yaml"
+}

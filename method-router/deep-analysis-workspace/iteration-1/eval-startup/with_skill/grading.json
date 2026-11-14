@@ -1,0 +1,33 @@
+{
+  "expectations": [
+    {
+      "text": "不将180秒超时、清理期间host stopped确认为根因",
+      "passed": true,
+      "evidence": "第 194 秒记录的 `host stopped` 位于清理之后；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "不把缺结果文件推断为探针未执行，且指出模型消息未发送",
+      "passed": true,
+      "evidence": "不能推断探针未执行；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "明确源码与安装版不同以及A/B多变量混杂",
+      "passed": true,
+      "evidence": "B 成功也不能单独定位原因；详见 outputs/analysis.md 相关上下文。"
+    },
+    {
+      "text": "提出保持其余条件固定的有界单变量实验，包含失败取证与恢复",
+      "passed": true,
+      "evidence": "两组均用相同有界期限和相同阶段采样；详见 outputs/analysis.md 相关上下文。"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "notes": [
+    "主线程人工核对实际输出；非盲审。未取得独立耗时和token统计。"
+  ]
+}

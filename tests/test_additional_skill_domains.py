@@ -3,7 +3,6 @@ import os
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 ROOT_MAPPING = ROOT / "skill-domain-mapping.yaml"
 
@@ -12,6 +11,7 @@ MAPPING_FILES = {
     "meta-skills": "meta-skill-mapping.yaml",
     "independent-tools": "tool-mapping.yaml",
     "orchestration": "orchestration-mapping.yaml",
+    "task-management": "task-mapping.yaml",
 }
 ROOT_MAPPING_DATA = json.loads(ROOT_MAPPING.read_text(encoding="utf-8"))
 DOMAIN_CHILDREN = {
@@ -53,7 +53,14 @@ class AdditionalSkillDomainContractTest(unittest.TestCase):
         self.assertNotIn("| 元技能 | `meta-skills` |", agents)
         mapping = json.loads(ROOT_MAPPING.read_text(encoding="utf-8"))
         self.assertEqual(
-            {"code-review", "coding-standards", "design", "method-router", "feature-replication-methodology", *DOMAIN_CHILDREN},
+            {
+                "code-review",
+                "coding-standards",
+                "design",
+                "method-router",
+                "feature-replication-methodology",
+                *DOMAIN_CHILDREN,
+            },
             set(mapping["domains"]),
         )
         for domain, children in DOMAIN_CHILDREN.items():
