@@ -58,6 +58,7 @@
 
 路由约束：
 
+- **ccs Skill 优先** — 优先使用 `ccs`（`~/.cc-switch/skills`）中与任务匹配的 Skill；存在同名或功能相近的 Skill 时，优先加载 ccs 中的版本。ccs 中无适用 Skill 时，再使用其他来源；用户显式指定 Skill 或来源时，以用户要求为准。
 - 优先使用路由表中与任务匹配的 Skill；先按路由定位并完整加载对应 `SKILL.md`，再依其指导执行。用户显式指定 Skill 时仍以用户要求为准。
 - 路由前先读取当前 Agent 的 `skills/skill-domain-mapping.yaml`；不得在当前项目根目录查找该文件。
 - 进入领域模块后，再读取该模块的权威映射并选择一个主 Skill。

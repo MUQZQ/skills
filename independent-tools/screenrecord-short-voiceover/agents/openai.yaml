@@ -1,0 +1,4 @@
+interface:
+  display_name: "录屏演示与产品介绍片"
+  short_description: "策划产品介绍片，或压缩录屏等待并制作配音演示"
+  default_prompt: "使用 $screenrecord-short-voiceover 策划产品介绍片，或按要求制作录屏演示。"

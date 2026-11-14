@@ -195,6 +195,11 @@
           "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
           "path": "independent-tools/project-reviewer/SKILL.md"
         },
+        "screenrecord-short-voiceover": {
+          "skill_name": "screenrecord-short-voiceover",
+          "description": "将软件录屏制作成面向潜在用户的产品介绍短片，或保留完整操作的教程短演示。支持价值主张与真实镜头映射、多素材剪辑、分段变速、字幕、重点裁剪标注、同音色配音及按秒修订；不用于文件体积压缩或普通影视剪辑。",
+          "path": "independent-tools/screenrecord-short-voiceover/SKILL.md"
+        },
         "usb-git-manager": {
           "skill_name": "usb-git-manager",
           "description": "本地硬盘与 U 盘之间的 git 仓库双向同步。当用户提到\"推到 U 盘\"、\"从 U 盘拉代码\"、\"U 盘同步\"、\"usb git\"、\"U盘备份\"、\"U盘git\"时必须使用。处理 FAT32/exFAT 文件系统的 safe.directory 权限问题，支持裸仓库和非裸仓库两种模式。",

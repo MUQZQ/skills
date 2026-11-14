@@ -47,6 +47,15 @@
       ],
       "skill_name": "prhelp-review-to-guide"
     },
+    "screenrecord-short-voiceover": {
+      "intent": [
+        "软件录屏分段加速与配音",
+        "面向潜在用户的产品介绍短片",
+        "多素材演示剪辑、字幕与重点标注",
+        "按秒调整演示视频配音与画面对齐"
+      ],
+      "skill_name": "screenrecord-short-voiceover"
+    },
     "usb-git-manager": {
       "intent": [
         "U 盘 Git 双向同步"

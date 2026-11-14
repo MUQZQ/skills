@@ -29,7 +29,7 @@
 根注册表负责领域、规范 `skill_name`、描述和仓库相对路径。领域映射只负责将领域内意图映射到
 规范 `skill_name`，不重复保存物理路径。父 Skill 读取领域映射后，再通过根注册表解析实际路径。
 
-当前根注册表包含 9 个领域、79 个注册 Skill；其中 `method-router` 注册 49 个方法论 Skill，按 10 个功能块组织。
+当前根注册表包含 9 个领域、80 个注册 Skill；其中 `method-router` 注册 49 个方法论 Skill，按 10 个功能块组织。
 `method-router/references/method-mapping.yaml` 是意图路由的权威配置，负责分类、上下文和路由链，
 不应以 README 或父 Skill 中的静态清单替代。
 
@@ -120,4 +120,5 @@ python -m unittest tests.test_skill_repository_layout tests.test_additional_skil
 python -m unittest tests.test_method_router_contract
 python -m unittest discover -s design\tests -p "test_*.py"
 python -m unittest discover -s orchestration\auto-code-generator\tests -p "test_auto_code_generator.py"
+python -m unittest discover -s independent-tools\screenrecord-short-voiceover\tests -p "test_*.py"
 ```
