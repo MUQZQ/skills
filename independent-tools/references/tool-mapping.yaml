@@ -41,6 +41,14 @@
       ],
       "skill_name": "prhelp-review-to-guide"
     },
+    "qedai-submit-reimbursement": {
+      "intent": [
+        "QEDAI 订阅费用报销登记",
+        "outer-ai-usage 费用录入与凭证上传",
+        "按用户明确要求标记已有记录的报销提交状态"
+      ],
+      "skill_name": "qedai-submit-reimbursement"
+    },
     "screenrecord-short-voiceover": {
       "intent": [
         "软件录屏分段加速与配音",

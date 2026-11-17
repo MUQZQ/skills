@@ -151,11 +151,12 @@
     },
     "independent-tools": {
       "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理）",
+      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记）",
       "intents": [
         "专业单用途工具",
         "媒体转换",
-        "环境管理"
+        "环境管理",
+        "QEDAI 订阅费用报销登记"
       ],
       "entry_path": "independent-tools/SKILL.md",
       "routing_source": "independent-tools/references/tool-mapping.yaml",
@@ -189,6 +190,11 @@
           "skill_name": "project-reviewer",
           "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
           "path": "independent-tools/project-reviewer/SKILL.md"
+        },
+        "qedai-submit-reimbursement": {
+          "skill_name": "qedai-submit-reimbursement",
+          "description": "在已登录的 QEDAI 外部 AI 资源管理页面登记一笔订阅报销费用、上传凭证并核对保存结果；也可按用户明确要求操作已有记录的报销提交状态。用于 outer-ai-usage 的报销录入，不用于审批、转账或应用开发。",
+          "path": "independent-tools/qedai-submit-reimbursement/SKILL.md"
         },
         "screenrecord-short-voiceover": {
           "skill_name": "screenrecord-short-voiceover",
