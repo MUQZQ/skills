@@ -169,6 +169,8 @@ classification:
     - flag
     - 定目标
     - 达成
+    - 差距过大
+    - 从结果倒推
     examples:
     - 帮我定个季度减肥目标
   learning:
@@ -675,6 +677,14 @@ routes:
     order: 1
     mandatory: true
   rationale: 因为已有目标只需检查可执行性，选择 SMART 而非重新搭建 OKR 体系
+- type: goal
+  condition:
+    sub_type: goal_backward
+  chain:
+  - skill_name: backward-planning
+    order: 1
+    mandatory: true
+  rationale: 因为目标与现状差距过大且正向拆解易遗漏依赖，从终态倒推里程碑而非正向排步骤
 - type: report
   condition:
     sub_type: feedback
@@ -779,6 +789,8 @@ skill_registry:
   available:
   - skill_name: evidence-driven-dev
     category: improve
+  - skill_name: backward-planning
+    category: goal
   - skill_name: deep-analysis
     category: diagnose
   - skill_name: pdca-tuning

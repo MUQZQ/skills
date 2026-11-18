@@ -141,7 +141,7 @@ Phase 1: 意图分类 ──▶ route_context（type / urgency / domain / has_da
 | **improve** | 优化、提升、改进、加速、减少、自动化、太慢、全面测试、实机验收、实机验证、上机验收、先测后修、证据驱动 | "这个接口太慢了" |
 | **risk** | 风险、安全、漏洞、事故、万一、上线、有问题吗 | "这个改动能上线吗" |
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
-| **goal** | 目标、OKR、KPI、flag、减肥、学习计划、愿景、里程碑、定目标、达成 | "帮我定个季度减肥目标" |
+| **goal** | 目标、OKR、KPI、flag、减肥、学习计划、愿景、里程碑、定目标、达成、差距过大、从结果倒推 | "帮我定个季度减肥目标"；"目标和现状差距太大，从结果倒推" |
 | **learning** | 学习、理解、弄懂、掌握、复习、讲给别人听、面试、简单解释 | "这个机制我是不是真懂了" |
 | **manage** | 管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、升级 | "按依赖图安排 Sol 和 Luna 的并发波次" |
 
@@ -235,6 +235,7 @@ route_context:
 | **report** | 默认 | SCQA |
 | **goal** | `sub_type=goal_setup` | OKR → SMART |
 | **goal** | `sub_type=goal_quality` | SMART |
+| **goal** | `sub_type=goal_backward` | Backward Planning |
 | **learning** | `sub_type=verify_understanding` | Feynman |
 
 ### 组合规则
@@ -416,12 +417,12 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 49 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 50 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|
 | **问题分析** diagnose | 5whys（五个为什么）· deep-analysis（5W2H 深度分析）· mece（MECE 穷尽检查）· fishbone（鱼骨图）· ooda（OODA 快速闭环） |
-| **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验） |
+| **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验）· backward-planning（逆向规划） |
 | **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录）· multidisciplinary-models（多元思维模型）· mental-model-lattice（思维模型格栅）· inversion-thinking（逆向思考）· circle-of-competence（能力圈）· margin-of-safety（安全边际）· incentive-analysis（激励机制分析）· psychological-misjudgment（心理误判检查）· checklist-patience（检查清单与耐心等待） |
 | **设计创新** design | discovery-sprint（探索冲刺）· design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
 | **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
