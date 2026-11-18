@@ -186,28 +186,62 @@ async function runEnter() {
   ws.close()
 }
 
-// ---------- open（在树中点开图页）----------
+// ---------- open（在树中点开图页；树面板折叠时自动展开）----------
+// easyui/tianshu 控件不响应合成 MouseEvent，必须用 CDP Input 真实输入。
+// easyui 树：单击仅选中，双击才打开图页。
+async function clickViaCdp(send, x, y) {
+  await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x, y })
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 1 })
+  await new Promise(r => setTimeout(r, 80))
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 1 })
+  await new Promise(r => setTimeout(r, 150))
+  await send('Input.dispatchMouseEvent', { type: 'mousePressed', x, y, button: 'left', clickCount: 2 })
+  await new Promise(r => setTimeout(r, 80))
+  await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x, y, button: 'left', clickCount: 2 })
+}
+
+async function clickTreeTitle(evalJs, send, sheet) {
+  const rect = await evalJs(`(function(){
+    var title = Array.from(document.querySelectorAll('ul.easyui-tree .tree-title')).find(function(el){ return (el.textContent || '').trim() === ${JSON.stringify(sheet)} })
+    if (!title || title.offsetParent === null) return null
+    title.scrollIntoView({ block: 'center' })
+    var node = title.closest('.tree-node') || title.parentElement
+    var r = node.getBoundingClientRect()
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+  })()`)
+  if (!rect) return false
+  await new Promise(r => setTimeout(r, 400))
+  await clickViaCdp(send, rect.x, rect.y)
+  return true
+}
+
 async function runOpen() {
   const sheet = argValue('sheet')
   const pages = await listPages()
   const page = findPage(pages, 'schematic.qyf')
-  const { evalJs, ws } = await connect(page)
-  const result = await evalJs(`(function(){
-    var title = Array.from(document.querySelectorAll('.tree-title')).find(function(el){ return (el.textContent || '').trim() === ${JSON.stringify(sheet)} })
-    if (!title) return 'no-title'
-    var node = title.closest('.tree-node') || title.parentElement
-    var rect = node.getBoundingClientRect()
-    var opts = { bubbles: true, clientX: rect.left + 20, clientY: rect.top + 10 }
-    title.dispatchEvent(new MouseEvent('mousedown', opts))
-    title.dispatchEvent(new MouseEvent('mouseup', opts))
-    title.dispatchEvent(new MouseEvent('click', opts))
-    title.dispatchEvent(new MouseEvent('dblclick', opts))
-    return 'opened'
-  })()`)
-  if (result !== 'opened') throw new Error('未找到图页标题：' + sheet)
-  await new Promise(r => setTimeout(r, 3000))
+  const { evalJs, send, ws } = await connect(page)
+  let clicked = await clickTreeTitle(evalJs, send, sheet)
+  if (!clicked) {
+    // 左面板可能被折叠（.layout-toggler.left.close）：点把手展开后重试
+    const toggler = await evalJs(`(function(){
+      var t = document.querySelector('.layout-toggler.left.close') || document.querySelector('.layout-toggler.close')
+      if (!t) return null
+      var r = t.getBoundingClientRect()
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) }
+    })()`)
+    if (!toggler) throw new Error('未找到图页标题且无折叠面板把手：' + sheet)
+    await clickViaCdp(send, toggler.x, toggler.y)
+    await new Promise(r => setTimeout(r, 2000))
+    clicked = await clickTreeTitle(evalJs, send, sheet)
+  }
+  if (!clicked) throw new Error('未找到图页标题：' + sheet)
+  await new Promise(r => setTimeout(r, 3500))
   const state = await pageState(evalJs)
-  console.log('OPEN_OK ' + JSON.stringify(state))
+  const active = await evalJs(`JSON.stringify((function(){
+    var t = document.querySelector('#tabbar .tabbar-tab.sheet.active')
+    return t ? { text: (t.textContent||'').trim().slice(0, 40), tabid: t.getAttribute('tabid') } : null
+  })())`)
+  console.log('OPEN_OK ' + JSON.stringify(state) + ' ACTIVE=' + active)
   ws.close()
 }
 

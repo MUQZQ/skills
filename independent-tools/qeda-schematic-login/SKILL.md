@@ -32,6 +32,9 @@ description: >
 
    - 注意：Edge/Chrome 已运行时再启动带 `--remote-debugging-port` 的命令不会生效（参数被转发给
      现有实例）；需要调试端口时必须先完全退出浏览器，再用上一条命令重启。
+   - **Edge 157+ 必须显式传 `--user-data-dir`**：未指定时（默认 profile）调试端口会被拒绝，
+     报 "DevTools remote debugging requires a non-default data directory"。传默认 profile 的
+     完整路径（见上面示例）即可——同一 profile、同一登录态，不影响复用既有身份。
    - `--ignore-certificate-errors` 必须带：站点证书是 `*.df2cloud.com` 单级通配符，
      `schematic.qyf.df2cloud.com` 是三级子域，严格校验会报 `ERR_CERT_COMMON_NAME_INVALID`。
    - 调试端口可能只绑 IPv6：先试 `http://127.0.0.1:9222`，连不上改 `http://[::1]:9222`。
@@ -63,9 +66,26 @@ description: >
 | 1. 填账号密码+取验证码 | `node login.mjs captcha --account <账号> --password <密码> --out <路径.png>` | 页面内 canvas NEAREST ×12 放大后保存；Agent 读图识别 4 位数字 |
 | 2. 提交 | `node login.mjs submit --captcha <4位数字>` | 轮询至离开登录页/报错；`LOGIN_OK` 为认证通过，`noPermission` 也是通过信号 |
 | 3. 进工程 | `node login.mjs enter --project <projectId>` | navigate 工程 URL → 硬刷新 → 等 `tabs>=1 && editor===true` |
-| 4. 开图页 | `node login.mjs open --sheet <图页标题>` | 在工程树中双击标题打开图页 |
+| 4. 开图页 | `node login.mjs open --sheet <图页标题>` | 在工程树中**双击**标题打开图页（单击只选中）；树面板折叠时自动展开；输出含活动页签 `ACTIVE={text,tabid}` |
 
 典型串行执行：`captcha` → Agent 读图 → `submit` →（noPermission 时立即）`enter` → `open`。
+
+### 设计树与图页打开（实测要点）
+
+- **树懒加载**：编辑器加载后设计树可能 30–60 秒后才填充；`open` 找不到标题时先
+  `check`/轮询 `.easyui-tree .tree-title` 数量（`ul.easyui-tree` 内），不要立即判定失败。
+- **左面板折叠**：树容器链宽度为 0 且存在 `.layout-toggler.left.close`（6px 把手）时，
+  `open` 会自动点把手展开（CDP 真实鼠标事件；合成 MouseEvent 对 tianshu 控件无效）。
+- **easyui 树交互**：单击仅选中（`.tree-node-selected`），**双击才开图页**；脚本已内置
+  单击+双击序列，手动操作时注意点击用 CDP `Input.dispatchMouseEvent`，不要用页面内合成事件。
+- **工程恢复陷阱**：直接 navigate `#/,id=<projectId>` 可能被页面恢复到上次打开的工程
+  （环境里存在多个同名工程，如多个 `HI3516_demo`）。进入后必须核对：活动图页签
+  `#tabbar .tabbar-tab.sheet.active` 的 `tabid`（= documentId）与工程树根节点名称是否与
+  目标一致。不一致时先从其他页面（如 `/account/`）完整导航回编辑器 URL（跨页导航会真正
+  按 URL 参数加载）。
+- **图页身份核对**：`#tabbar .tabbar-tab.sheet.active` 的 `tabid` 属性就是当前打开图页的
+  documentId。目标文档的图页名/ID 可从页面 IndexedDB 核对：以 projectId 命名的库中
+  `schSheetData` 存储的 `uuid` = documentId，`display_title` = 图页名（如 SHEET_06）。
 
 ### 回退：手动 JS 要点（脚本缺失能力时）
 
@@ -165,6 +185,9 @@ curl -s 'http://127.0.0.1:8080/api/bridge/status?projectId=<projectId>'
 | 验证码错误 | 识别错/用了刷新前的图 | 重新取图，NEAREST 放大再读 |
 | 登录后回登录页 | 未在 6 秒内离开 noPermission，或验证码/密码错 | 识别到 noPermission 立即导航工程 URL |
 | 工程页停在项目列表 | 只 navigate 未 reload | `Page.reload({ ignoreCache: true })` |
+| 树为空/找不到图页 | 树懒加载未完成，或左面板折叠 | 等 30–60s 轮询 `.tree-title`；面板折叠由 `open` 自动展开 |
+| 点击树节点无效 | 合成事件无效/单击只选中 | CDP `Input.dispatchMouseEvent` 真实点击，**双击**开图页 |
+| 进入的工程不对 | 页面恢复了上次工程（有同名工程） | 从 `/account/` 等页面完整导航回工程 URL；核对活动页签 `tabid` |
 | 页面内 fetch 127.0.0.1 失败 | 浏览器本地网络限制 | 用桥状态接口核对，不要据此判断桥挂了 |
 
 ## 安全边界
