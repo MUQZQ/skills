@@ -2,7 +2,7 @@
 name: agents-sync
 description: >
   检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md，
-  以及六个客户端（含 WorkBuddy）的 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。
+  以及七个客户端（含 WorkBuddy、CodeBuddy）的 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。
   当用户提到"同步 agents""检查 agents""AGENTS.md 更新了""软链接 agents""同步 skills""同步 skill""同步到 zcode""同步到 pi""同步到 workbuddy"时触发。
 ---
 
@@ -60,8 +60,10 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 | ZCode | `$env:USERPROFILE\.zcode\skills` |
 | Pi | `$env:USERPROFILE\.pi\agent\skills` |
 | WorkBuddy | `$env:USERPROFILE\.workbuddy\skills` |
+| CodeBuddy | `$env:USERPROFILE\.codebuddy\skills` |
 
 WorkBuddy 当前只管理已核实的 Skill 与注册表入口；其全局指令位置未核实，不创建假定的 AGENTS.md。
+CodeBuddy 同 WorkBuddy：只管理已核实的 Skill 与注册表入口，全局指令位置未核实，不创建假定的 AGENTS.md。
 
 注意：目标 skills 目录中不在权威源列表内的条目（如 Codex 的 `.system`）一律保留不动。
 只为根注册表中的一级领域 Skill 创建 Junction。领域子 Skill 通过父 Skill Junction 的目录树发现，不创建顶层叶子别名。
@@ -112,7 +114,8 @@ $targets = @(
     "$env:USERPROFILE\.claude\skills",
     "$env:USERPROFILE\.zcode\skills",
     "$env:USERPROFILE\.pi\agent\skills",
-    "$env:USERPROFILE\.workbuddy\skills"
+    "$env:USERPROFILE\.workbuddy\skills",
+    "$env:USERPROFILE\.codebuddy\skills"
 )
 ```
 

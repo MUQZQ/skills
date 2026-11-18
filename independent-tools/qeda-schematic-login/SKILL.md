@@ -13,9 +13,15 @@ description: >
 `data:image/jpeg;base64` 内嵌图，**取出后放大即可由 Agent 直接读图识别**，不需要人工转述；
 连续识别失败时再交用户读取。
 
+**脚本优先**：登录、提交、进工程、开图页一律运行 `scripts/login.mjs` 的对应子命令
+（见「执行流程」），不要内联手写 CDP JS。脚本只连接已有浏览器的调试端口，**不启动浏览器、
+不注册新的浏览器实例**。只有脚本缺失对应能力或失败分支需要现场诊断时，才按下方 JS 要点手动操作。
+
 ## 前置条件
 
-1. **浏览器带调试端口**（本流程用 CDP 驱动）。Edge 示例：
+1. **复用现有浏览器实例**：连接已带调试端口的现有浏览器，**不要新建浏览器实例、不要新建
+   user-data-dir profile**（新实例会丢掉站点 localStorage 中的页面身份、证书信任与登录态，
+   导致实机验收页面无法连桥）。确实没有可复用的实例时，才用默认用户数据目录重启，Edge 示例：
 
    ```powershell
    Start-Process 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' -ArgumentList `
@@ -24,6 +30,8 @@ description: >
      'https://schematic.qyf.df2cloud.com/uiam/#/login'
    ```
 
+   - 注意：Edge/Chrome 已运行时再启动带 `--remote-debugging-port` 的命令不会生效（参数被转发给
+     现有实例）；需要调试端口时必须先完全退出浏览器，再用上一条命令重启。
    - `--ignore-certificate-errors` 必须带：站点证书是 `*.df2cloud.com` 单级通配符，
      `schematic.qyf.df2cloud.com` 是三级子域，严格校验会报 `ERR_CERT_COMMON_NAME_INVALID`。
    - 调试端口可能只绑 IPv6：先试 `http://127.0.0.1:9222`，连不上改 `http://[::1]:9222`。
@@ -44,7 +52,22 @@ description: >
 > 登录后落到 `#/noPermission`——**这不代表登录失败**；导航到工程 URL 后编辑器可正常加载。
 > 生产或真实数据操作必须换有权限账号。凭据不得写入 URL、cookie、日志或提交到仓库。
 
-## 执行流程
+## 执行流程（脚本优先）
+
+脚本位置：`scripts/login.mjs`（本 skill 目录下）。所有子命令只连接已有 CDP 端口，
+不启动浏览器；`--cdp http://[::1]:9222` 可切换到 IPv6。
+
+| 步骤 | 命令 | 说明 |
+|---|---|---|
+| 0. 状态检查 | `node login.mjs check` | 输出原理图页面 `{url, tabs, editor, text}` |
+| 1. 填账号密码+取验证码 | `node login.mjs captcha --account <账号> --password <密码> --out <路径.png>` | 页面内 canvas NEAREST ×12 放大后保存；Agent 读图识别 4 位数字 |
+| 2. 提交 | `node login.mjs submit --captcha <4位数字>` | 轮询至离开登录页/报错；`LOGIN_OK` 为认证通过，`noPermission` 也是通过信号 |
+| 3. 进工程 | `node login.mjs enter --project <projectId>` | navigate 工程 URL → 硬刷新 → 等 `tabs>=1 && editor===true` |
+| 4. 开图页 | `node login.mjs open --sheet <图页标题>` | 在工程树中双击标题打开图页 |
+
+典型串行执行：`captcha` → Agent 读图 → `submit` →（noPermission 时立即）`enter` → `open`。
+
+### 回退：手动 JS 要点（脚本缺失能力时）
 
 ### 1. 填账号与密码（Element Plus）
 

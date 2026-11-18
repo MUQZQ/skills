@@ -149,7 +149,7 @@ git ls-remote origin refs/heads/<pr-branch>  # 3. 远程 PR 分支 head 是否�
 | 检查项 | 关注点 | 异常时动作 |
 |--------|--------|-----------|
 | PR head/base | head 是否仍是自己的分支、指向的提交与本地是否一致、base 是否被人变更 | 远程领先本地先拉取；base 变更先评估影响 |
-| mergeable | 是否与目标分支冲突 | false 时先按「同步上游」解决，不要直接叠改动 |
+| mergeable | 是否与目标分支冲突；false 时先用 `git merge-tree --write-tree HEAD <target>` 判是否真冲突 | false 时先按「同步上游」解决，不要直接叠改动 |
 | CI / 评审 | 上一轮 checks 是否全绿、是否有未读的评审评论或新评审轮次 | 有未读评审先读——可能改变本次修改的方向 |
 
 ### 确认通过后的推送纪律
@@ -157,6 +157,7 @@ git ls-remote origin refs/heads/<pr-branch>  # 3. 远程 PR 分支 head 是否�
 - 基线已推进：先合并/变基最新目标分支，再叠加本次修改
 - 远程 head 领先本地：先拉取合并，禁止直接覆盖
 - 快进更新用普通 push；确需改写 PR 分支历史时用 `--force-with-lease`，且仅限无协作者的自有分支（见 R4/R5）
+- 同步目标分支后重算交付面：旧依赖 pin、脚本硬编码计数、spec/feature/test 映射；旧 head 的 CI 与评审结论失效，必须在新 head 重跑
 
 > 经验教训：目标分支在评审期高频推进时，「拉取 → 合并 → 推送」可能要做多轮；
 > 每轮推送后重新确认 mergeable 与 CI，不要沿用推送前的旧结论。
@@ -288,7 +289,7 @@ PR 推出后默认进入值守：定时监控（pr-watch 或 API 四查）→ �
 | 必载 skill | `ccs/independent-tools/branch-manager`（值守、R6、推送纪律）与 `ccs/orchestration/auto-code-generator` 的 `references/pre-pr-local-verification.md`（L0→L1→L2）；要求先完整加载再执行 |
 | 工作区与凭证 | 独立 worktree 路径与分支、勿切换他人分支、令牌只读、PrHelp 全文接口、中文评论用 node fetch 写盘脚本 |
 | 四查 | 逐项写端点、字段与判据；CI 状态字段是 `status` 而非 `state` |
-| 处置路由 | 新评审→全文→修复→L0/L1/L2→推送前 `pnpm run closeout` exit 0→非 force push→回帖；CI 红先判因；基线债只记录不修；mergeable=false 先同步；head 漂移按快进/回退分流 |
+| 处置路由 | 新评审→全文→修复→L0/L1/L2→推送前 `pnpm run closeout` exit 0→非 force push→回帖；CI 红先判因；基线债只记录不修；mergeable=false 先同步；head 漂移按快进/回退分流；生命周期门禁红按项目 gate 规则收口（结论/归档/基础映射），不得为变绿伪造结论 |
 | 收敛判据与出口 | 最新评审 ✅ 绑定当前 head + 必需车道零失败零 pending + mergeable=true + head 无漂移；不自行合入；merged/closed 停止并提示删除任务；静默轮只报「无变化」+ head/mergeable/评论数 |
 
 本地验证的层级、复用条件、缺陷修复取证与推送前门禁以 auto-code-generator 的 `pre-pr-local-verification.md` 为准；本 skill 不复制其规则。
@@ -313,7 +314,8 @@ PR 推出后默认进入值守：定时监控（pr-watch 或 API 四查）→ �
 | CI 单车道红（首次） | 拉日志判因：①已知偶发清单（负载敏感/计时悬崖）→ 本地同 head 复跑，绿则空提交重触发；②typecheck/build 语法类 → 本地复现真修复 |
 | **同一车道/用例三连红** | 升格为真问题：预算适配（有 README/清单先例时提单用例预算）或修代码，不再空提交赌空闲 |
 | required-lane 宿主启动 30s 超时 | 已知悬崖用例（`application-data-directory` 等）：本地复跑绿 → 空提交重触发即可 |
-| openspec-required 红 | 未归档 change：核 tasks 全勾/三件套 → delta 智能同步主规格（判定方向：delta 严格超集才整块替换）→ `validate --specs` → 判定三扫开放 todo → 日期前缀归档 |
+| openspec-required 红（未归档） | 核 tasks 全勾/三件套 → delta 智能同步主规格（判定方向：delta 严格超集才整块替换）→ `validate --specs` → 判定三扫开放 todo → 日期前缀归档 |
+| openspec-required 红（已归档仍红） | 查结论精确首行（`## 复核结论`→APPROVED、`## 最终结论`→VERIFIED）、报告表格未决词、基础 `openspec/specs/<cap>/test.md` 与 `feature.md` 是否随归档后的 spec 对齐；base 新增场景后最常见 |
 | mergeable=False / base 推进 | fetch → merge base → 解冲突 → **冲突文件功能面回归**（各自单测 + 相关 e2e，不只 typecheck）→ 推送。解冲突后若引入结构变更（注册函数拆分等）必须搜他包直调点并补装配 |
 | head 被并行写者推进 | 快进（`0 N`）：在其上继续收敛；含回退（`>0 N`）：先找写者，不覆盖 |
 | PR merged/closed | 删值守任务；按「工作树（worktree）管理」生命周期收尾（R10–R12） |
@@ -536,6 +538,7 @@ git worktree list                                # 核对
 2. **未推送/未合并提交**：`git rev-list --count @{upstream}..HEAD`（无 upstream 时对照基线分支）> 0 → 确认这些提交随分支留存即可，还是需要先推送/合并。
 3. **未跟踪制品**：`.tmp/`、原型、导出物等未跟踪文件是否还有用；有用先归档再删。
 4. **特殊载体**：该工作树是否是开着的 PR 的 head 载体、或承载未提交的规格/规划制品 → 是则保留到 PR 收口。
+5. **跨仓跟进项**：分支 pin 指向源仓库未合并分支/PR 时，登记该跟进项；工作树删除不代表依赖已收口。
 
 两条边界：
 
