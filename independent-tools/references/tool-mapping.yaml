@@ -41,6 +41,13 @@
       ],
       "skill_name": "prhelp-review-to-guide"
     },
+    "qeda-schematic-login": {
+      "intent": [
+        "登录启云方原理图站点",
+        "实机验收前自动登录"
+      ],
+      "skill_name": "qeda-schematic-login"
+    },
     "qedai-submit-reimbursement": {
       "intent": [
         "QEDAI 订阅费用报销登记",

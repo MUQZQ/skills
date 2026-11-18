@@ -2,8 +2,8 @@
 name: agents-sync
 description: >
   检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md，
-  以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。
-  当用户提到"同步 agents""检查 agents""AGENTS.md 更新了""软链接 agents""同步 skills""同步 skill""同步到 zcode""同步到 pi"时触发。
+  以及六个客户端（含 WorkBuddy）的 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。
+  当用户提到"同步 agents""检查 agents""AGENTS.md 更新了""软链接 agents""同步 skills""同步 skill""同步到 zcode""同步到 pi""同步到 workbuddy"时触发。
 ---
 
 # Agents 同步器
@@ -50,7 +50,7 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 
 ### Skill 目录目标
 
-固定五组 skills 目录，目录存在才同步：
+固定六组 skills 目录，目录存在才同步：
 
 | Agent 工具 | 目标目录 |
 |-----------|---------|
@@ -59,6 +59,9 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 | Claude Code | `$env:USERPROFILE\.claude\skills` |
 | ZCode | `$env:USERPROFILE\.zcode\skills` |
 | Pi | `$env:USERPROFILE\.pi\agent\skills` |
+| WorkBuddy | `$env:USERPROFILE\.workbuddy\skills` |
+
+WorkBuddy 当前只管理已核实的 Skill 与注册表入口；其全局指令位置未核实，不创建假定的 AGENTS.md。
 
 注意：目标 skills 目录中不在权威源列表内的条目（如 Codex 的 `.system`）一律保留不动。
 只为根注册表中的一级领域 Skill 创建 Junction。领域子 Skill 通过父 Skill Junction 的目录树发现，不创建顶层叶子别名。
@@ -108,13 +111,14 @@ $targets = @(
     "$env:USERPROFILE\.codex\skills",
     "$env:USERPROFILE\.claude\skills",
     "$env:USERPROFILE\.zcode\skills",
-    "$env:USERPROFILE\.pi\agent\skills"
+    "$env:USERPROFILE\.pi\agent\skills",
+    "$env:USERPROFILE\.workbuddy\skills"
 )
 ```
 
 ### 步骤 2：检查指令文件目标
 
-对每个指令文件目标，以及五个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
+对每个指令文件目标，以及六个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
 套安全文件同步。注册表源为 `$srcRoot\skill-domain-mapping.yaml`，目标分别为
 `<consumer-skills>\skill-domain-mapping.yaml`：
 
@@ -164,7 +168,15 @@ if ($null -ne $item) {
         return "conflict"
     }
     $same = (Get-FileHash -LiteralPath $target).Hash -eq (Get-FileHash -LiteralPath $source).Hash
-    if ($item.LinkType -eq "HardLink" -and $same) { return "ok" }
+    if ($item.LinkType -eq "HardLink") {
+        $linkNames = @(& fsutil hardlink list $target)
+        if ($LASTEXITCODE -ne 0) { throw "无法核实硬链接身份: $target" }
+        $volumeRoot = [IO.Path]::GetPathRoot($target).TrimEnd('\')
+        $sameIdentity = @($linkNames | ForEach-Object {
+            [IO.Path]::GetFullPath($volumeRoot + $_.Trim())
+        }) -contains ([IO.Path]::GetFullPath($source))
+        if ($sameIdentity) { return "ok" }
+    }
     if ($same) { return "stale-link" }
     return "stale"
 } else {
@@ -321,7 +333,7 @@ try {
 
 ### 步骤 6：验证
 
-修复后重新运行步骤 2 与步骤 3，确认所有非跳过目标均为 ✅。
+修复后重新运行步骤 2 与步骤 3，逐客户端确认已安装目标；未安装者单独跳过，不跳过其他客户端。文件须验证同一文件身份/实际链接目标，不能只比较内容或硬链接数量。递归检查发布父域中的 SKILL.md 是否都来自根注册表，评估快照不得进入发布目录；客户端缓存和实际激活另行验证，链接通过不等于宿主运行验收。
 
 ## 一键执行
 

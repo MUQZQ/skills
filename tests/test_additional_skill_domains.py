@@ -25,6 +25,7 @@ CONSUMERS = (
     Path.home() / ".config" / "opencode" / "skills",
     Path.home() / ".zcode" / "skills",
     Path.home() / ".pi" / "agent" / "skills",
+    Path.home() / ".workbuddy" / "skills",
 )
 
 

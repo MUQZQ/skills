@@ -4,7 +4,8 @@ code-review/review-issues.md
 feature-replication-methodology/references/visual-spec.md
 feature-replication-methodology/references/test-porting.md
 __pycache__/
-method-router/pdca-tuning-workspace/
+.skill-evals/pdca-tuning-workspace/
+.skill-evals/skill-system/
 method-router/munger-methods-workspace/
 independent-tools/branch-manager/tools/pr-watch.config.json
 independent-tools/branch-manager/tools/pr-watch.state.json

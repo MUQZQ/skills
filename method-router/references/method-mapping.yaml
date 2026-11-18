@@ -196,7 +196,7 @@ urgency:
     action: skip_confirmation
   normal:
     keywords: []
-    action: show_route_for_confirmation
+    action: show_route_then_execute_within_authorization
 fallbacks:
   diagnose:
     action: ask_user_with_top_3
@@ -878,7 +878,7 @@ skill_registry:
   planned: []
 composition_rules:
 - rule: R_A
-  desc: 诊断类输出自动衔接 SCQA
+  desc: 仅当映射链显式包含 SCQA 时执行，不因诊断类型自动追加
 - rule: R_B
   desc: MECE 先于 5 Whys
 - rule: R_C

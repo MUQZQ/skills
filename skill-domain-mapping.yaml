@@ -99,12 +99,13 @@
     },
     "design": {
       "display_name": "设计与视觉",
-      "responsibility": "UI/UX、前端界面、图示、可视化和办公文档设计路由",
+      "responsibility": "UI/UX、前端界面、高保真源稿、图示、可视化和办公文档设计路由",
       "intents": [
         "UI/UX",
         "前端视觉",
         "图表与架构图",
-        "办公文档设计"
+        "办公文档设计",
+        "高保真源稿产出"
       ],
       "entry_path": "design/SKILL.md",
       "routing_source": "design/references/design-mapping.yaml",
@@ -118,6 +119,11 @@
           "skill_name": "frontend-design",
           "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
           "path": "design/frontend-design/SKILL.md"
+        },
+        "hifi-prototype-authoring": {
+          "skill_name": "hifi-prototype-authoring",
+          "description": "产出可审看、可交接的高保真原型源稿：四维保真与档位、数据量口径、屏/状态清单、data-* 锚点合同、交互接线、生成防漂移、独立评审与验收阻断；不负责生产代码实现",
+          "path": "design/hifi-prototype-authoring/SKILL.md"
         },
         "hifi-prototype-implementation": {
           "skill_name": "hifi-prototype-implementation",
@@ -191,6 +197,11 @@
           "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
           "path": "independent-tools/project-reviewer/SKILL.md"
         },
+        "qeda-schematic-login": {
+          "skill_name": "qeda-schematic-login",
+          "description": "自动登录启云方原理图站点（UIAM 单点登录）：填账号密码、读取 base64 验证码、提交并处理 noPermission 跳转与工程页硬刷新；登录态不跨浏览器重启。当用户提到「登录原理图」「启云方登录」「schematic 登录」「实机验收前先登录」或给出 schematic.qyf.df2cloud.com 链接要求进入工程、图页时使用。",
+          "path": "independent-tools/qeda-schematic-login/SKILL.md"
+        },
         "qedai-submit-reimbursement": {
           "skill_name": "qedai-submit-reimbursement",
           "description": "在已登录的 QEDAI 外部 AI 资源管理页面登记一笔订阅报销费用、上传凭证并核对保存结果；也可按用户明确要求操作已有记录的报销提交状态。用于 outer-ai-usage 的报销录入，不用于审批、转账或应用开发。",
@@ -244,7 +255,7 @@
       "skills": {
         "agents-sync": {
           "skill_name": "agents-sync",
-          "description": "检查并同步全局 agent 指令文件（Codex、Claude Code、OpenCode、ZCode、Pi）与权威 AGENTS.md， 以及 skill 目录与权威源 .cc-switch/skills 的 Junction 链接。 当用户提到\"同步 agents\"\"检查 agents\"\"AGENTS.md 更新了\"\"软链接 agents\"\"同步 skills\"\"同步 skill\"\"同步到 zcode\"\"同步到 pi\"时触发。",
+          "description": "同步五个已核实的全局指令入口，以及六客户端（含 WorkBuddy）的 Skill Junction 与注册表；不假定 WorkBuddy 全局指令位置。",
           "path": "meta-skills/agents-sync/SKILL.md"
         },
         "skill-creator": {
@@ -256,7 +267,7 @@
     },
     "method-router": {
       "display_name": "方法论",
-      "responsibility": "诊断、决策、问题探索、改进、风险与报告方法路由",
+      "responsibility": "方法论选择、跨阶段保持与证据反馈后的重选，指导任务判断、规划、检查和改进",
       "intents": [
         "从零探索",
         "分析诊断",
@@ -264,7 +275,8 @@
         "设计规划",
         "流程改进",
         "风险评估",
-        "总结汇报"
+        "总结汇报",
+        "复杂任务的推进方法与跨阶段改进"
       ],
       "entry_path": "method-router/SKILL.md",
       "routing_source": "method-router/references/method-mapping.yaml",
@@ -391,7 +403,7 @@
         },
         "pdca-tuning": {
           "skill_name": "pdca-tuning",
-          "description": "PDCA 戴明环持续改进方法论：当用户要求进行系统性调优、多轮迭代优化或流程级改进时， 引导用户通过 Plan→Do→Check→Act 四阶段循环完成结构化优化，输出阶段性分析记录和量化对比报告。 当用户提到\"调优\"、\"PDCA\"、\"戴明环\"、\"持续改进\"、\"多轮优化\"、\"流程改善\"、 \"根因分析后怎么改\"、\"效果验证\"、\"系统性能调优\"、\"工作流优化\"、\"代码质量持续提升\"时触发。 也适用于表达了\"分析现状→制定方案→执行→验证效果\"的闭环改进意图、 或已尝试单次修复但效果不明显的场景。 对于单次 bug 修复或一次性配置调整，不触发此 skill，直接给出修复方案。",
+          "description": "PDCA 戴明环持续改进：根因不明时单点探索；方案明确时支持快步整体联调，整体实现后完整测试、记录卡点、修复复测并回归。",
           "path": "method-router/pdca-tuning/SKILL.md"
         },
         "pre-mortem": {
@@ -518,7 +530,7 @@
     },
     "orchestration": {
       "display_name": "编排",
-      "responsibility": "跨领域、跨阶段和授权边界的工作流编排路由，含交付前本地验证",
+      "responsibility": "软件实施、开发验证与 Git 交付阶段的编排路由",
       "intents": [
         "规格驱动实施",
         "从需求持续推进到验证或开 PR",

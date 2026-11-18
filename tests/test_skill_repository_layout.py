@@ -4,9 +4,11 @@
 import json
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 CONSUMERS = (
@@ -15,6 +17,7 @@ CONSUMERS = (
     Path.home() / ".config" / "opencode" / "skills",
     Path.home() / ".zcode" / "skills",
     Path.home() / ".pi" / "agent" / "skills",
+    Path.home() / ".workbuddy" / "skills",
 )
 
 ROOT_MAPPING_DATA = json.loads(
@@ -26,16 +29,15 @@ DOMAIN_CHILDREN = {
 }
 ROOT_SKILLS = set(DOMAIN_CHILDREN)
 MOVED_CHILDREN = {
-    child: domain
-    for domain, children in DOMAIN_CHILDREN.items()
-    for child in children
+    child: domain for domain, children in DOMAIN_CHILDREN.items() for child in children
 }
 
 
 class SkillRepositoryLayoutContractTest(unittest.TestCase):
     def test_root_contains_only_domain_or_independent_skills(self) -> None:
         actual = {
-            path.name for path in ROOT.iterdir()
+            path.name
+            for path in ROOT.iterdir()
             if path.is_dir() and (path / "SKILL.md").is_file()
         }
         self.assertEqual(ROOT_SKILLS, actual)
@@ -52,24 +54,34 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
                 self.assertFalse((ROOT / child).exists())
 
     def test_consumers_expose_domains_without_child_aliases(self) -> None:
-        if not all(consumer.exists() for consumer in CONSUMERS):
-            self.skipTest("consumer skill roots are not installed on this machine")
         aliases = set(MOVED_CHILDREN) | {"refactor-tdd"}
         for consumer in CONSUMERS:
+            with self.subTest(consumer=consumer):
+                if not consumer.exists():
+                    self.skipTest("客户端未安装")
+            if not consumer.exists():
+                continue
             registry_copy = consumer / "skill-domain-mapping.yaml"
             self.assertTrue(registry_copy.is_file())
+            self.assertTrue(
+                os.path.samefile(ROOT / "skill-domain-mapping.yaml", registry_copy)
+            )
             self.assertEqual(
                 (ROOT / "skill-domain-mapping.yaml").read_text(encoding="utf-8"),
                 registry_copy.read_text(encoding="utf-8"),
             )
-            for domain in DOMAIN_CHILDREN:
+            for domain, children in DOMAIN_CHILDREN.items():
                 with self.subTest(consumer=consumer, domain=domain):
                     self.assertTrue((consumer / domain / "SKILL.md").is_file())
                     self.assertTrue(os.path.isjunction(consumer / domain))
-                    self.assertEqual((ROOT / domain).resolve(), (consumer / domain).resolve())
-                for child in DOMAIN_CHILDREN[domain]:
+                    self.assertEqual(
+                        (ROOT / domain).resolve(), (consumer / domain).resolve()
+                    )
+                for child in children:
                     with self.subTest(consumer=consumer, domain=domain, child=child):
-                        self.assertTrue((consumer / domain / child / "SKILL.md").is_file())
+                        self.assertTrue(
+                            (consumer / domain / child / "SKILL.md").is_file()
+                        )
             for alias in aliases:
                 with self.subTest(consumer=consumer, alias=alias):
                     self.assertFalse(os.path.lexists(consumer / alias))
@@ -98,14 +110,14 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
         self.assertIn("skill-domain-mapping.yaml", agents)
         self.assertNotIn("| 代码审查 | `code-review` |", agents)
-        for duplicated_section in {
+        for duplicated_section in (
             "## 全流程自动化",
             "## 共享执行 Provider（非 Skill）",
             "## 代码质量",
             "## 设计能力",
             "## 分支与同步",
             "## 方法论体系",
-        }:
+        ):
             self.assertNotIn(duplicated_section, agents)
         mapping = json.loads(
             (ROOT / "skill-domain-mapping.yaml").read_text(encoding="utf-8")
@@ -124,13 +136,66 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         )
         names = []
         for path in paths:
-            match = re.search(r"(?m)^name:\s*([^\r\n]+)", path.read_text(encoding="utf-8"))
+            match = re.search(
+                r"(?m)^name:\s*([^\r\n]+)", path.read_text(encoding="utf-8")
+            )
             self.assertIsNotNone(match, path)
             names.append(match.group(1).strip())
 
         self.assertEqual(len(names), len(set(names)))
-        self.assertTrue(all("auto-code-generator-workspace" not in str(path) for path in paths))
+        self.assertTrue(
+            all("auto-code-generator-workspace" not in str(path) for path in paths)
+        )
         self.assertTrue(all("_providers" not in str(path) for path in paths))
+
+    def test_published_trees_contain_only_registered_skill_entries(self) -> None:
+        expected = {ROOT / domain / "SKILL.md" for domain in ROOT_SKILLS}
+        expected.update(
+            ROOT / entry["path"]
+            for domain in ROOT_MAPPING_DATA["domains"].values()
+            for entry in domain["skills"].values()
+        )
+        actual = {
+            path for domain in ROOT_SKILLS for path in (ROOT / domain).rglob("SKILL.md")
+        }
+        self.assertEqual(expected, actual, "发布目录泄露评估快照或未注册入口")
+
+    @unittest.skipUnless(os.name == "nt" and shutil.which("pwsh"), "仅 Windows 硬链接")
+    def test_sync_rejects_equal_content_from_a_different_hardlink_group(self) -> None:
+        sync = (ROOT / "meta-skills/agents-sync/SKILL.md").read_text(encoding="utf-8")
+        section = sync.split("### 步骤 2：", 1)[1].split("### 步骤 3：", 1)[0]
+        check = section.split("$item = Get-Item", 1)[1].split("```", 1)[0]
+        check = "$item = Get-Item" + check
+        with tempfile.TemporaryDirectory(prefix="ccs-link-test-") as directory:
+            base = Path(directory)
+            source = base / "source.md"
+            other = base / "other.md"
+            source.write_text("相同内容", encoding="utf-8")
+            other.write_bytes(source.read_bytes())
+            wrong = base / "wrong.md"
+            correct = base / "correct.md"
+            os.link(other, wrong)
+            os.link(source, correct)
+            for target, expected in ((correct, "ok"), (wrong, "stale-link")):
+                with self.subTest(target=target.name):
+                    command = (
+                        "[Console]::OutputEncoding=[Text.UTF8Encoding]::new();"
+                        + "$source='"
+                        + str(source).replace("'", "''")
+                        + "';"
+                        + "$target='"
+                        + str(target).replace("'", "''")
+                        + "';"
+                        + check
+                    )
+                    result = subprocess.run(
+                        ["pwsh", "-NoProfile", "-NonInteractive", "-Command", command],
+                        capture_output=True,
+                        encoding="utf-8",
+                        timeout=30,
+                        check=True,
+                    )
+                    self.assertEqual(expected, result.stdout.strip())
 
     def test_root_mapping_describes_every_child_skill(self) -> None:
         mapping = json.loads(
@@ -148,7 +213,9 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
                         skill_path.read_text(encoding="utf-8"),
                     )
                     self.assertIsNotNone(frontmatter_name)
-                    self.assertEqual(skill["skill_name"], frontmatter_name.group(1).strip())
+                    self.assertEqual(
+                        skill["skill_name"], frontmatter_name.group(1).strip()
+                    )
                     self.assertTrue(skill["skill_name"].strip())
                     self.assertTrue(skill["description"].strip())
                     self.assertNotIn(skill["description"].strip(), {">", "|"})
@@ -198,8 +265,12 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
                 self.assertIn(required_text, skill_text)
 
         literary_mapping = json.loads(
-            (ROOT / "literary-creation" / "references" / "literary-creation-mapping.yaml")
-            .read_text(encoding="utf-8")
+            (
+                ROOT
+                / "literary-creation"
+                / "references"
+                / "literary-creation-mapping.yaml"
+            ).read_text(encoding="utf-8")
         )
         self.assertIn("novel-topic-discovery", literary_mapping["routes"])
         self.assertEqual(
@@ -219,7 +290,9 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         root_mapping = json.loads(
             (ROOT / "skill-domain-mapping.yaml").read_text(encoding="utf-8")
         )
-        self.assertEqual("repository_registry_and_paths", root_mapping["authority_scope"])
+        self.assertEqual(
+            "repository_registry_and_paths", root_mapping["authority_scope"]
+        )
         for path in (
             ROOT / "meta-skills" / "references" / "meta-skill-mapping.yaml",
             ROOT / "independent-tools" / "references" / "tool-mapping.yaml",
@@ -227,7 +300,9 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         ):
             mapping = json.loads(path.read_text(encoding="utf-8"))
             self.assertEqual("domain_intent_routing", mapping["authority_scope"])
-            self.assertEqual("../../skill-domain-mapping.yaml", mapping["registry_source"])
+            self.assertEqual(
+                "../../skill-domain-mapping.yaml", mapping["registry_source"]
+            )
             for route in mapping["routes"].values():
                 self.assertIn("skill_name", route)
                 self.assertNotIn("skill_path", route)
@@ -239,14 +314,14 @@ class SkillRepositoryLayoutContractTest(unittest.TestCase):
         self.assertNotIn("$PSScriptRoot", sync)
         self.assertNotIn("Remove-Item -LiteralPath $target -Recurse -Force", sync)
         self.assertIn("Move-Item", sync)
-        self.assertIn("LinkType -ne \"Junction\"", sync)
+        self.assertIn('LinkType -ne "Junction"', sync)
         self.assertIn("skill-domain-mapping.yaml", sync)
         self.assertIn("ConvertFrom-Json", sync)
         self.assertNotIn("Get-ChildItem $srcRoot -Directory", sync)
         self.assertIn("$allowedRoots", sync)
         self.assertIn("[Guid]::NewGuid()", sync)
         self.assertNotIn("Remove-Item $target", sync)
-        self.assertIn("$domainEntry.LinkType -eq \"Junction\"", sync)
+        self.assertIn('$domainEntry.LinkType -eq "Junction"', sync)
         self.assertIn("Split-Path $domainSource -Parent", sync)
         self.assertIn("$item.PSIsContainer", sync)
         self.assertNotIn("if (Test-Path -LiteralPath $target)", sync)

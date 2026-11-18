@@ -2,7 +2,6 @@ import re
 import unittest
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[2]
 DESIGN_SKILL = ROOT / "design" / "SKILL.md"
 AGENTS = ROOT / "AGENTS.md"
@@ -23,6 +22,8 @@ class DesignSkillContractTest(unittest.TestCase):
         expected_routes = (
             "| `ui-ux-pro-max` | UI/UX 知识检索、评审、设计系统建议与实现指导；不直接负责项目文件修改 |",
             "| `frontend-design` | 创建或修改实际前端界面、页面与组件 |",
+            "| `hifi-prototype-authoring` | 产出可审看/可交接的高保真源稿，声明四维保真、档位、数据量、状态与锚点；不负责生产实现 |",
+            "| `hifi-prototype-implementation` | 已有高保真原型/设计稿作权威视觉答案时的像素级实现与对照收敛（翻译纪律+三档验证+裁定同步） |",
             "| `drawio-skill` | 流程图、架构图、UML、ER 与 Draw.io 产物 |",
             "| `visualize:visualize` | 对话内交互式可视化、图表、模拟器与解释工具 |",
             "| `presentations:Presentations` / `documents:documents` / `pdf:pdf` | 对应办公文档产物 |",
@@ -35,7 +36,7 @@ class DesignSkillContractTest(unittest.TestCase):
         content = DESIGN_SKILL.read_text(encoding="utf-8")
         required_contracts = (
             "用户显式指定具体 Skill 时直接服从",
-            "每个任务只选择一个主 Skill",
+            "每个阶段只选择一个主 Skill",
             "系统或产品问题定义、架构决策与重构方法进入 `method-router`",
             "视觉、交互、图示或办公文档产物明确时由 `design` 直接路由",
             "只执行所选主 Skill 的验收合同",
@@ -73,7 +74,10 @@ class DesignSkillContractTest(unittest.TestCase):
             "Resolve `<ui-ux-pro-max-skill-dir>` to the absolute directory containing this `SKILL.md`",
             content,
         )
-        self.assertNotIn("Then synthesize the design system + detailed searches and implement.", content)
+        self.assertNotIn(
+            "Then synthesize the design system + detailed searches and implement.",
+            content,
+        )
         self.assertIn("## Before Delivering Native/Mobile App UI", content)
         self.assertNotIn("`r`n", content)
 
@@ -83,7 +87,7 @@ class DesignSkillContractTest(unittest.TestCase):
         self.assertNotIn(b"\n", without_crlf)
 
     def test_repository_owned_leaf_skills_are_nested_under_design(self) -> None:
-        for name in ("ui-ux-pro-max", "frontend-design", "drawio-skill"):
+        for name in ("ui-ux-pro-max", "frontend-design", "hifi-prototype-authoring", "hifi-prototype-implementation", "drawio-skill"):
             with self.subTest(name=name):
                 self.assertTrue((ROOT / "design" / name / "SKILL.md").is_file())
                 self.assertFalse((ROOT / name).exists())

@@ -20,7 +20,7 @@ class RepositoryDomainRoutingContractTest(unittest.TestCase):
 
     def test_design_mapping_is_v1_source_of_truth(self) -> None:
         content = DESIGN_MAPPING.read_text(encoding="utf-8")
-        self.assertIn('version: "1.0"', content)
+        self.assertIn('version: "1.1"', content)
         self.assertIn("domain: design", content)
         self.assertIn("source_of_truth: true", content)
         self.assertIn("registry_source: ../../skill-domain-mapping.yaml", content)
@@ -28,6 +28,8 @@ class RepositoryDomainRoutingContractTest(unittest.TestCase):
         for route, skill in {
             "ui_ux_guidance": "ui-ux-pro-max",
             "frontend_implementation": "frontend-design",
+            "hifi_prototype_authoring": "hifi-prototype-authoring",
+            "hifi_prototype_implementation": "hifi-prototype-implementation",
             "diagram": "drawio-skill",
             "interactive_visualization": "visualize:visualize",
             "presentation": "presentations:Presentations",
@@ -36,6 +38,16 @@ class RepositoryDomainRoutingContractTest(unittest.TestCase):
         }.items():
             self.assertIn(f"  {route}:", content)
             self.assertIn(f"primary_skill: {skill}", content)
+
+    def test_hifi_authoring_and_implementation_are_distinct_routes(self) -> None:
+        content = DESIGN_MAPPING.read_text(encoding="utf-8")
+        self.assertIn("hifi_prototype_authoring:", content)
+        self.assertIn("primary_skill: hifi-prototype-authoring", content)
+        self.assertIn("hifi_prototype_implementation:", content)
+        self.assertIn("primary_skill: hifi-prototype-implementation", content)
+        self.assertIn("keywords: [像素级对齐", content)
+        self.assertNotIn("keywords: [高保真,", content)
+        self.assertIn("hifi_authoring_and_frontend:", content)
 
     def test_design_router_loads_mapping_before_selecting_leaf(self) -> None:
         content = DESIGN_SKILL.read_text(encoding="utf-8")
