@@ -50,7 +50,7 @@ skill 目录（即 `.cc-switch/skills`）。指令文件通过符号链接注入
 
 ### Skill 目录目标
 
-固定六组 skills 目录，目录存在才同步：
+固定七组 skills 目录，目录存在才同步：
 
 | Agent 工具 | 目标目录 |
 |-----------|---------|
@@ -121,7 +121,7 @@ $targets = @(
 
 ### 步骤 2：检查指令文件目标
 
-对每个指令文件目标，以及六个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
+对每个指令文件目标，以及七个消费者 skills 根目录下的 `skill-domain-mapping.yaml` 目标执行同一
 套安全文件同步。注册表源为 `$srcRoot\skill-domain-mapping.yaml`，目标分别为
 `<consumer-skills>\skill-domain-mapping.yaml`：
 

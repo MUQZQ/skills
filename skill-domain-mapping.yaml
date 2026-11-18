@@ -301,6 +301,11 @@
           "description": "ADR 架构决策记录（Architecture Decision Record）：把重大决策的背景、选项、 结论、理由、后果固化为一页结构化记录，可检索、可追溯、可演进。适用于 架构选型、方案定案、规则变更等\"决定后需要沉淀\"的场景。由 method-router 路由触发（decide/design 链的输出收口），或用户直接说\"记录决策\"\"写 ADR\" \"决策归档\"时触发。与 Pugh/ADL/Design Thinking 搭配使用。",
           "path": "method-router/adr/SKILL.md"
         },
+        "backward-planning": {
+          "skill_name": "backward-planning",
+          "description": "逆向规划：目标与现状差距过大时，从终态往前推里程碑到现状，生成路径步骤。当用户提到差距过大、从结果倒推、从终态反推、逆向规划或 backcasting 时使用。",
+          "path": "method-router/backward-planning/SKILL.md"
+        },
         "cynefin": {
           "skill_name": "cynefin",
           "description": "Cynefin 问题域分类框架。在执行任何方法论分析之前，先判断问题属于哪个域—— 简单(Clear)/繁杂(Complicated)/复杂(Complex)/混沌(Chaotic)/失序(Disorder)， 不同域适用完全不同的策略。作为 method-router 的元认知增强层，提升分类路由准确率。 触发关键词：复杂度判断、问题分类、cynefin、用哪个方法不确定、这类问题怎么解。",
@@ -571,7 +576,7 @@
       "skills": {
         "dida-task-manager": {
           "skill_name": "dida-task-manager",
-          "description": "管理绑定到当前 Codex 项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
+          "description": "管理绑定到当前项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
           "path": "task-management/dida-task-manager/SKILL.md"
         }
       }

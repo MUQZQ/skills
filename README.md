@@ -30,7 +30,7 @@
 根注册表负责领域、规范 `skill_name`、描述和仓库相对路径。领域映射只负责将领域内意图映射到
 规范 `skill_name`，不重复保存物理路径。父 Skill 读取领域映射后，再通过根注册表解析实际路径。
 
-当前根注册表包含 10 个领域、83 个注册 Skill；其中 `method-router` 注册 49 个方法论 Skill，按 10 个功能块组织。
+当前根注册表包含 10 个领域、84 个注册 Skill；其中 `method-router` 注册 50 个方法论 Skill，按 10 个功能块组织。
 `method-router/references/method-mapping.yaml` 是意图路由的权威配置，负责分类、上下文和路由链，
 不应以 README 或父 Skill 中的静态清单替代。
 
@@ -83,9 +83,9 @@ skill-domain-architecture.drawio 可编辑的领域总览
 
 ## 跨客户端同步
 
-`meta-skills/agents-sync` 为 Codex、Claude Code、OpenCode、ZCode、Pi 和 WorkBuddy 创建一级领域 Junction。具体 Skill
+`meta-skills/agents-sync` 为 Codex、Claude Code、OpenCode、ZCode、Pi、WorkBuddy 和 CodeBuddy 创建一级领域 Junction。具体 Skill
 通过父域目录树发现，不创建顶层叶子别名。同步器同时把 `skill-domain-mapping.yaml` 以文件链接
-暴露到六个消费者的 skills 根目录，使父域可解析仓库内 Skill 路径。同步流程不会删除普通目录；
+暴露到七个消费者的 skills 根目录，使父域可解析仓库内 Skill 路径。同步流程不会删除普通目录；
 发生冲突时先停止并要求人工处理。
 
 ## 提交前检查
@@ -95,7 +95,7 @@ skill-domain-architecture.drawio 可编辑的领域总览
 1. **注册表一致** — 新增、移动、删除 Skill 时同步更新根注册表与所属域映射；计数以根注册表为准
 2. **计数同步** — `README.md` 与 `skill-domain-architecture.drawio` 中的域数/总数/各域子 Skill 数，以及 `tests/test_method_router_contract.py` 的计数断言，三者必须与根注册表实际条目一致
 3. **测试通过** — 运行下文「验证」一节的测试套件
-4. **客户端同步** — 运行 `meta-skills/agents-sync`，确认六客户端 Skill 与注册表入口指向权威源；AGENTS.md 仅同步五个已核实的指令入口，WorkBuddy 全局指令入口未核实
+4. **客户端同步** — 运行 `meta-skills/agents-sync`，确认七客户端 Skill 与注册表入口指向权威源；AGENTS.md 仅同步五个已核实的指令入口，WorkBuddy 与 CodeBuddy 全局指令入口未核实
 5. **链接完整性** — 编辑 AGENTS.md 或 `skill-domain-mapping.yaml` 后确认硬链接组未被编辑工具打断（逐一验证权威源与实际受管目标的文件身份，不以固定链接数量代替），断开则重建
 6. **格式回归** — YAML/JSON 保留文件末尾换行，行尾风格与原文一致
 
