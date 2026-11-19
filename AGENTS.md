@@ -91,3 +91,69 @@
 
 ---
 
+# 本机环境与约定（Windows，用户 qedai）
+
+本机（Windows，用户 qedai）跨工作区成立的事实与约定，随本文件同步到客户端后在本机全局生效。
+
+## 本机可用的外部资源
+
+- **器件参数手册（datasheet）语料**：使用者给出的取用位置是 `E:\QedAgent\NextBoard\datasheets`
+  （2026-10-13 口述）。用途：PR 实机验证里需要**真实器件手册**的场景（Datasheet 双入口 / 文件夹批量导入、
+  参数提取等），比现场合成的 PDF 更贴近真实输入。
+  **可达性实情**：2026-10-13 核对时本机只有 C: 与 D: 两个卷、**没有 E: 盘**，该路径当时不可达
+  （`Test-Path 'E:\QedAgent\NextBoard\datasheets'` → False；`Get-Volume` 的盘符只有 D、C）。
+  所以：用之前先确认盘符/挂载是否已变化，**别把「记过这条」当成「语料已就绪」**；
+  若盘符换了，以实际可达路径为准，并回来更新本行。
+- 语料到位只解决「真实输入」这一半：**提取类**场景（如 parameter-template-workflow、
+  datasheet-pool-parameter-extraction）同时需要真实模型才会给出 THEN；**纯导入/对话框类**场景
+  （双入口、文件夹扫描、几何与确认面）有真实 PDF 就能实机跑。
+- 本机没有 `E:` 这类可移动/网络盘时的取样替代：先看评审检出里该 PR 自带的测试语料，再考虑向使用者确认路径，
+  不要默默改用合成文件后把结论写成「等价于真实手册」。
+
+## 本机口径与工具链状态（2026-11-07 使用者确认）
+
+- **「只评 qinzuoquan」是本机口径，不上公共仓**（使用者 2026-11-07 明确）：不要把范围条款提交/PR 进
+  QEDAReview 远端。落地通道是**本机**的两处：线上引导语里的范围行（面板里粘上游正文时要手工保留）
+  + 评审控制台 `review-config.mjs scope --set allowlist:qinzuoquan`（控制台没起时 fail open，靠范围行兜底）。
+  因此本机 prompt-sync 对两份引导语**永远报「未匹配」是预期态**（线上 = 上游正文 + 本机范围行），
+  不要再按 prompt-drift 惊报；上游其它机器没有这行，它们的范围约束只有各自的控制台——
+  范围外评审标记（#359 类）的修法是**在那台机器上设控制台范围**，不是改正文。
+- **QEDAReview 本机检出曾与远端平行分叉 37 天**（#347）：2026-11-07 经使用者确认处置——本地未提交
+  开发线整体快照到分支 `wip-snapshot-20261107`（85301a2，40 文件，可 diff/找回；其中唯一的独有价值
+  「范围条款」按上一条不上库），main 快进到远端最新。此后本机工具链按上游版本跑。
+  范围行在上游正文里**不存在**是设计使然，别再"补"进仓库。
+- **本仓工作区必须保持干净（使用者核心要求：用到的仓代码要实时更新）**：评审线每 30 分钟、维护线每
+  3 小时的第一步都是 `sync-repo.mjs` 快进——任何留在 main 工作区的未提交改动若与远端相撞，会把两条
+  线一起卡死在旧代码上（37 天事故的根源）。**在本仓做任何修改一律开分支、及时提交或还原，不许把
+  WIP 摊在 main 工作区**；长期本地状态只放 gitignore 目录（tmp/、session-archive/）。
+
+- **localapp daemon（承载本机控制台 55441）**：以计划任务 `LocalApp User Daemon`（+ 每 3 分钟的
+  Watchdog）常驻；启动脚本 `%LOCALAPPDATA%\LocalApp\start-daemon.cmd` 钉死 `LISTEN_PORT=55441`
+  （防止 server 自己把端口改回 0）。控制台"不可达"时先看
+  `%LOCALAPPDATA%\LocalApp\logs\daemon-console.log`——2026-10-26 meta.sqlite 损坏（"file is not a
+  database"）曾让 watchdog 连续 11 天拉起即死、控制台 11 天不可达（#353）；修法 = 备份移走坏库再触发
+  计划任务。`localapp server start` 的服务管理器路径在 PowerShell 下会撞 ExecutionPolicy（npm 的
+  .ps1 shim），走 Git Bash 或直接 Start-ScheduledTask。
+
+## 取包与装机约定（使用者 2026-11-07 口述）
+
+- **本机缺什么软件/安装包：先确认本机真没有（扫 Program Files、`%LOCALAPPDATA%\Programs`、桌面/开始菜单），
+  没有就直接去官网下载；官网直链慢或不可达时，可用国内镜像加速**。不要因为"找不到包"就把任务停在
+  等人工——除非官网确实没有该平台的产品（如实报告缺什么，再等输入）。
+- 下载与安装纪律：装包放**独立新空目录**（如 `%USERPROFILE%\Downloads\<名>-<日期>\`）；可执行安装包
+  **先验 Authenticode 签名再运行**（`Get-AuthenticodeSignature`，签名者与厂商主体对得上才装）；
+  官网 latest 直链优先于第三方镜像/商店搬运。
+- **DSH 客户端（DeepSeek Harness）已装**（2026-11-07，为 QEDAgent 评审线 UI 实机验证装）：
+  - 安装位置 `C:\Users\qedai\AppData\Local\Programs\DeepSeek Harness\DeepSeek Harness.exe`；
+    `QEDA_DSH_EXECUTABLE` 已按该路径 setx 到**用户级**环境变量（另在 `~/.bashrc`、`~/.bash_profile`
+    各留一行同名 export）。**正在跑的进程读不到 setx 的新值**——ZCode 宿主要重启一次评审会话才继承。
+  - 官方下载入口 `https://www.deepseek.com/en/download`（Windows 直链
+    `https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe`，latest 动态链接；
+    macOS 为 `dsh-latest-macos-arm64.dmg`）。官网是 latest：客户端自动升级跨版本时留意与
+    QEDAgent 插件的宿主兼容范围（该仓 `openspec/architecture/context.md` 记 0.2.x）。
+  - 项目侧的解决记录在 QEDAReview 仓 issue #392 的关闭评论（含验签、冒烟、登记全过程）。
+  - **DSH 启动要填的 DeepSeek API key**（使用者 2026-11-07 提供）存在本机 Windows 凭据管理器：
+    普通凭据，目标 `deepseek-api-key`、用户 `deepseek`（`cmdkey /list:deepseek-api-key` 可查是否在；
+    Git Bash 里 cmdkey 要加 `MSYS_NO_PATHCONV=1`，否则 `/list:` 被路径改写）。**明文不写进本文件、
+    提示词、日志、评论或提交**（QEDAReview AGENTS §2 凭证纪律）；需要时用 Win32 `CredRead`
+    （PowerShell `Add-Type` 调 advapi32）非交互读取，只在填入客户端时使用、不回显。
