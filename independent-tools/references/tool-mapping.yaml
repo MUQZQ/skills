@@ -84,6 +84,13 @@
         "uv Python 环境与依赖管理"
       ],
       "skill_name": "uv-env"
+    },
+    "zcode-plan-switch": {
+      "intent": [
+        "ZCode 定时任务套餐/模型切换",
+        "ZCode 切 Start Plan"
+      ],
+      "skill_name": "zcode-plan-switch"
     }
   },
   "authority_scope": "domain_intent_routing",

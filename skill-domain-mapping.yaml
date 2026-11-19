@@ -157,13 +157,14 @@
     },
     "independent-tools": {
       "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记、Magpie 模型路由）",
+      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记、Magpie 模型路由）、ZCode 套餐切换",
       "intents": [
         "专业单用途工具",
         "媒体转换",
         "环境管理",
         "QEDAI 订阅费用报销登记",
-        "Magpie 模型路由与分组"
+        "Magpie 模型路由与分组",
+        "ZCode 套餐与定时任务模型切换"
       ],
       "entry_path": "independent-tools/SKILL.md",
       "routing_source": "independent-tools/references/tool-mapping.yaml",
@@ -227,6 +228,11 @@
           "skill_name": "uv-env",
           "description": "Python 虚拟环境管理（uv）。当用户提到\"安装依赖\"、\"添加包\"、\"移除包\"、\"创建虚拟环境\"、\"Python版本\"、\"uv sync\"、\"pip install\"、\"package\"、\"依赖\"、\"venv\"、\"环境管理\"、\"uv add\"、\"uv remove\"、\"uv run\"、\"uv lock\"时必须使用。用于使用 uv 管理 Python 项目依赖和虚拟环境。",
           "path": "independent-tools/uv-env/SKILL.md"
+        },
+        "zcode-plan-switch": {
+          "skill_name": "zcode-plan-switch",
+          "description": "切换 ZCode 定时任务（automations）的模型与套餐：读取并备份 tasks-index.sqlite，按 Start Plan 或指定供应商写入，支持 dry-run、运行历史回读和回滚。适用于 ZCode 套餐额度用尽、夜间切免费 Start Plan、定时任务模型调整。",
+          "path": "independent-tools/zcode-plan-switch/SKILL.md"
         }
       }
     },

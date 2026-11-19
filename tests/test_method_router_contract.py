@@ -447,7 +447,7 @@ class MethodRouterContractTest(unittest.TestCase):
 
     def test_readme_and_method_router_counts_include_eight_leaf_skills(self) -> None:
         readme = README_PATH.read_text(encoding="utf-8")
-        self.assertIn("87 个注册 Skill", readme)
+        self.assertIn("88 个注册 Skill", readme)
         self.assertIn("51 个方法论 Skill", readme)
         self.assertIn("10 个功能块", readme)
         self.assertIn("8 个独立叶子 Skill", readme)
@@ -488,7 +488,7 @@ class MethodRouterContractTest(unittest.TestCase):
             "Discovery Sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "87 个",
+            "88 个",
             "51 个",
         ):
             with self.subTest(document="README", text=text):
@@ -499,7 +499,7 @@ class MethodRouterContractTest(unittest.TestCase):
             "discovery-sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "87 个",
+            "88 个",
             "51 个",
             *LEAF_NAMES,
         ):
