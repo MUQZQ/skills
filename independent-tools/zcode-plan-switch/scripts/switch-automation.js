@@ -40,6 +40,7 @@ function usage(message) {
     '用法：',
     '  node switch-automation.js --list [--db <路径>] [--json]',
     '  node switch-automation.js --title <标题> --to <预设> [--dry-run] [--json]',
+    '  node switch-automation.js --all --to <预设> [--dry-run] [--json]',
     '  node switch-automation.js --id <automation_id> --provider <id> --model <id> [--reasoning <级别>] [--dry-run]',
     '  node switch-automation.js --restore <备份文件> [--db <路径>] [--dry-run]',
     '  node switch-automation.js --history <automation_id> [--limit <N>] [--session-db <路径>] [--json]',
@@ -55,6 +56,7 @@ function usage(message) {
 function parseArgs(argv) {
   const options = {
     list: false,
+    all: false,
     json: false,
     dryRun: false,
     db: undefined,
@@ -83,7 +85,7 @@ function parseArgs(argv) {
     'history',
     'limit',
   ]);
-  const flags = new Set(['list', 'json', 'dry-run', 'help']);
+  const flags = new Set(['list', 'all', 'json', 'dry-run', 'help']);
 
   for (let index = 0; index < argv.length; index += 1) {
     const raw = argv[index];
@@ -219,6 +221,13 @@ function automationHistory(db, sessionDb, automationId, limit) {
       };
     }),
   };
+}
+
+function findAutomationRows(db, options) {
+  if (options.all) {
+    return db.prepare('select * from automations order by title').all();
+  }
+  return [findAutomation(db, options)];
 }
 
 function findAutomation(db, options) {
@@ -382,14 +391,17 @@ function main() {
     usage(error.message);
   }
   if (options.help) usage();
-  if (options.list && (options.title || options.id || options.to || options.restore || options.history)) {
+  if (options.list && (options.all || options.title || options.id || options.to || options.restore || options.history)) {
     usage('--list 不能与其他操作同时使用');
   }
-  if (options.history && (options.title || options.id || options.to || options.restore)) {
+  if (options.all && (options.title || options.id || options.restore || options.history)) {
+    usage('--all 不能与 --title/--id/--restore/--history 同时使用');
+  }
+  if (options.history && (options.all || options.title || options.id || options.to || options.restore)) {
     usage('--history 不能与其他操作同时使用');
   }
-  if (!options.list && !options.restore && !options.history && !options.title && !options.id) {
-    usage('必须指定 --list、--history、--title/--id 或 --restore');
+  if (!options.list && !options.all && !options.restore && !options.history && !options.title && !options.id) {
+    usage('必须指定 --list、--all、--history、--title/--id 或 --restore');
   }
 
   const dbPath = resolveDbPath(options.db);
@@ -475,27 +487,36 @@ function main() {
   const plan = buildPlan(options);
   const db = openDatabase(dbPath, readOnly);
   try {
-    const row = findAutomation(db, options);
-    const before = describeRow(row);
-    const backup = options.dryRun ? null : backupRow(row, plan);
-    const after = options.dryRun ? null : applyPlan(db, row, plan);
+    const rows = findAutomationRows(db, options);
+    if (rows.length === 0) {
+      throw new Error('数据库中没有定时任务，--all 无可操作对象');
+    }
+    const results = rows.map((row) => {
+      const before = describeRow(row);
+      const backup = options.dryRun ? null : backupRow(row, plan);
+      const after = options.dryRun ? null : applyPlan(db, row, plan);
+      return {
+        automation_id: row.automation_id,
+        title: row.title,
+        before,
+        after,
+        backup,
+      };
+    });
 
     if (options.json) {
       console.log(
         JSON.stringify(
           {
             db: dbPath,
-            automation_id: row.automation_id,
-            title: row.title,
             dryRun: options.dryRun,
-            before,
             planned: {
               model: plan.model,
               model_selection: JSON.parse(plan.modelSelection),
               thought_level: plan.thoughtLevel,
             },
-            after,
-            backup,
+            count: results.length,
+            results,
           },
           null,
           2
@@ -503,14 +524,19 @@ function main() {
       );
     } else {
       console.log(`数据库：${dbPath}`);
-      console.log(`定时任务：${row.title} [${row.automation_id}]`);
-      console.log(`切换前：${JSON.stringify(before.model_selection)} (model=${before.model})`);
-      console.log(`目标：  ${plan.modelSelection} (model=${plan.model})`);
-      if (options.dryRun) {
-        console.log('dry-run：未写入');
-      } else {
-        console.log(`切换后：${JSON.stringify(after.model_selection)} (model=${after.model})`);
-        console.log(`备份：${backup}`);
+      console.log(`目标：${plan.modelSelection} (model=${plan.model})`);
+      console.log(`任务数：${results.length}${options.all ? '（--all 自动发现）' : ''}`);
+      for (const result of results) {
+        console.log(`--- ${result.title} [${result.automation_id}]`);
+        console.log(`  切换前：${JSON.stringify(result.before.model_selection)} (model=${result.before.model})`);
+        if (options.dryRun) {
+          console.log('  dry-run：未写入');
+        } else {
+          console.log(`  切换后：${JSON.stringify(result.after.model_selection)} (model=${result.after.model})`);
+          console.log(`  备份：${result.backup}`);
+        }
+      }
+      if (!options.dryRun) {
         console.log('提示：请在下次调度运行后，用 model_usage 核对实际使用的 provider_id。');
       }
     }

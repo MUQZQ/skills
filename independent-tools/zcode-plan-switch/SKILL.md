@@ -26,6 +26,7 @@ description: 切换 ZCode 定时任务（automations）的模型与套餐：读�
 |---|---|
 | 查看当前定时任务用什么模型 | `--list` |
 | 把某个任务切到免费 Start Plan | `--title <标题> --to start-plan --dry-run`，确认后去掉 `--dry-run` |
+| 把全部定时任务切到 Start Plan | `--all --to start-plan --dry-run`，确认后去掉 `--dry-run`（自动从数据库发现全部任务，无需列举标题或 ID） |
 | 切到付费个人套餐 | `--to individual-coding-plan` |
 | 使用自定义供应商/模型 | `--provider <providerId> --model <modelId> --reasoning <级别>` |
 | 核对下一次运行是否真的用了新套餐 | `--history <automation_id>` |
@@ -94,7 +95,8 @@ node scripts/switch-automation.js --restore <备份文件路径>
 | 参数 | 说明 |
 |---|---|
 | `--list` | 列出全部定时任务 |
-| `--title <标题>` / `--id <automation_id>` | 指定目标任务（二选一） |
+| `--all` | 自动发现并操作全部定时任务，与 `--title`/`--id` 互斥；不可与 `--list`/`--history`/`--restore` 同用 |
+| `--title <标题>` / `--id <automation_id>` | 指定目标任务（二选一，与 `--all` 三选一） |
 | `--to <预设>` | `start-plan` 或 `individual-coding-plan` |
 | `--provider` / `--model` / `--reasoning` | 自定义供应商、模型和推理级别 |
 | `--dry-run` | 只预览，不写库 |
