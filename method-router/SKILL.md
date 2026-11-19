@@ -2,7 +2,7 @@
 name: method-router
 description: >
   方法论体系统一路由器。当用户请求涉及诊断分析、决策选型、设计规划、流程改进、
-  风险评估、管理协作、时间管理、总结汇报等需要方法论框架辅助的任务时触发。作为所有方法论 Skill 的
+  风险评估、管理协作、时间管理、Token 预算、总结汇报等需要方法论框架辅助的任务时触发。作为所有方法论 Skill 的
   统一入口，自动分类问题类型并路由到最合适的框架（5W2H/5Whys/SCQA/Pre-mortem 等）。
   触发关键词：从零、没思路、先调研、网上实践、头脑风暴、为什么、分析、排查、定位、选哪个、优先级、风险、管理、协作、分工、委派、责任、
   子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、排期、复盘、用什么框架。
@@ -143,7 +143,7 @@ Phase 1: 意图分类 ──▶ route_context（type / urgency / domain / has_da
 | **report** | 总结、汇报、周报、复盘、文档、记录、写报告 | "帮我写个复盘报告" |
 | **goal** | 目标、OKR、KPI、flag、减肥、学习计划、愿景、里程碑、定目标、达成、差距过大、从结果倒推 | "帮我定个季度减肥目标"；"目标和现状差距太大，从结果倒推" |
 | **learning** | 学习、理解、弄懂、掌握、复习、讲给别人听、面试、简单解释 | "这个机制我是不是真懂了" |
-| **manage** | 管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、升级 | "按依赖图安排 Sol 和 Luna 的并发波次" |
+| **manage** | Token 预算、模型额度管理、费用控制、管理、协作、分工、委派、责任、协调、资源、排期、子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、升级 | "按依赖图安排 Sol 和 Luna 的并发波次" |
 
 ### route_context 推导
 
@@ -162,6 +162,8 @@ route_context:
 ```
 
 推导约定：`type` 由关键词与语义意图确定；`urgency` 命中 critical 关键词才为 `critical`，否则为 `normal`；`domain` 由项目上下文和请求对象确定；`has_data` 仅在出现报告、指标、日志或其他可分析数据时为 `true`，明确没有时为 `false`，其余为 `unknown`；`complexity=high` 仅在多因素交织或因果难以拆分时成立；`sub_type` 与 `scope` 只填写有直接证据的 YAML 条件值；`cynefin_pre=true` 表示先执行 `meta` 预处理链。无法确定 `type` 或多个候选同样成立时，进入 Top 3 降级。
+
+当目标是制定或调整模型用量、额度或预算策略时，使用 `type=manage`、`sub_type=token_management`。仅统计历史用量、配置指定网关或管理认证令牌时，交给对应专业工具。
 
 ### 降级输出格式（type 未确定或选择平局时）
 
@@ -228,6 +230,7 @@ route_context:
 | **manage** | `sub_type=improvement` | Management Collaboration → PDCA → SCQA（前两者必需，SCQA 可选） |
 | **manage** | `sub_type=structured_discussion` | Six Hats |
 | **manage** | `sub_type=personal_tasks` | GTD |
+| **manage** | `sub_type=token_management` | Token 管理 |
 | **report** | `sub_type=retrospective` | STAR → SCQA（可选） |
 | **report** | `sub_type=kpt` | KPT |
 | **report** | `sub_type=feedback` | SBI |
@@ -417,7 +420,7 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 50 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 51 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|
@@ -428,7 +431,7 @@ route_log:
 | **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
 | **风险管理** risk | pre-mortem（事前验尸）· fmea（失效模式分析）· fta（故障树分析）· scenario-planning（情景规划） |
 | **汇报与反馈** report | scqa（金字塔叙事）· star（STAR 叙事）· kpt（KPT 复盘）· a3（一页纸报告）· sbi（SBI 反馈）· double-loop（双环学习） |
-| **协作管理** manage | management-collaboration（管理与协作）· six-hats（六顶思考帽）· gtd（GTD 任务管理） |
+| **协作管理** manage | management-collaboration（管理与协作）· six-hats（六顶思考帽）· gtd（GTD 任务管理）· token-management（Token 管理） |
 | **学习验证** learning | feynman（费曼技巧） |
 | **元认知** meta | cynefin（问题域分类） |
 

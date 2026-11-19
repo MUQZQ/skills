@@ -1,4 +1,5 @@
-# 方法论路由映射表 v3.9
+# 方法论路由映射表 v3.10
+# v3.10: +token-management 模型用量与额度管理(manage/token_management)
 # v3.9: +evidence-driven-dev 证据驱动开发全流程(improve/evidence-driven-full-loop)
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
 # 无需修改 SKILL.md
@@ -6,11 +7,11 @@
 # v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
 # v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.9'
+version: '3.10'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
-last_updated: '2026-09-01'
+last_updated: '2026-11-19'
 route_context:
   fields:
     type: required; classify to one of diagnose/decide/design/improve/risk/report/manage/goal/learning
@@ -153,7 +154,12 @@ classification:
     - 超时
     - 进度
     - 升级
+    - Token 管理
+    - 模型用量预算
+    - 模型额度管理
+    - 模型费用控制
     examples:
+    - 如何分配模型 Token 和套餐额度
     - Sol 和 Luna 怎么分工
     - 如何安排多个子 Agent 协作
     - 如何避免 Luna 超时
@@ -497,6 +503,14 @@ routes:
     mandatory: false
   rationale: 因为协作机制反复低效，选择 Management Collaboration 加 PDCA 而非一次性任务重排
 - type: manage
+  condition:
+    sub_type: token_management
+  chain:
+  - skill_name: token-management
+    order: 1
+    mandatory: true
+  rationale: 因为需要在验收质量下分配模型额度和费用预算，选择 Token 管理而非通用协作分工
+- type: manage
   priority: 0
   condition: {}
   chain:
@@ -818,6 +832,8 @@ skill_registry:
   - skill_name: star
     category: report
   - skill_name: management-collaboration
+    category: manage
+  - skill_name: token-management
     category: manage
   - skill_name: pugh-matrix
     category: decide

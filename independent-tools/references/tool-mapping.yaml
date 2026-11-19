@@ -21,6 +21,14 @@
       ],
       "skill_name": "datasheet-params"
     },
+    "magpie-model-routing": {
+      "intent": [
+        "Magpie 模型路由与主组轻量组配置",
+        "免费与套餐优先、按量兜底",
+        "Magpie 意图规则与主子 Agent 选模"
+      ],
+      "skill_name": "magpie-model-routing"
+    },
     "playwright-testing": {
       "intent": [
         "ParamCompare 浏览器端到端测试"

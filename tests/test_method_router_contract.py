@@ -383,8 +383,8 @@ class MethodRouterContractTest(unittest.TestCase):
     def test_eight_leaf_routes_are_narrow_unique_and_learning_does_not_hit(
         self,
     ) -> None:
-        self.assertIn("version: '3.9'", self.mapping)
-        self.assertIn("last_updated: '2026-09-01'", self.mapping)
+        self.assertIn("version: '3.10'", self.mapping)
+        self.assertIn("last_updated: '2026-11-19'", self.mapping)
         decide_block = self.mapping.split("\n  decide:\n", 1)[1].split(
             "\n  design:\n", 1
         )[0]
@@ -411,7 +411,7 @@ class MethodRouterContractTest(unittest.TestCase):
             leaf_sub_types,
             {route["condition"]["sub_type"] for route in leaf_routes},
         )
-        self.assertEqual(54, len(self.routes))
+        self.assertEqual(55, len(self.routes))
 
         with self.assertRaises(LookupError):
             _resolve(
@@ -447,12 +447,12 @@ class MethodRouterContractTest(unittest.TestCase):
 
     def test_readme_and_method_router_counts_include_eight_leaf_skills(self) -> None:
         readme = README_PATH.read_text(encoding="utf-8")
-        self.assertIn("85 个注册 Skill", readme)
-        self.assertIn("50 个方法论 Skill", readme)
+        self.assertIn("87 个注册 Skill", readme)
+        self.assertIn("51 个方法论 Skill", readme)
         self.assertIn("10 个功能块", readme)
         self.assertIn("8 个独立叶子 Skill", readme)
         self.assertIn("不是第九个综合 Skill", readme)
-        self.assertIn("50 个框架", self.method)
+        self.assertIn("51 个框架", self.method)
         self.assertIn("10 个功能块", self.method)
         self.assertIn("munger_full", self.method)
         self.assertNotIn(OLD_COMPOSITE_NAME, self.method)
@@ -488,8 +488,8 @@ class MethodRouterContractTest(unittest.TestCase):
             "Discovery Sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "85 个",
-            "50 个",
+            "87 个",
+            "51 个",
         ):
             with self.subTest(document="README", text=text):
                 self.assertIn(text, readme)
@@ -499,8 +499,8 @@ class MethodRouterContractTest(unittest.TestCase):
             "discovery-sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "85 个",
-            "50 个",
+            "87 个",
+            "51 个",
             *LEAF_NAMES,
         ):
             with self.subTest(document="Draw.io", text=text):

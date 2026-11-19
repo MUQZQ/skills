@@ -157,12 +157,13 @@
     },
     "independent-tools": {
       "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记）",
+      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记、Magpie 模型路由）",
       "intents": [
         "专业单用途工具",
         "媒体转换",
         "环境管理",
-        "QEDAI 订阅费用报销登记"
+        "QEDAI 订阅费用报销登记",
+        "Magpie 模型路由与分组"
       ],
       "entry_path": "independent-tools/SKILL.md",
       "routing_source": "independent-tools/references/tool-mapping.yaml",
@@ -181,6 +182,11 @@
           "skill_name": "datasheet-params",
           "description": "从器件数据手册（IC datasheet）提取结构化、可信、可溯源的器件参数，把 merged.json 中间产物加工为 *_ai_params.yaml（每条参数带 Page/layout_type/Block 证据地址）。当用户提到\"提取器件参数\"、\"数据手册参数\"、\"datasheet 参数\"、\"merged.json 参数\"、\"ai_params.yaml\"、\"芯片参数溯源\"、\"PDF 参数提取\"时使用。",
           "path": "independent-tools/datasheet-params/SKILL.md"
+        },
+        "magpie-model-routing": {
+          "skill_name": "magpie-model-routing",
+          "description": "检查、设计或按授权更新 Magpie 模型路由，按费用、效率和质量选择模型。适用于 Magpie 的 main/cheap 分组、免费与套餐优先、按量兜底、意图规则、单入口以及主 Agent 和子 Agent 的分工。",
+          "path": "independent-tools/magpie-model-routing/SKILL.md"
         },
         "playwright-testing": {
           "skill_name": "playwright-testing",
@@ -270,6 +276,7 @@
       "responsibility": "方法论选择、跨阶段保持与证据反馈后的重选，指导任务判断、规划、检查和改进",
       "intents": [
         "从零探索",
+        "模型 Token、额度与费用管理",
         "分析诊断",
         "决策选型",
         "设计规划",
@@ -430,6 +437,11 @@
           "skill_name": "scqa",
           "description": "SCQA 叙事框架：将所有分析/审查/诊断输出统一格式化为情境(Situation)→冲突(Complication) →问题(Question)→答案(Answer)的金字塔结构。作为 method-router 的输出层 Skill， 自动衔接上游分析结果。也适用于用户直接要求\"写报告\"\"格式化输出\"\"用 SCQA 模板\"时触发。",
           "path": "method-router/scqa/SKILL.md"
+        },
+        "token-management": {
+          "skill_name": "token-management",
+          "description": "制定和调整大模型 Token 用量、套餐额度和费用预算，兼顾任务耗时与验收质量。适用于 Token 管理、额度分配、免费与套餐优先、按量兜底、模型成本与返工对比。",
+          "path": "method-router/token-management/SKILL.md"
         },
         "star": {
           "skill_name": "star",
