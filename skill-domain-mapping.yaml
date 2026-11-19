@@ -569,7 +569,11 @@
         "任务总览",
         "晨报",
         "日历待办",
-        "Git issue 转任务"
+        "Git issue 转任务",
+        "甘特图",
+        "任务时间线",
+        "进度可视化",
+        "排期图"
       ],
       "entry_path": "task-management/SKILL.md",
       "routing_source": "task-management/references/task-mapping.yaml",
@@ -578,6 +582,11 @@
           "skill_name": "dida-task-manager",
           "description": "管理绑定到当前项目的滴答清单：读取、巡检、整理少量里程碑任务，并在明确授权时执行更新。用户提到滴答清单、TickTick、项目任务同步、定时巡检或清单整理时使用。",
           "path": "task-management/dida-task-manager/SKILL.md"
+        },
+        "gantt-chart": {
+          "skill_name": "gantt-chart",
+          "description": "把任务、issue 或项目线渲染成终端甘特图并标注分组与完成状态。用 termaid 渲染 Mermaid gantt 源码，输出纯文本字符图；用于任务时间线、进度可视化、排期图、各组进度查看。只做呈现，不修改任务数据。",
+          "path": "task-management/gantt-chart/SKILL.md"
         }
       }
     }

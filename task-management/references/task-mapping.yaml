@@ -10,6 +10,16 @@
         "任务管家多源汇总"
       ],
       "skill_name": "dida-task-manager"
+    },
+    "gantt-chart": {
+      "intent": [
+        "甘特图",
+        "任务时间线",
+        "进度可视化",
+        "排期图",
+        "各组进度"
+      ],
+      "skill_name": "gantt-chart"
     }
   },
   "authority_scope": "domain_intent_routing",
