@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * pr-watch.mjs — 监控自己在 Gitea 上所有开 PR 的状态、评论与 CI，输出与上次快照的变化。
+ * pr-watch.mjs — 监控 Gitea PR 的候选提交、合入状态、评论、正式评审事件与 CI。
  *
  * 配置（必须提供，否则报错退出）：
  *   方式一：脚本同目录 pr-watch.config.json
@@ -14,7 +14,7 @@
  *   node pr-watch.mjs 94                  # 只监控指定 PR
  *   node pr-watch.mjs 94 owner/repo      # 指定 PR + 仓库
  *
- * 状态快照写在脚本同目录 pr-watch.state.json（按 repo#PR 分键）；删除即重置。
+ * 状态快照写在脚本同目录 pr-watch.state.json（按服务器与仓库隔离）；删除即重置。
  *
  * 认证顺序：
  *   1. ~/.gitea-token（唯一存放位置，branch-manager skill R7 约定；不进任何仓库）
@@ -26,7 +26,8 @@
  * 退出码：0 正常；1 配置缺失或运行时错误；2 全部监控 PR 已关闭/合并。
  */
 import { execFileSync } from 'node:child_process';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { createHash, randomUUID } from 'node:crypto';
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
@@ -38,7 +39,7 @@ function readConfigFile() {
 }
 const CFG = readConfigFile();
 const argRepo = process.argv[3];
-const SERVER = process.env.GITEA_SERVER || CFG.server || '';
+const SERVER = (process.env.GITEA_SERVER || CFG.server || '').replace(/\/+$/, '');
 const DEFAULT_REPO = argRepo || process.env.GITEA_REPO || CFG.repo || '';
 const MY_LOGIN = process.env.GITEA_LOGIN || CFG.login || '';
 
@@ -56,9 +57,9 @@ function readTokenFile() {
 }
 function readTokenFromGcm() {
   try {
-    const host = new URL(SERVER).host;
+    const { protocol, host } = new URL(SERVER);
     const cred = execFileSync('git', ['credential', 'fill'], {
-      input: `protocol=https\nhost=${host}\n\n`,
+      input: `protocol=${protocol.slice(0, -1)}\nhost=${host}\n\n`,
       env: { ...process.env, GIT_TERMINAL_PROMPT: '0', GCM_INTERACTIVE: 'never' },
       timeout: 20_000,
     }).toString();
@@ -67,157 +68,275 @@ function readTokenFromGcm() {
 }
 const token = readTokenFile() || process.env.GITEA_TOKEN || readTokenFromGcm();
 
-// ── HTTP（令牌优先，失败降级匿名）──
-// 令牌经 --config stdin 传入，避免出现在进程命令行参数中（同机进程列表可窥）。
-function curl(path, useToken = Boolean(token)) {
-  const args = [TLS_INSECURE ? '-sk' : '-s', '--max-time', '30'];
-  const input = `url = "${SERVER}${path}"\n`;
-  if (useToken && token) args.push('--config', '-');
-  else args.push(`${SERVER}${path}`);
-  const out = execFileSync('curl', args, {
-    encoding: 'utf8',
-    maxBuffer: 16 * 1024 * 1024,
-    input: useToken && token ? input + `header = "Authorization: token ${token}"\n` : undefined,
-    stdio: ['pipe', 'pipe', 'pipe'],
-  });
+// HTTP 状态与 JSON 数据分别核对，避免把 API 错误正文当作有效快照。
+function curl(path, useToken) {
+  const args = ['--silent', '--show-error', '--max-time', '30', '--write-out', '\\n%{http_code}'];
+  if (TLS_INSECURE) args.push('--insecure');
+  const url = SERVER + path;
+  const input = useToken ? 'url = ' + JSON.stringify(url) + '\nheader = ' + JSON.stringify('Authorization: token ' + token) + '\n' : undefined;
+  args.push(...(useToken ? ['--config', '-'] : ['--url', url]));
+  let out;
   try {
-    return JSON.parse(out);
+    out = execFileSync('curl', args, {
+      encoding: 'utf8',
+      maxBuffer: 16 * 1024 * 1024,
+      input,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+  } catch (error) {
+    throw new Error('请求失败（' + (error.code || error.status || '未知错误') + '）：' + path);
+  }
+  const split = out.lastIndexOf('\n');
+  const status = Number(out.slice(split + 1));
+  if (status < 200 || status >= 300 || !Number.isInteger(status)) {
+    throw Object.assign(new Error('HTTP ' + status + '：' + path), { status });
+  }
+  try {
+    return JSON.parse(out.slice(0, split));
   } catch {
-    throw new Error(`非 JSON 响应（HTTP 可能 4xx/5xx 或超时）: ${out.slice(0, 120)}`);
+    throw new Error('响应不是 JSON：' + path);
   }
 }
-function curlSafe(path) {
+
+function get(path) {
   try {
-    return curl(path, true);
-  } catch (tokenedError) {
+    return curl(path, Boolean(token));
+  } catch (error) {
+    if (!token || ![401, 403, 404].includes(error.status)) throw error;
     try {
       return curl(path, false);
     } catch {
-      // 带令牌与匿名都失败时，抛首次（带令牌）错误：真实原因（如 401）不被匿名 404 掩盖
-      throw tokenedError;
+      throw error;
     }
   }
 }
 
-// ── 状态（按 repo#PR 分键，跨仓库不冲突）──
-function loadState() {
-  try { return JSON.parse(readFileSync(STATE_FILE, 'utf8')); } catch { return {}; }
-}
-function saveState(state) {
-  writeFileSync(STATE_FILE, `${JSON.stringify(state, null, 2)}\n`);
+function getPages(path, readRows = result => result) {
+  const items = [];
+  const collected = new Set();
+  const separator = path.includes('?') ? '&' : '?';
+  const pageSize = 50;
+  for (let page = 1; ; page++) {
+    const result = get(path + separator + 'limit=' + pageSize + '&page=' + page);
+    const batch = readRows(result);
+    if (!Array.isArray(batch)) throw new Error('列表响应格式无效：' + path);
+    for (const item of batch) {
+      const id = item?.id ?? item?.number;
+      if (id == null || collected.has(id)) throw new Error('分页数据变化或无效：' + path);
+      collected.add(id);
+      items.push(item);
+    }
+    if (batch.length < pageSize) return items;
+  }
 }
 
-// ── 快照与报告 ──
-function snapshotPr(repo, prNumber) {
-  const pr = curlSafe(`/api/v1/repos/${repo}/pulls/${prNumber}`);
-  const comments = curlSafe(`/api/v1/repos/${repo}/issues/${prNumber}/comments?limit=50&sort=created&direction=desc`);
-  const head = pr.head?.sha ?? '';
-  const ci = head ? curlSafe(`/api/v1/repos/${repo}/commits/${head}/status`) : { statuses: [] };
-  const last = Array.isArray(comments) && comments.length ? comments[0] : null;
+function loadState() {
+  let raw;
+  try {
+    raw = readFileSync(STATE_FILE, 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') return {};
+    throw error;
+  }
+  const state = JSON.parse(raw);
+  if (!state || typeof state !== 'object' || Array.isArray(state)) throw new Error('监控状态格式无效');
+  return state;
+}
+
+function saveState(key, updates) {
+  if (!Object.keys(updates).length) return;
+  const state = loadState();
+  state[key] = { ...state[key], ...updates };
+  const scratch = STATE_FILE + '.' + randomUUID() + '.tmp';
+  try {
+    writeFileSync(scratch, JSON.stringify(state, null, 2) + '\n', { flag: 'wx' });
+    renameSync(scratch, STATE_FILE);
+  } finally {
+    rmSync(scratch, { force: true });
+  }
+}
+
+function fingerprint(records) {
+  return createHash('sha256').update(JSON.stringify(records)).digest('hex');
+}
+
+function briefSha(sha) {
+  return sha ? sha.slice(0, 9) : '未知';
+}
+
+function pullState(pr) {
+  const head = pr?.head?.sha ?? '';
+  const base = pr?.base?.sha ?? '';
+  if (!['open', 'closed'].includes(pr?.state) || typeof head !== 'string' || typeof base !== 'string'
+      || (pr.state === 'open' && (!head || !base))) {
+    throw new Error('PR 响应缺少状态或 head/base');
+  }
   return {
-    pr,
-    now: {
-      at: new Date().toISOString(),
-      state: pr.state ?? 'unknown',
-      merged: Boolean(pr.merged),
-      head: head.slice(0, 9),
-      mergeable: pr.mergeable,
-      comments: pr.comments ?? 0,
-      lastComment: last ? { id: last.id, user: last.user?.login, at: last.created_at } : null,
-      ci: Object.fromEntries((ci.statuses ?? []).map(s => [s.context.replace('CI / ', '').replace(' (pull_request)', ''), s.status])),
-    },
-    ciRaw: ci,
+    state: pr.state,
+    merged: Boolean(pr.merged),
+    draft: Boolean(pr.draft),
+    head,
+    base,
+    baseRef: pr.base?.ref ?? '',
+    baseRepo: pr.base?.repo?.full_name ?? pr.base?.repo_id ?? '',
+    mergeable: pr.mergeable ?? null,
   };
 }
 
-function reportPr(repo, prNumber, title, prev, now, ciRaw) {
-  const lines = [`\n━━ PR ${repo}#${prNumber} ${title.slice(0, 45)}`];
-  lines.push(`状态: ${now.state}${now.merged ? '（已合并）' : ''} | head: ${now.head} | mergeable: ${now.mergeable} | 评论: ${now.comments}`);
-  lines.push(`CI: ${Object.entries(now.ci).map(([k, v]) => `${k}=${v}`).join(' ') || '未注册'}`);
-  if (!prev) { lines.push('（首次监控，已记录基线）'); return { lines, changed: true, first: true }; }
-
-  const changes = [];
-  if (prev.head !== now.head) changes.push(`head ${prev.head} → ${now.head}（有新推送）`);
-  if (prev.mergeable !== now.mergeable) changes.push(`mergeable ${prev.mergeable} → ${now.mergeable}`);
-  if ((prev.comments ?? 0) !== now.comments) {
-    const last = now.lastComment;
-    changes.push(`评论 ${prev.comments} → ${now.comments}（最新 #${last?.id} by ${last?.user} @ ${last?.at?.slice(0, 16).replace('T', ' ')}）`);
+function latestChecks(path, head) {
+  const byContext = new Map();
+  if (!head) return byContext;
+  const rows = getPages(path, result => {
+    if (result?.sha && result.sha !== head) throw new Error('CI 响应与当前提交不匹配');
+    return Array.isArray(result) ? result : result?.statuses;
+  });
+  for (const row of rows) {
+    const status = row?.status ?? row?.state;
+    if (!row?.context || typeof status !== 'string' || !status) throw new Error('CI 记录缺少检查名或状态');
+    const prior = byContext.get(row.context);
+    const date = Date.parse(row.updated_at || row.created_at || '') || 0;
+    const id = Number(row.id) || 0;
+    if (!prior || date > prior.date || (date === prior.date && id > prior.id)) {
+      byContext.set(row.context, { status, url: row.target_url, date, id });
+    }
   }
-  for (const [k, v] of Object.entries(now.ci)) {
-    if ((prev.ci?.[k] ?? '未注册') !== v) changes.push(`CI ${k}: ${prev.ci?.[k] ?? '未注册'} → ${v}`);
-  }
-  if (prev.state !== now.state || prev.merged !== now.merged) changes.push(`PR 状态 ${prev.state} → ${now.state}${now.merged ? '（已合并）' : ''}`);
-
-  if (changes.length) lines.push(`变化:\n${changes.map(c => `  - ${c}`).join('\n')}`);
-  else lines.push('较上次无变化');
-
-  const failedHints = (ciRaw.statuses ?? [])
-    .filter(x => x.status === 'failure')
-    .map(x => {
-      const m = String(x.target_url ?? '').match(/runs\/(\d+)\/jobs\/(\d+)/);
-      return m ? `  失败日志: ${SERVER}/${repo}/actions/runs/${m[1]}/jobs/${m[2]}/logs` : '';
-    })
-    .filter(Boolean);
-  if (failedHints.length) lines.push(failedHints.join('\n'));
-
-  return { lines, changed: changes.length > 0, first: false };
+  return byContext;
 }
 
-// ── 主流程 ──
-function main() {
-  const argPr = process.argv[2];
-  const repo = DEFAULT_REPO;
-  const stateKey = repo; // 按 repo 分键
-  const state = loadState();
-  const tracked = state[stateKey] ?? {};
+function formalReviews(path, head) {
+  let reviews;
+  try {
+    reviews = getPages(path);
+  } catch (error) {
+    if (![401, 403, 404].includes(error.status)) throw error;
+    return { reviewDigest: null, approvals: null };
+  }
+  const sorted = reviews.sort((a, b) => a.id - b.id);
+  const latestVotes = new Map();
+  const voteStates = new Set(['APPROVED', 'REQUEST_CHANGES', 'CHANGES_REQUESTED', 'DISMISSED']);
+  for (const item of sorted) {
+    const voter = item.user?.id ?? item.user?.login;
+    if (voter != null && item.commit_id === head && voteStates.has(item.state)) {
+      latestVotes.set(voter, item.state === 'APPROVED' && !item.dismissed && !item.stale);
+    }
+  }
+  const reviewDigest = fingerprint(sorted.map(item => [
+    item.id, item.user?.id, item.user?.login, item.state, item.commit_id, item.dismissed, item.stale,
+    item.submitted_at, item.updated_at, item.body,
+  ]));
+  return { reviewDigest, approvals: [...latestVotes.values()].filter(Boolean).length };
+}
 
-  let targets;
-  if (argPr) {
-    const n = Number(argPr);
-    if (!Number.isInteger(n) || n <= 0) { console.error(`无效 PR 号: ${argPr}`); process.exit(1); }
-    targets = [{ number: n }];
+function snapshotPr(repo, number) {
+  const root = '/api/v1/repos/' + repo;
+  const path = root + '/pulls/' + number;
+  const pr = get(path);
+  const candidate = pullState(pr);
+  const comments = getPages(root + '/issues/' + number + '/comments').sort((a, b) => a.id - b.id);
+  const checks = latestChecks(root + '/commits/' + encodeURIComponent(candidate.head) + '/status', candidate.head);
+  const formal = formalReviews(path + '/reviews', candidate.head);
+  if (JSON.stringify(candidate) !== JSON.stringify(pullState(get(path)))) {
+    throw new Error('读取期间 PR 状态或提交变化，本次快照未保存');
+  }
+  return {
+    title: pr.title ?? '',
+    now: {
+      ...candidate,
+      ...formal,
+      comments: comments.length,
+      lastComment: comments.at(-1)?.id ?? null,
+      commentDigest: fingerprint(comments.map(item => [item.id, item.created_at, item.updated_at, item.body])),
+      ci: Object.fromEntries([...checks].map(([name, info]) => [name, info.status])),
+      ciReceipts: Object.fromEntries([...checks].map(([name, info]) => [name, fingerprint(info)])),
+    },
+    checks,
+  };
+}
+
+function reportPr(repo, number, title, previous, current, checks) {
+  const changes = [];
+  if (!previous) {
+    changes.push('首次监控，已记录基线');
   } else {
-    const all = curlSafe(`/api/v1/repos/${repo}/pulls?state=open&limit=50`);
-    targets = all.filter(p => p.user?.login === MY_LOGIN).map(p => ({ number: p.number, title: p.title }));
+    if (previous.head !== current.head) changes.push('head ' + briefSha(previous.head) + ' → ' + briefSha(current.head));
+    if (previous.base !== current.base || previous.baseRef !== current.baseRef || previous.baseRepo !== current.baseRepo) {
+      changes.push('目标分支 ' + previous.baseRef + '@' + briefSha(previous.base) + ' → ' + current.baseRef + '@' + briefSha(current.base));
+    }
+    if (previous.mergeable !== current.mergeable) changes.push('冲突状态变化');
+    if (previous.draft !== current.draft) changes.push('草稿状态变化');
+    if (previous.state !== current.state || previous.merged !== current.merged) changes.push('PR 状态变化');
+    if (previous.commentDigest !== current.commentDigest) changes.push('评论有新增、编辑或移除');
+    if (previous.reviewDigest !== current.reviewDigest || previous.approvals !== current.approvals) changes.push('正式评审记录变化');
+    for (const name of new Set([...Object.keys(previous.ci ?? {}), ...Object.keys(current.ci)])) {
+      const was = Object.hasOwn(previous.ci ?? {}, name) ? previous.ci[name] : undefined;
+      const now = Object.hasOwn(current.ci, name) ? current.ci[name] : undefined;
+      if (was !== now) {
+        changes.push('CI ' + name + '：' + (was ?? '未注册') + ' → ' + (now ?? '未回报'));
+      } else if (previous.ciReceipts?.[name] !== current.ciReceipts[name]) {
+        changes.push('CI ' + name + '：' + now + '，作业回执变化');
+      }
+    }
   }
-
-  if (targets.length === 0) {
-    console.log(`在 ${repo} 下没有 ${MY_LOGIN} 的开 PR。`);
-    process.exit(0);
+  if (!changes.length) return;
+  console.log('\n━━ PR ' + repo + '#' + number + ' ' + title.slice(0, 45));
+  console.log('状态 ' + current.state + (current.merged ? '（已合并）' : '') + (current.draft ? '（草稿）' : '')
+    + ' | head ' + briefSha(current.head) + ' | base ' + current.baseRef + '@' + briefSha(current.base)
+    + ' | mergeable ' + (current.mergeable ?? '未知') + ' | 评论 ' + current.comments);
+  console.log('当前提交正式批准记录 ' + (current.approvals ?? '不可读') + '，分支保护门槛以平台为准');
+  console.log('CI ' + (Object.entries(current.ci).map(([name, state]) => name + '=' + state).join(' ') || '未见回执'));
+  for (const change of changes) console.log('  - ' + change);
+  for (const [name, row] of checks) {
+    if (['failure', 'error'].includes(row.status) && /^https?:\/\/[^\s]+$/i.test(row.url ?? '')) {
+      console.log('  失败作业 ' + name + ' ' + row.url);
+    }
   }
+}
 
-  console.log(`监控 ${targets.length} 个 PR @ ${new Date().toISOString().slice(0, 19).replace('T', ' ')}`);
-  let anyChanged = false;
+function main() {
+  const repo = DEFAULT_REPO;
+  if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) throw new Error('仓库配置应为 owner/repo');
+  const parsedServer = new URL(SERVER);
+  if (!['http:', 'https:'].includes(parsedServer.protocol) || parsedServer.username || parsedServer.password || parsedServer.search || parsedServer.hash) {
+    throw new Error('server 应为不含凭证、查询或片段的 HTTP(S) 地址');
+  }
+  const stateKey = SERVER + '|' + repo;
+  const previous = loadState()[stateKey] ?? {};
+  const updates = {};
+  const requested = process.argv[2];
+  const number = Number(requested);
+  if (requested && (!Number.isInteger(number) || number <= 0)) throw new Error('PR 号无效');
+  const targets = requested ? [number]
+    : getPages('/api/v1/repos/' + repo + '/pulls?state=open').filter(pr => pr.user?.login === MY_LOGIN).map(pr => pr.number);
+
+  if (!targets.length) {
+    console.log('在 ' + repo + ' 下没有 ' + MY_LOGIN + ' 的开 PR。');
+    return;
+  }
   let allClosed = true;
   let hadError = false;
-
-  for (const { number, title: tOverride } of targets) {
+  for (const pr of targets) {
     try {
-      const { pr, now, ciRaw } = snapshotPr(repo, number);
-      const title = tOverride ?? pr.title ?? '';
-      const prev = tracked[String(number)];
-      const result = reportPr(repo, number, title, prev, now, ciRaw);
-      if (result.changed) {
-        console.log(result.lines.join('\n'));
-        anyChanged = true;
-      }
-      // 无变化时静默（cron 友好）；首次也输出（建立基线）
+      const { title, now, checks } = snapshotPr(repo, pr);
+      const before = previous[pr];
+      reportPr(repo, pr, title, before, now, checks);
+      if (JSON.stringify(before) !== JSON.stringify(now)) updates[pr] = now;
       if (now.state === 'open') allClosed = false;
-      tracked[String(number)] = now;
     } catch (error) {
-      console.error(`PR #${number}: 读取失败 — ${String(error.message || error).split('\n')[0]}`);
+      console.error('PR #' + pr + ' 读取失败：' + error.message);
       hadError = true;
     }
   }
-
-  state[stateKey] = tracked;
-  saveState(state);
-
-  if (hadError) process.exit(1);
-  if (allClosed) {
-    console.log('\n所有监控的 PR 均已关闭/合并。');
-    process.exit(2);
+  saveState(stateKey, updates);
+  if (hadError) process.exitCode = 1;
+  else if (allClosed) {
+    console.log('所有监控的 PR 均已关闭或合并。');
+    process.exitCode = 2;
   }
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  console.error('PR 监控失败：' + error.message);
+  process.exitCode = 1;
+}

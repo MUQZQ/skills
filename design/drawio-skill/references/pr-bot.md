@@ -1,73 +1,28 @@
-# PR Diagram Bot — reviewing `.drawio` changes as pictures
+# PR 图表差异报告
 
-Goal: in CI, for every `.drawio` file a pull request touches, render the base
-version, the head version, and a colour-coded diff, then post them as a
-sticky PR comment (and the job summary) so reviewers see pictures instead of
-raw XML diffs.
+对当前 PR 涉及的 `.drawio` 文件生成基线图、候选图、着色差异图和 Markdown。由目标仓库的 CI 发布生成的报告和图片制品。
 
-Read this when you're setting up (or troubleshooting) automated PR diagram
-review for a repo.
+## 在本地生成
 
-## Pieces
+先按 PR 实际目标仓库和分支获取基线与候选提交，确保两个引用在被检出的仓库中可用。从 CCS 根目录执行：
 
-- `scripts/prdiff.py` — the script. `changed_drawios()` finds what changed
-  (`git diff --name-status`); for each file it exports base/head PNGs via the
-  draw.io CLI and, for modified files, chains `drawiodiff.py` ->
-  `autolayout.py` -> CLI export into a third diff PNG; `render_markdown()`
-  turns all of that into one Markdown report.
-- `.github/actions/drawio-diff/action.yml` — a composite action that checks
-  out full history, installs draw.io + Graphviz, runs `prdiff.py`, uploads
-  the PNGs + report as a build artifact, writes the report to
-  `$GITHUB_STEP_SUMMARY`, and posts/updates a sticky PR comment.
-- `.github/workflows/drawio-pr-diff.example.yml` — a template workflow that
-  wires the action to `pull_request` events. It ships as `.example.yml` and
-  gated with `if: false` so it does **nothing** until you copy and adapt it
-  in your own repo (see the comment at the top of that file).
-
-## Adopting it in your own repo
-
-1. Copy `.github/actions/drawio-diff/` and `skills/design/drawio-skill/` (or at
-   least `scripts/prdiff.py`, `scripts/drawiodiff.py`, `scripts/autolayout.py`)
-   into your repo.
-2. Copy `.github/workflows/drawio-pr-diff.example.yml` to
-   `.github/workflows/drawio-pr-diff.yml`, drop the `if: false` guard, and
-   uncomment the `pull_request: paths: ["**/*.drawio"]` trigger.
-3. Give the job `permissions: pull-requests: write` (already set in the
-   example) — the sticky comment step needs it; `contents: read` covers the
-   checkout.
-4. Push a PR that touches a `.drawio` file and watch it run.
-
-## Runner tooling
-
-The draw.io desktop CLI is Electron-based, so headless CI needs the same
-setup documented in `docs/CI.md` "Option A" of this repo: Graphviz (`dot`,
-for `autolayout.py`) and a virtual display (`xvfb-run`). The composite action
-installs both by default (latest `drawio-desktop` `.deb` + `apt-get
-graphviz xvfb`); pass `skip-tool-install: true` if your runner/container
-already provides `drawio` and `dot` on PATH.
-
-If the draw.io CLI is missing (or fails), `prdiff.py` does **not** hard-fail
-the run — the Markdown report still lists every changed file and its status,
-just without images, with a note that image export was skipped. `git`
-missing (or `--repo` not being a git repository) IS fatal, since without git
-there is nothing to diff.
-
-## How the sticky comment works
-
-The action tags its comment body with an HTML marker
-(`<!-- drawio-pr-diff-bot -->`) and, before posting, searches the PR's
-existing comments (via `gh api .../issues/<n>/comments`) for one starting
-with that marker. If found, it `PATCH`es that comment in place; otherwise it
-creates a new one with `gh pr comment`. This keeps one running comment per PR
-instead of a new comment on every push.
-
-## Running it locally
-
-```
-python3 skills/design/drawio-skill/scripts/prdiff.py --base origin/main --head HEAD \
-  --out-dir drawio-pr -o drawio-pr/report.md
+```bash
+python design/drawio-skill/scripts/prdiff.py --repo <项目检出目录> \
+  --base <base-sha> --head <head-sha> --out-dir drawio-pr -o drawio-pr/report.md
 ```
 
-`--base`/`--head` are any git refs or SHAs (`--head` defaults to `HEAD`);
-`--repo` points at a different working tree (default: current directory).
-Open `drawio-pr/report.md` to preview exactly what the PR comment will say.
+脚本在 PATH 中查找 `drawio` 或 `draw.io`。Windows 已安装桌面版时，可直接传入安装路径。PowerShell 示例：
+
+```powershell
+python design/drawio-skill/scripts/prdiff.py --repo '<项目检出目录>' --base '<base-sha>' --head '<head-sha>' --drawio 'D:\Program Files\draw.io\draw.io.exe' --out-dir drawio-pr -o drawio-pr/report.md
+```
+
+脚本通过 draw.io CLI 导出 PNG。着色差异图需要 Graphviz 的 `dot` 在 PATH 中。修改的图通过同目录 `drawiodiff.py` 和 `autolayout.py` 生成差异图。无头 Linux runner 使用虚拟显示（如 `xvfb-run`）。图片导出不完整时，结合报告和运行日志确认覆盖范围，文件清单仍可用于评审。
+
+## 接入目标仓库的 CI
+
+1. 在现有流水线中检出可解析的 PR base 和 head，并调用上述脚本。
+2. 上传完整 `drawio-pr/`，包含 Markdown 与相对路径指向的图片。需要展示摘要时链接流水线制品。
+3. 项目已授权更新 PR 评论时，复用其评论发布能力，用稳定标记定位现有报告并确认仓库、PR、提交和制品链接。评论中的图使用评审者可以访问的地址。先验证制品读回，再记录视觉验收结果。
+
+CCS 提供报告脚本。工作流、评论和制品上传由目标仓库接入。PR 操作见 [PR 验证记录与评审线程](../../../independent-tools/branch-manager/references/pr-records.md)。

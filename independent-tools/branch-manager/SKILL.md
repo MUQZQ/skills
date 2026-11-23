@@ -4,11 +4,11 @@ description: >
   Git 分支管理工作流：创建分支、暂存恢复、checkpoint 提交、feature 分支工作流、
   hotfix 紧急修复、rebase/merge 同步上游、cherry-pick 挑选提交、
   交互式 rebase 整理历史、bisect 二分查找、分支对比、分支清理、
-  PR 修改前状态确认、Gitea API 令牌管理。
+  PR 修改前状态确认、验证清单刷新、Gitea API 令牌管理。
   当用户提到"创建分支"、"切换分支"、"stash"、"暂存"、"checkpoint"、
   "工作区检查"、"回退点"、"feature 分支"、"hotfix"、"cherry-pick"、
   "整理提交"、"rebase"、"merge 冲突"、"bisect"、"更新 PR"、"改 PR 分支"、
-  "PR 状态"、"令牌"、"token"、"API token"、"fork PR"、"双阶段 PR"、
+  "PR 状态"、"刷新 PR 验证列表"、"令牌"、"token"、"API token"、"fork PR"、"双阶段 PR"、
   "fork 集成"、"合入 upstream"、"评审门禁"时触发。
 ---
 
@@ -36,9 +36,10 @@ description: >
 | 管理工作树 | 按位置/命名约定创建、迁移、删除 | 工作树（worktree）管理 |
 | 清理旧分支 | 列出 → 确认 → 删除 | 分支清理 |
 | 修改已有 PR 的分支 | 确认 PR 状态 → 同步基线 → 修改 → 推送 | PR 修改前状态确认 |
+| 刷新 PR 验证清单或核对历史失败 | 读取当前和历史证据 → 同步清单 → 回读 | [PR 验证记录](references/pr-records.md#刷新-pr-验证清单) |
 | 发布、编辑、回复 PR 评论或处理评审线程 | 检查最新状态 → 判断同步需要 → 刷新内容 → 写入前复核 | PR 评论与评审线程操作前检查 |
-| 提 PR 后自动定时监控并收敛 | 建值守任务 → 四查 → 按信号路由处置 → 收敛即停 | PR 提出后的值守与自动收敛 |
-| fork/upstream 双仓操作 | 模式〇：特性 PR → fork main（VM 评审门禁）→ 定期批量 upstream；或集成分支/逐特性 | references/fork-workflow.md |
+| 跟踪 PR 评审或 CI | 核对当前候选 → 按变化处置 → 判定收敛和可合入 | [PR 值守与收敛](references/pr-records.md#pr-值守与收敛) |
+| fork/upstream 双仓操作 | 特性 PR → fork main（项目评审门禁）→ 批量交付 upstream，或按项目选择集成分支和逐特性模式 | references/fork-workflow.md |
 
 ## 铁律速查
 
@@ -52,7 +53,7 @@ description: >
 | R5 | rebase 前先确认没有其他人基于当前分支工作 | 协作者的提交历史被破坏，需要强制同步 |
 | R6 | 修改已开 PR 的分支或操作 PR 评论、评审线程前，先检查最新 head/base、CI、评审和线程内容，再判断是否需要同步代码、证据与待发布内容；具体按下文对应检查清单执行 | 基于过期状态操作：覆盖新修复或新回复、重复处理已解决的问题、发布与当前代码不符的结论 |
 | R7 | API 令牌只存用户级固定位置（`~/.gitea-token`，ACL 仅本人），不进任何 git 仓库、脚注或会话输出 | 令牌泄漏进仓库历史或日志；轮换时找不到全部副本 |
-| R8 | 值守收敛完成（评审通过 + CI 全绿 + mergeable）即停，**agent 不得自动合入 PR**：禁止 `gh pr merge`、平台合并接口、开启自动合并；合入必须由用户当场人工确认，此前授权推送或值守不构成合入授权 | 越权合入他人仓库；不可逆合并 |
+| R8 | 按当前候选的评审、必需 CI、基线和冲突状态结束值守，按平台正式审批等门禁确认合入资格。**agent 不得自动合入 PR**：禁止 `gh pr merge`、平台合并接口、开启自动合并；合入必须由用户当场人工确认，此前授权推送或值守不构成合入授权 | 越权合入他人仓库；不可逆合并 |
 | R9 | **创建闸门**：创建分支、PR、工作树前必须先与用户确认（分支名与基线 / PR 目标分支与提交范围 / 工作树路径与分支），确认后再执行，不得自行创建 | 擅自产生多余分支、PR 与工作树，污染远端与磁盘 |
 
 ## 分支命名与创建
@@ -133,30 +134,35 @@ git rebase --abort                     # 放弃整个 rebase，回到初始状�
 
 ## PR 修改前状态确认
 
-修改已开 PR 的分支（追加提交、rebase/merge 同步、强推更新）之前，先确认 PR 与基线的**当前**状态，再动手。
+修改已开 PR 的分支或刷新 PR 描述中的验证列表之前，先核对平台记录的 head 与 base 提交。目标分支即使名称未变也可能推进，并使原 head 产生新冲突。
 
 ### 检查清单（按顺序）
 
+先读取平台上的 head/base 仓库、分支与完整提交，按 `git remote -v` 对应到本地 remote。fork PR 的 base 可以在 fork，也可以在上游。以下占位值按实际 PR 替换。
+
 ```bash
-git fetch origin --prune                     # 1. 拉最新远程引用
-git fetch upstream --prune                   #    fork 工作流时同时拉上游
-git rev-list --count HEAD..upstream/main     # 2. 目标分支是否又推进；>0 先同步再改
-git ls-remote origin refs/heads/<pr-branch>  # 3. 远程 PR 分支 head 是否与本地一致
+git fetch <base-remote> --prune
+git fetch <head-remote> --prune               # 与 base remote 相同只 fetch 一次
+git rev-list --count HEAD..<base-remote>/<base-branch>
+git ls-remote <head-remote> refs/heads/<head-branch>
 ```
 
-平台侧（Gitea/GitHub API 或页面）再确认三件事：
+通过托管平台核对合入条件。
 
 | 检查项 | 关注点 | 异常时动作 |
 |--------|--------|-----------|
 | PR head/base | head 是否仍是自己的分支、指向的提交与本地是否一致、base 是否被人变更 | 远程领先本地先拉取；base 变更先评估影响 |
-| mergeable | 是否与目标分支冲突；false 时先用 `git merge-tree --write-tree HEAD <target>` 判是否真冲突 | false 时先按「同步上游」解决，不要直接叠改动 |
-| CI / 评审 | 上一轮 checks 是否全绿、是否有未读的评审评论或新评审轮次 | 有未读评审先读——可能改变本次修改的方向 |
+| mergeable | 平台可能在重算，用 `git merge-tree --write-tree <head-sha> <base-sha>` 核对实际冲突 | 复查平台回执，确认冲突后按授权同步基线并验证 |
+| CI / 评审 | 当前 head 对应的 checks、最新评审及其绑定的提交 | 有新评审先读全文；运行中的作业按任务和日志确认 |
+| 正式审批 | 实际满足的审批数及目标分支要求 | 从平台合入页或有权读取的保护规则确认。评审应用的结论单独记录，权限不足时注明未核实门槛 |
+
+刷新验证清单或核对某条失败记录时，加载[PR 验证记录](references/pr-records.md#刷新-pr-验证清单)。按当前验证、历史验证和人工用例逐区核对。CI、评审、冲突与正式审批分别以其平台凭据为准。写入前重新核对正文和 head/base，写入后回读。
 
 ### 确认通过后的推送纪律
 
-- 基线已推进：先合并/变基最新目标分支，再叠加本次修改
+- 基线已推进且影响候选时，按已有授权先同步目标分支并复验冲突影响面，再推送候选。单纯刷新验证清单可以先记录当前状态。
 - 远程 head 领先本地：先拉取合并，禁止直接覆盖
-- 快进更新用普通 push；确需改写 PR 分支历史时用 `--force-with-lease`，且仅限无协作者的自有分支（见 R4/R5）
+- 快进更新用普通 push。改写已推送历史须有用户明确授权，并按项目规则核对分支归属、协作者和远端预期 SHA，再用 `--force-with-lease`（见 R4/R5）。
 - 同步目标分支后重算交付面：旧依赖 pin、脚本硬编码计数、spec/feature/test 映射；旧 head 的 CI 与评审结论失效，必须在新 head 重跑
 
 > 经验教训：目标分支在评审期高频推进时，「拉取 → 合并 → 推送」可能要做多轮；
@@ -166,12 +172,7 @@ git ls-remote origin refs/heads/<pr-branch>  # 3. 远程 PR 分支 head 是否�
 
 ## PR 评论与评审线程操作前检查
 
-本节适用于发布、编辑、回复 PR 评论，以及解决或重开评审线程；单独操作评论、不修改分支时也执行。它规定已获授权操作的前置检查，不授予评论写入、Git 同步或合入权限。
-
-1. **先读取最新状态**：获取 PR 的 open/closed/merged 状态、head/base 提交、当前 head 对应的 CI 与最新评审；读取目标评论、线程全文及后续回复。比较上次依据与当前内容、更新时间和线程状态，不能仅凭评论数量或新增 id 判断无变化，因为已有评论也可能被编辑。
-2. **再判断是否需要同步**：有新提交、新评审或新回复时，先核实原问题是否已经解决、代码位置和原结论是否仍有效、验证证据是否对应当前 head。需要本地验证或修改时，先 fetch 并按「PR 修改前状态确认」及已有授权处理代码同步；同时更新证据与评论草稿。仅回复评论时，不因基线推进就机械执行 merge/rebase；不需要同步时记录判断依据。
-3. **按最新事实组织内容**：已经解决或已有等价回复的问题不重复登记；编辑已有评论前读取其最新正文，保留仍有效的内容。只有修复已推送到目标 PR 且验证证据支持当前 head 时，才能声称修复已生效或据此解决线程；尚在本地的修复应明确标注。
-4. **实际写入前再复核**：发布、编辑、回复或改变线程状态前，重新核对 PR 状态、head/base、相关 CI/评审及目标线程的内容和状态。若期间发生变化，回到影响判断并刷新待发布内容；读取失败或无法确认最新状态时暂停写入，不沿用旧快照宣称已解决或已收敛。
+发布、修改、回复 PR 评论或处理评审线程时，加载[评论与评审线程](references/pr-records.md#评论与评审线程)。先读最新正文与线程，再判断同步和复验范围。发布结论以远端提交和对应证据为准。
 
 ---
 
@@ -192,17 +193,11 @@ icacls "$env:USERPROFILE\.gitea-token" /inheritance:r /grant:r "$env:COMPUTERNAM
   （评论/改 PR 用 `write:issue` + `write:repository` 即可，不必给 `read:user`）。
 - 读取顺序约定：`~/.gitea-token`（唯一存放位置）→ 环境变量 `GITEA_TOKEN` →
   GCM 兜底（仅应急，见上）。不设任何仓库内令牌副本，避免随 Junction 同步扩散。
-- 令牌不入 git 仓库、不写进提交信息、不完整回显到会话输出（展示只留前 6 位）。
+- 令牌不入 git 仓库、不写进提交信息、不回显到会话输出。
 
-### 常用操作
+### 验证与轮换
 
-```bash
-TOKEN=$(cat ~/.gitea-token)
-# 验证（注意 /user 需要 read:user scope，最小 scope 下用业务端点验证；自签证书环境才加 -k）
-curl -s -H "Authorization: token $TOKEN" \
-  "https://<host>/api/v1/repos/<owner>/<repo>/pulls/<n>" -o /dev/null -w "%{http_code}\n"
-# 轮换：网页生成新令牌 → 覆盖 ~/.gitea-token → 立即删除旧令牌
-```
+用 `tools/pr-watch.mjs` 或已配置的 API 客户端读取实际业务端点验证权限。轮换时在平台生成新令牌，更新用户级令牌文件，验证后撤销旧令牌。
 
 ### 使用模式（脚本内）
 
@@ -213,126 +208,9 @@ fetch(url, { headers: { Authorization: `token ${token}` } });
 
 ---
 
-## pr-watch：PR 状态监控工具
+## PR 状态监控与收敛
 
-本 skill 附带 `tools/pr-watch.mjs`——R6（PR 修改前状态确认）的自动化实现。
-
-### 配置（必须，脚本不做任何默认假设）
-
-```bash
-# 方式一：配置文件（推荐，放 skill tools 目录下）
-echo '{"server":"https://<host>","repo":"<owner>/<repo>","login":"<用户名>"}' \
-  > $SKILL_DIR/tools/pr-watch.config.json
-
-# 方式二：环境变量
-export GITEA_SERVER=https://<host> GITEA_REPO=<owner>/<repo> GITEA_LOGIN=<用户名>
-```
-
-缺 server 或 repo 时脚本报错退出（fail-loud）；login 仅扫描自己的全部 PR 时必需，
-指定 PR 号可省。不做静默降级。
-
-### 用法
-
-```bash
-SKILL_DIR=~/.cc-switch/skills/independent-tools/branch-manager
-
-node $SKILL_DIR/tools/pr-watch.mjs                # 扫描配置仓库下自己全部开 PR
-node $SKILL_DIR/tools/pr-watch.mjs 94              # 只监控指定 PR（不需要 login）
-node $SKILL_DIR/tools/pr-watch.mjs 94 owner/repo  # 指定 PR + 覆盖仓库
-```
-
-### 监控内容
-
-每个 PR 报告：state / head / mergeable / 评论数（最新评论者与时间）/ CI 各项状态。
-与上次快照 diff，有变化才输出详情；无变化静默（cron 友好）；CI 失败自动给日志直链。
-状态按 `repo#PR` 分键，跨仓库不冲突。
-
-### 运行时文件
-
-| 文件 | 用途 | 位置 |
-|---|---|---|
-| `pr-watch.config.json` | 环境配置 | 脚本同目录（不进 git） |
-| `pr-watch.state.json` | 快照基线（删除即重置） | 脚本同目录 |
-| `~/.gitea-token` | 令牌唯一位置（R7 约定） | 用户级 |
-
-令牌自动从 `~/.gitea-token` 读取（亦可用 `GITEA_TOKEN` 覆盖，匿名可读时自动降级匿名）；
-TLS 默认严格校验证书，自签证书环境需显式设置 `GITEA_INSECURE=1`。
-
-### 结合定时任务
-
-在任意会话说「建一个定时监控 PR #N」，即可创建每 15–30 分钟的自动检查。
-建议每个 PR 一个独立任务（提示词嵌入 PR 背景，变化时处置能「懂行」）。
-监控只是下半场——发现变化后的**收敛动作路由**见下一章。
-
----
-
-## PR 提出后的值守与自动收敛
-
-PR 推出后默认进入值守：定时监控（pr-watch 或 API 四查）→ 发现变化 → 按路由处置 → 收敛即停。
-目标状态是**评审通过 + CI 全绿 + mergeable**；到达即停（R8），合入授权在维护者/用户手里。
-
-### 一、建值守（PR 推出后的默认动作）
-
-推送 PR 后立即建定时任务（每 15–30 分钟一轮），提示词必须内嵌：
-
-1. PR 身份（仓库、编号、head 分支、base、当前 head 与评审基线、本线背景一句话、已知基线债）
-2. 必载 skill：`ccs` 的 `branch-manager` 与本地验证入口；要求执行前完整加载 SKILL.md
-3. 每轮四查清单（下节）与静默判据
-4. 处置路由表（下下节）与「连续红升格」规则
-5. 出口边界（R8）与停值守条件（PR merged/closed → 删任务并转收尾）
-
-**值守任务提示词的必备段落（PR 收敛 cron 统一写法）**：所有 PR 收敛定时任务的 prompt 按以下顺序自包含，不依赖会话上下文。
-
-| 段 | 必须写清 |
-|---|---|
-| 身份与基线 | 仓库/PR/head 分支/base、当前已知 head、最新评审 id 与绑定 head、已知基线债（点名文件与用例） |
-| 必载 skill | `ccs/independent-tools/branch-manager`（值守、R6、推送纪律）与 `ccs/orchestration/auto-code-generator` 的 `references/pre-pr-local-verification.md`（L0→L1→L2）；要求先完整加载再执行 |
-| 工作区与凭证 | 独立 worktree 路径与分支、勿切换他人分支、令牌只读、PrHelp 全文接口、中文评论用 node fetch 写盘脚本 |
-| 四查 | 逐项写端点、字段与判据；CI 状态字段是 `status` 而非 `state` |
-| 处置路由 | 新评审→全文→修复→L0/L1/L2→推送前 `pnpm run closeout` exit 0→非 force push→回帖；CI 红先判因；基线债只记录不修；mergeable=false 先同步；head 漂移按快进/回退分流；生命周期门禁红按项目 gate 规则收口（结论/归档/基础映射），不得为变绿伪造结论 |
-| 收敛判据与出口 | 最新评审 ✅ 绑定当前 head + 必需车道零失败零 pending + mergeable=true + head 无漂移；不自行合入；merged/closed 停止并提示删除任务；静默轮只报「无变化」+ head/mergeable/评论数 |
-
-本地验证的层级、复用条件、缺陷修复取证与推送前门禁以 auto-code-generator 的 `pre-pr-local-verification.md` 为准；本 skill 不复制其规则。
-
-轮次纪律：静默轮只答「无变化」，不重复取证；处置轮先取证再动手，处置后回帖登记。
-
-### 二、每轮四查
-
-| 查什么 | 怎么查 | 异常信号 |
-|--------|--------|---------|
-| head 漂移 | `git fetch` + 对比远程 PR 分支与本地 head | 并行写者推送（判快进/回退用 `rev-list --left-right --count`，`0 N` 为快进） |
-| CI 回流 | `GET /repos/{o}/{r}/commits/{head}/statuses`（解析兼容裸数组/带 `statuses` 键两种形态） | failure；长期 pending 先看 runs 层 `run_started_at` 判排队还是真跑 |
-| 新评审/评论 | 评论列表按 id 增量；全文在检视应用（PrHelp 类）而非 Gitea 摘要 | 新一轮 ⚠️/FAIL；摘要只有结论，**处置前必拉全文** |
-| mergeable 与 base | PR 详情 `mergeable` + `rev-list origin/main...head` | False＝冲突或重算中；base 领先 >0 需吸收 |
-
-### 三、处置路由（信号 → 动作）
-
-| 信号 | 处置 |
-|------|------|
-| 新评审 ⚠️/FAIL | 拉评审全文（勿凭 Gitea 摘要处置）→ 逐条核实定位 → 修复/举证 → 有代码修改时先验证并推 head → 按「PR 评论与评审线程操作前检查」回帖登记。声明「已收口/无残留」前必须全仓 `git grep` 词表扫描并逐条给判定，不按目录白名单扫 |
-| 新评审 ✅/PASS 且四查余项静默 | 登记终态回帖，值守转静默，等维护者合入 |
-| CI 单车道红（首次） | 拉日志判因：①已知偶发清单（负载敏感/计时悬崖）→ 本地同 head 复跑，绿则空提交重触发；②typecheck/build 语法类 → 本地复现真修复 |
-| **同一车道/用例三连红** | 升格为真问题：预算适配（有 README/清单先例时提单用例预算）或修代码，不再空提交赌空闲 |
-| required-lane 宿主启动 30s 超时 | 已知悬崖用例（`application-data-directory` 等）：本地复跑绿 → 空提交重触发即可 |
-| openspec-required 红（未归档） | 核 tasks 全勾/三件套 → delta 智能同步主规格（判定方向：delta 严格超集才整块替换）→ `validate --specs` → 判定三扫开放 todo → 日期前缀归档 |
-| openspec-required 红（已归档仍红） | 查结论精确首行（`## 复核结论`→APPROVED、`## 最终结论`→VERIFIED）、报告表格未决词、基础 `openspec/specs/<cap>/test.md` 与 `feature.md` 是否随归档后的 spec 对齐；base 新增场景后最常见 |
-| mergeable=False / base 推进 | fetch → merge base → 解冲突 → **冲突文件功能面回归**（各自单测 + 相关 e2e，不只 typecheck）→ 推送。解冲突后若引入结构变更（注册函数拆分等）必须搜他包直调点并补装配 |
-| head 被并行写者推进 | 快进（`0 N`）：在其上继续收敛；含回退（`>0 N`）：先找写者，不覆盖 |
-| PR merged/closed | 删值守任务；按「工作树（worktree）管理」生命周期收尾（R10–R12） |
-
-### 四、收敛完成判据与停值守
-
-- **收敛 = 最新一轮评审 ✅/PASS + CI 全绿（零 failure 零 pending）+ mergeable=True + head 无漂移**
-- 到达即发终态回帖（可合入态登记），值守转静默轮；**不自行合入（R8）**，唯一出口是维护者/用户
-- 静默轮四查全静默时只答「无变化」；PR 被合并即删任务并做工作树/分支收尾
-
-### 五、经验纪律
-
-- 每次推 head 前走「PR 修改前状态确认」（R6）；评审期 base 高频推进时「拉→并→推」做多轮，每轮重新取 mergeable 与 CI
-- 每次回帖、编辑评论或处理评审线程前走「PR 评论与评审线程操作前检查」（R6）；终态回帖也不例外，不沿用轮次开始时的旧快照
-- 空提交重触发一条轮上最多两连用；第三连红必须升格（预算适配或修代码），并保留本地复跑证据
-- CI 日志端点可能 404：判据退化为「同树其他轮有绿记录 + 本地同 head 复跑」
-- 全量递归套件的 30s 预算用例是负载敏感重灾区：单跑/整文件复跑绿即负载敏感，勿按回归处置
+读取单次 PR 状态、跟踪变化或按评审意见收敛时，加载[PR 值守与收敛](references/pr-records.md#pr-值守与收敛)。附带的 `tools/pr-watch.mjs` 轮询 Gitea，报告候选、CI、评论与正式评审信号。单个 PR 的本轮收敛在当前会话进行。用户明确需要周期监视时再创建定时任务。
 
 ---
 

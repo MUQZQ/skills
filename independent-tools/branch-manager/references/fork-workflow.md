@@ -4,34 +4,31 @@
 
 ## 前提
 
-- 本文只管 git 层。项目授权层归各自 AGENTS.md。
+- 分支、PR、工作树创建，远端写入和分支清理沿用项目 AGENTS.md 及当前授权；合入见 branch-manager R8。
 - 分支命名遵循项目约定，本文统一用 `<branch>` 占位。
 
 ## 三种工作模式
 
 | 模式 | 适用场景 | 特点 |
 |---|---|---|
-| **fork 集成主线**（当前默认） | 有自动评审服务把关 fork PR 的个人/团队 | 特性 PR 先落 fork main（过评审门禁），定期批量 PR 到 upstream |
+| **fork 集成主线** | 有自动评审服务把关 fork PR 的个人/团队 | 特性 PR 先落 fork main（过评审门禁），定期批量 PR 到 upstream |
 | **持续集成分支** | 中大型功能、多特性打包交付但无 fork PR 评审 | fork 上养长生命周期分支，持续合 upstream，完成后一次性 PR |
 | **逐特性分支** | 小修复、独立小功能 | 每个特性切短分支，直接 PR upstream，合完删 |
 
 ---
 
-## 模式〇：fork 集成主线 + 双阶段 PR（当前默认）
+## 模式〇：fork 集成主线 + 双阶段 PR
 
 ### 核心思想
 
-fork 的 main 是唯一集成点：所有特性以 PR 形式合入 **fork main**（不是 upstream），
-每个 fork PR 先过虚拟机自动评审（每 30 分钟轮询，评论 + 邮件作者，按评论循环修正），
-确认 ✅ 后才合入 fork main；由人定期把 fork main 批量 PR 到 upstream。
-upstream 只见批量出口，fork 内部闭环消化所有迭代。
+特性 PR 先进入 fork main。项目已有评审服务时，按该服务核对当前候选的评审、CI 与正式审批。维护者决定何时从 fork main 批量交付到 upstream。
 
 ### 拓扑
 
 ```
-upstream/main ──(4h 自动同步)──► fork/main ──(定期批量 PR，人手动)──► upstream/main
+upstream/main ──(按项目同步)──► fork/main ──(定期批量 PR，人手动)──► upstream/main
                                     ▲
-                                    │ 特性 PR（base=fork main）+ VM 评审门禁
+                                    │ 特性 PR（base=fork main）+ 项目评审门禁
                               qin/<特性>  codex/<特性>
 ```
 
@@ -41,23 +38,10 @@ upstream/main ──(4h 自动同步)──► fork/main ──(定期批量 PR�
 2. **开发 + 本地基础检视**（typecheck/单测/自查）→ push 到 fork
 3. **开 PR：base 必须选自己 fork 的 main**——Gitea 建 PR 时默认建议 upstream，
    要在 base 下拉里手动切到 `<你的用户名>/<仓库名>` 的 `main`
-4. **VM 评审门禁**（全自动，每 30 分钟）：占用 → 上下文打包 → 读码 + 实机截图验证
-   → 发布评论（fork 模式一律 `--no-mail`：PR 作者即本人，评论即通知）
-   → 看评论**在同分支追加修复再 push**，VM 下轮自动复审
-   （判据：最新 commit 后无标记评论），循环到结论 ✅
-5. **合入 fork main**（评审 ✅ 后）
-6. **定期批量出口**：fork main → upstream 开 PR（人工决定时机），CI + 团队检视 → 合入
-7. **回环**：宿主机 4h 同步自动化把 upstream main 拉回 fork main，供下批分支基线
-
-### 注意
-
-- fork main 同时承载 upstream 同步内容与你已验证的特性，是 upstream 的超集——出口 PR 即批量交付
-- upstream 合入后 fork main 与 upstream 重新收敛，无需重置
-- VM 评审脚本的 fork 模式环境变量（**每条命令都要带**，shell 间不持久；漏带会 fail-open 到 upstream）：
-  `QEDA_REPO_OWNER=<fork用户名> QEDA_REPO_NAME=<仓库名> QEDA_UPSTREAM_REMOTE=origin QEDA_REPO_DIR=<QEDAgent 克隆路径>`
-- **upstream 按需评审**（不自动化）：在 VM 里 unset 上述环境变量后跑脚本即为 upstream 模式
-  （默认值即 upstream），发布评论**不带** `--no-mail`（邮件此时生效，通知真实同事）；
-  与 fork 撞号（同号 PR 同时在审）时 `--force` 接管或等一轮
+4. **评审与复验**：阅读项目评审全文并按问题追加修复，推送后确认最新结论与当前 head 匹配。适用时按 [QEDAReview 使用前同步](../../../orchestration/auto-code-generator/references/qedareview-local-verification.md#使用前同步)更新工具，显式指定目标仓库，确认上下文属于当前 PR。
+5. **合入 fork main**：按 [PR 收敛与合入状态](pr-records.md#评审发布与合入状态)核对门禁，等待维护者确认。
+6. **批量出口**：维护者决定建立 fork main → upstream 的 PR。按上游门禁重新验证。
+7. **同步基线**：按项目约定更新 fork main。已有同步任务时复用，周期安排按用户授权。
 
 ---
 
@@ -112,35 +96,7 @@ fi
 git push origin <集成分支>
 ```
 
-**同步频率**：手动每次做太容易忘，应建定时任务自动化。建议每 4 小时或每天早晚各一次。
-（注：模式〇的部署形态已由宿主机 ZCode 定时自动化承担——每 4 小时同步 upstream/main → fork/main，
-目标与下文脚本的"集成分支"不同；用模式〇时无需再跑本脚本。）
-
-**定时同步脚本**（放 cron 或 ZCode 定时任务）：
-
-```bash
-#!/usr/bin/env bash
-# auto-sync.sh — 定时拉取 upstream 并合入集成分支
-set -euo pipefail
-cd /path/to/<仓库名>
-git fetch upstream --prune
-COUNT=$(git rev-list --count <集成分支>..upstream/main)
-if [ "$COUNT" -gt 0 ]; then
-  git checkout <集成分支>
-  git merge upstream/main
-  # 冲突时退出并告警（不自动解决）
-  if git status --porcelain | grep -q '^UU\|^AA\|^DD'; then
-    echo "::error::同步冲突，需手动解决: $(git status --porcelain | head -5)"
-    exit 1
-  fi
-  git push origin <集成分支>
-  echo "$(date '+%H:%M') 合入 upstream/main $COUNT 个提交"
-else
-  echo "$(date '+%H:%M') upstream 无新提交"
-fi
-```
-
-在 ZCode 中建定时任务：「每 4 小时执行 auto-sync.sh，有冲突时通知我」。
+同步频率按实际分支推进情况与项目约定确定。周期自动同步需明确授权，适用的冲突、验证和推送门禁照常执行。
 
 #### ③ 阶段性子任务（可选）
 
@@ -149,10 +105,9 @@ fi
 ```bash
 git checkout -b <临时分支> <集成分支>
 # 实验...
-# 成功 → 合回集成分支
-git checkout <集成分支> && git merge <临时分支> && git branch -d <临时分支>
-# 失败 → 直接删
-git checkout <集成分支> && git branch -D <临时分支>
+# 成功且获准合入 → 合回集成分支
+git checkout <集成分支> && git merge <临时分支>
+# 清理前按 branch-manager 的分支清理与工作树规则核对
 ```
 
 #### ④ 整体 PR（功能完备时）
@@ -170,17 +125,7 @@ git push origin <集成分支>
 
 #### ⑤ 合入后
 
-```bash
-# fork 上的集成分支与 upstream/main 一致了，继续用或重建
-git fetch upstream --prune
-# 选项 A：重置集成分支到新 main（干净起点）
-git checkout <集成分支>
-git reset --hard upstream/main
-git push --force-with-lease origin <集成分支>
-# 选项 B：删掉重建
-git branch -D <集成分支>
-git checkout -b <集成分支> upstream/main
-```
+确认上游已合入且集成分支无待交付改动。项目允许继续复用时按当前基线同步；清理或创建下一条分支按 branch-manager 的分支管理流程执行。出现分叉时先核对两边提交与上游合并方式。
 
 ### 为什么选这种模式
 
@@ -205,9 +150,8 @@ git checkout -b <branch> upstream/main
 # 开发 → 测试
 git push -u origin <branch>
 # PR: fork/<branch> → upstream/main
-# 评审 → 修改 → 合入
-git branch -d <branch>
-git push origin --delete <branch>
+# 评审 → 修改 → 经维护者确认合入
+# 合入后的清理由 branch-manager 的分支清理流程处理
 ```
 
 ### 注意
@@ -218,20 +162,9 @@ git push origin --delete <branch>
 
 ## 公共规则（三种模式通用）
 
-### 同步 main 的纪律
+### 同步 PR 基线与推送前检查
 
-```bash
-# 合并前确认有多少新提交
-git fetch upstream --prune
-git rev-list --count HEAD..upstream/main
-
-# 用 merge 不用 rebase（保持历史，评审人能看到同步点）
-git merge upstream/main
-```
-
-### 推送前自审
-
-执行 code-review skill 的提交前审查模式。如是 PR 更新推送，额外用评审人判据自查：CI 车道覆盖、测试锁生产装配、文档代码一致、冗余审计。
+对已开的 PR，先用 [PR 修改前状态确认](../SKILL.md#pr-修改前状态确认)核对平台实际目标仓库、分支和提交。已有同步授权时按项目规则合并目标基线，验证冲突影响范围后再推送。提交前审查按项目已选模式执行，项目原生验证按 [本地验证入口](../../../orchestration/auto-code-generator/references/pre-pr-local-verification.md)执行。
 
 ### 冲突解决原则
 
@@ -243,25 +176,17 @@ git merge upstream/main
 
 通用方法：`git show <sha>:<file>` 看原文 → 理解意图 → 合成 → 测试验证。
 
-### PR 修改前状态确认（R6）
-
-```bash
-git fetch upstream --prune
-git ls-remote origin refs/heads/<branch>     # 远程 head 是否与本地一致
-git rev-list --count HEAD..upstream/main     # main 是否又推进
-```
-
 ### 常见故障与恢复
 
 | 故障 | 症状 | 恢复 |
 |---|---|---|
 | 基线偏离太久 | 一次 merge 冲突 50+ 处 | 增加同步频率；或考虑重放（cherry-pick 核心提交到新分支） |
 | GCM JWT 过期 | push 认证失败 | 用固定令牌（~/.gitea-token） |
-| CI flaky | 全过但作业失败 | 空提交重触发 |
+| CI 作业失败 | 本地复跑与远端结果不一致 | 读原作业日志，按 [CI 失败与重跑](pr-records.md#ci-失败与重跑)处理 |
 | 集成分支积累太多无关改动 | PR diff 巨大，评审困难 | 用临时分支拆分，分批 PR |
 
 ---
 
 ## Fork 定期维护
 
-fork 时平台会复制上游全部分支，需一次性清理不属于你的分支。保留 `main` + 集成分支 + 活跃 PR 分支即可。
+定期核对 fork 分支。清理前确认分支所有者、活动 PR 和远端引用，按项目授权执行。

@@ -6,8 +6,7 @@ base and head pages as PNGs via the draw.io CLI, and — for files present on
 both sides — chains `drawiodiff.py` -> `autolayout.py` -> CLI export into a
 third colour-coded diff PNG. Added/removed files just get the one side that
 exists. Emits a Markdown report with one section per changed file (status +
-image links) and a summary count, suitable for a PR comment or CI job
-summary; pair with `.github/actions/drawio-diff/`.
+image links) and a summary count for the target repository’s PR or CI report.
 
   python3 prdiff.py --base origin/main --head HEAD -o drawio-pr/report.md
 
@@ -15,7 +14,7 @@ Missing draw.io CLI degrades gracefully: the Markdown still lists every
 changed file, just without images (a review comment listing the files is
 still useful). Missing git, or `--repo` not a git repository, is fatal.
 
-Usage: python3 prdiff.py --base <ref> [--head <ref>] [--repo <dir>] [--out-dir <dir>] [-o report.md]
+Usage: python3 prdiff.py --base <ref> [--head <ref>] [--repo <dir>] [--drawio <exe>] [--out-dir <dir>] [-o report.md]
 """
 import argparse
 import os
@@ -62,14 +61,21 @@ def git_show_file(repo, ref, path, dest):
     return True
 
 
-def export_png(src_drawio, out_png):
-    """CLI-export page 1 of src_drawio to out_png. True on success."""
-    r = subprocess.run(["drawio", "-x", "-f", "png", "--page-index", "1", "-o", out_png, src_drawio],
-                       capture_output=True)
-    return r.returncode == 0 and os.path.exists(out_png)
+def export_png(drawio_executable, src_drawio, out_png):
+    """将输入图表的首页导出为 PNG。"""
+    command = [drawio_executable, "-x", "-f", "png", "--page-index", "1", "-o", out_png, src_drawio]
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=60)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        sys.stderr.write(f"警告：导出 {out_png} 失败（{error}）\n")
+        return False
+    if result.returncode != 0 or not os.path.isfile(out_png):
+        sys.stderr.write(f"警告：导出 {out_png} 失败（退出码 {result.returncode}）\n")
+        return False
+    return True
 
 
-def export_diff_png(base_drawio, head_drawio, out_png, tmp):
+def export_diff_png(drawio_executable, base_drawio, head_drawio, out_png, tmp):
     """drawiodiff.py -> autolayout.py -> CLI export a coloured diff PNG. True on success."""
     diff_json = os.path.join(tmp, "diff.json")
     diff_drawio = os.path.join(tmp, "diff.drawio")
@@ -81,13 +87,13 @@ def export_diff_png(base_drawio, head_drawio, out_png, tmp):
                         diff_json, "-o", diff_drawio], capture_output=True)
     if r2.returncode != 0 or not os.path.exists(diff_drawio):
         return False
-    return export_png(diff_drawio, out_png)
+    return export_png(drawio_executable, diff_drawio, out_png)
 
 
-def build_entry(repo, base, head, path, status, out_dir, drawio_available):
+def build_entry(repo, base, head, path, status, out_dir, drawio_executable):
     """One render_markdown entry: fetch both sides, export whatever PNGs it can."""
     entry = {"path": path, "status": status}
-    if not drawio_available:
+    if drawio_executable is None:
         entry["skipped"] = True
         return entry
     slug = path.replace("/", "__")
@@ -98,15 +104,15 @@ def build_entry(repo, base, head, path, status, out_dir, drawio_available):
         have_head = git_show_file(repo, head, path, head_drawio)
         if have_base:
             p = os.path.join(out_dir, f"{slug}.base.png")
-            if export_png(base_drawio, p):
+            if export_png(drawio_executable, base_drawio, p):
                 entry["base_png"] = p
         if have_head:
             p = os.path.join(out_dir, f"{slug}.head.png")
-            if export_png(head_drawio, p):
+            if export_png(drawio_executable, head_drawio, p):
                 entry["head_png"] = p
         if have_base and have_head:
             p = os.path.join(out_dir, f"{slug}.diff.png")
-            if export_diff_png(base_drawio, head_drawio, p, tmp):
+            if export_diff_png(drawio_executable, base_drawio, head_drawio, p, tmp):
                 entry["diff_png"] = p
     return entry
 
@@ -163,19 +169,26 @@ def main():
     ap.add_argument("--repo", default=".", help="path to the git repo (default: current directory)")
     ap.add_argument("--out-dir", default="drawio-pr", help="directory for exported PNGs (default: ./drawio-pr)")
     ap.add_argument("-o", "--output", help="write the Markdown report here (default: stdout)")
+    ap.add_argument("--drawio", metavar="EXE", help="draw.io 的可执行文件路径或命令名")
     args = ap.parse_args()
+
+    if args.drawio:
+        drawio_executable = shutil.which(args.drawio)
+        if drawio_executable is None:
+            ap.error(f"找不到 --drawio 指定的可执行文件：{args.drawio}")
+    else:
+        drawio_executable = shutil.which("drawio") or shutil.which("draw.io")
 
     changed = changed_drawios(args.base, args.head, args.repo)
     if not changed:
         sys.stderr.write("no .drawio files changed\n")
 
-    drawio_available = shutil.which("drawio") is not None
-    if not drawio_available and changed:
-        sys.stderr.write("warning: draw.io CLI not found - image export skipped, "
-                         "Markdown will list files only (is the draw.io CLI installed?)\n")
+    if drawio_executable is None and changed:
+        sys.stderr.write("警告：PATH 中找不到 draw.io，报告将保留文件清单。"
+                         "已安装时可用 --drawio 指定可执行文件路径。\n")
     os.makedirs(args.out_dir, exist_ok=True)
 
-    entries = [build_entry(args.repo, args.base, args.head, path, status, args.out_dir, drawio_available)
+    entries = [build_entry(args.repo, args.base, args.head, path, status, args.out_dir, drawio_executable)
                for path, status in changed]
     report = render_markdown(entries, args.out_dir)
 

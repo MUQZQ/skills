@@ -8,6 +8,7 @@ evidence-driven-dev 的项目专属适配登记。**首次**在某项目做探�
 
 - **工具箱**:`E:\QEDAReview`(PR 评审与验证工具仓;被评审产品仓为 QEDA/QEDAgent)
 - **登记日**:2026-10-22
+- **使用前同步**：每次独立使用 QEDAReview 前，按 [使用前同步](../../../orchestration/auto-code-generator/references/qedareview-local-verification.md#使用前同步)更新工具仓。
 - **用法**:`node scripts/<脚本>.mjs`;参数与全量清单见 `E:\QEDAReview\README.md`,行为约束见其 `AGENTS.md`
 - **核心脚本**(验证/取证相关):
 

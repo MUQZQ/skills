@@ -412,6 +412,8 @@ worker 返回后，协调者必须检查共享工作树中的：
 
 ### 4.2 项目原生验证
 
+使用 QEDAReview 的 QEDA 项目，每轮本地验证先按 [QEDAReview 本地验证](references/qedareview-local-verification.md)同步工具仓，核对场景、通过条件与证据。
+
 项目提供验证状态捕获/检查时直接复用官方命令和报告，不创建通用指纹脚本或第二证据账本。
 已有项目验证机制时按 [项目工作流适配](references/project-workflows.md) 读取当前要求，
 先完成必要同步、复核，再执行验证与状态检查；不能只刷新指纹来恢复通过。

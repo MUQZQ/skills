@@ -147,5 +147,6 @@ python -m unittest tests.test_skill_repository_layout tests.test_additional_skil
 python -m unittest tests.test_method_router_contract
 python -m unittest discover -s design\tests -p "test_*.py"
 python -m unittest discover -s orchestration\auto-code-generator\tests -p "test_auto_code_generator.py"
+node --test independent-tools/branch-manager/tools/pr-watch.test.mjs
 python -m unittest discover -s independent-tools\screenrecord-short-voiceover\tests -p "test_*.py"
 ```

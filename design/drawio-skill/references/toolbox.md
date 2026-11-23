@@ -85,7 +85,7 @@ The **actual** counterpart to §3 — see `references/live-infra.md`.
 - **`heatmap.py`** — recolour any `.drawio` by a metrics file (CSV/JSON): each node shaded low→high on a gradient by its value (`--palette`, optional `--size`, auto legend). Turns a static architecture into a cost / latency / traffic / error-rate heat map.
 - **`buildup.py`** — reveal ONE diagram's cells in dependency order (topological over its edges) → self-contained HTML player (embedded PNG frames, play/pause/step/scrub); optional `--gif`. Needs the draw.io CLI.
 - **`compress.py`** — big `.drawio` → 2-page executive summary. Pure-Python label-propagation clustering (no networkx), one auto-named node per cluster with a drill-down link to the full original on page 2, aggregated cross-cluster edges. Needs Graphviz.
-- **`prdiff.py`** — for every `.drawio` changed between two git refs, render base/head/`drawiodiff`-diff PNGs + a Markdown report for a PR comment; ships a composite GitHub Action (`.github/actions/drawio-diff/`). See `references/pr-bot.md`.
+- **`prdiff.py`** — for every `.drawio` changed between two git refs, render base/head/`drawiodiff`-diff PNGs + a Markdown report for a PR comment. See `references/pr-bot.md` for the executable override and target CI integration.
 
 ## 6. Diagram → other formats (reverse / interop)
 
