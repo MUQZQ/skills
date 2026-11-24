@@ -18,7 +18,7 @@ description: >
 
 ## 映射权威
 
-`references/design-mapping.yaml` 是设计领域唯一权威路由映射，版本为 v1.0。
+`references/design-mapping.yaml` 是设计领域唯一权威路由映射，版本见映射文件。
 未显式指定叶子 Skill 时，先读取映射，再选择一个主 Skill；本文件中的表格仅用于人工速查，必须与映射保持一致。
 映射负责意图、产物、阶段、主 Skill 和冲突优先级，本 Skill 只执行路由流程。
 仓库自有叶子 Skill 物理存放在 `design/<skill-name>/`；外部插件能力仅保留映射引用。
@@ -44,8 +44,8 @@ description: >
 |-----------|----------|
 | `ui-ux-pro-max` | UI/UX 知识检索、评审、设计系统建议与实现指导；不直接负责项目文件修改 |
 | `frontend-design` | 创建或修改实际前端界面、页面与组件 |
-| `hifi-prototype-authoring` | 产出可审看/可交接的高保真源稿，声明四维保真、档位、数据量、状态与锚点；不负责生产实现 |
-| `hifi-prototype-implementation` | 已有高保真原型/设计稿作权威视觉答案时的像素级实现与对照收敛（翻译纪律+三档验证+裁定同步） |
+| `hifi-prototype-authoring` | 产出和评审高保真源稿，准备同节点截图、状态和开发交接 |
+| `hifi-prototype-implementation` | 依据已确认的原型或设计稿实施，以及对现有界面做逐页独立验收与复审 |
 | `drawio-skill` | 流程图、架构图、UML、ER 与 Draw.io 产物 |
 | `visualize:visualize` | 对话内交互式可视化、图表、模拟器与解释工具 |
 | `presentations:Presentations` / `documents:documents` / `pdf:pdf` | 对应办公文档产物 |
@@ -64,8 +64,9 @@ description: >
 | 场景 | 处理 |
 |------|------|
 | 同时命中研究与实现 | 最终产物需要代码时选择 `frontend-design`，否则选择 `ui-ux-pro-max` |
-| 同时命中高保真产出与一般前端实现 | 交付物是可审看/可交接的源稿时选择 `hifi-prototype-authoring`；交付物是生产代码时选择 `frontend-design` |
+| 同时命中高保真产出与一般前端实现 | 先用 `hifi-prototype-authoring` 交付高保真源稿，稿件成为实施基准后转 `hifi-prototype-implementation` |
 | 同时命中高保真对齐与一般前端实现 | 有明确原型或设计稿作权威答案时选择 `hifi-prototype-implementation`，否则 `frontend-design` |
+| 在现有项目验收高保真，或单独搭建验收工程 | 对照实际界面验收用 `hifi-prototype-implementation`。交付物明确为独立 review 工程时交 `independent-tools` 处理 |
 | 同时命中系统方法与视觉产物 | 需要系统决策方法时选择 `method-router`，需要具体视觉或图示产物时选择 `design` |
 | 主 Skill 不可用 | 说明缺失项并给出职责最接近的可用 Skill，由用户确认 |
 | 项目规范与 Skill 冲突 | 项目规范优先，记录被覆盖的 Skill 规则 |

@@ -1,6 +1,6 @@
 ---
 name: project-reviewer
-description: 为任意软件项目构建"设计验收 review 工程"（reviewer 项目）：把设计稿/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录，供用户逐项执行检查并循环到问题清零。当用户说"给这个项目做个 review / reviewer / 验收工程 / 设计验收 / design-qa / 逐项检查 / 对照设计稿检查 / 构建评审项目"，或提供设计图/原型/规格要求对照实现验收时，使用本技能。也适用于"参考某某项目的 review 方式给另一个项目建 review"。
+description: 为软件项目构建独立设计验收 review 工程，将设计稿、规格或契约拆成可执行、可判定、可留证的检查项。用户明确要求生成或移植 reviewer 项目、验收工程或评审项目时使用。依照高保真在现有项目直接验收界面时使用 hifi-prototype-implementation。
 ---
 
 # Project Reviewer：设计验收 review 工程生成器

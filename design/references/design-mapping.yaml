@@ -33,18 +33,18 @@ routes:
     keywords: [实现页面, 修改前端, 写组件, 落地界面, 前端重构]
 
   hifi_prototype_authoring:
-    artifacts: [hifi_source_draft, fidelity_manifest, prototype_anchor_contract]
+    artifacts: [hifi_source_draft, fidelity_manifest, prototype_anchor_contract, prototype_handoff]
     stages: [authoring, review]
     primary_skill: hifi-prototype-authoring
     optional_helper: ui-ux-pro-max
     keywords: [产出高保真, 出高保真, 高保真源稿, 制作高保真原型, 生成可审看原型, 原型交付物, 保真度说明, 原型锚点合同, 原型状态清单, 整理高保真]
 
   hifi_prototype_implementation:
-    artifacts: [hifi_prototype, design_mockup, pixel_alignment]
-    stages: [implementation, verification]
+    artifacts: [hifi_prototype, design_mockup, pixel_alignment, hifi_acceptance_review]
+    stages: [implementation, verification, review]
     primary_skill: hifi-prototype-implementation
     optional_helper: ui-ux-pro-max
-    keywords: [像素级对齐, 原型还原, 按设计稿实现, UI 复刻, 视觉走查, 像素对照, 对齐原型, 高保真实现]
+    keywords: [像素级对齐, 原型还原, 按设计稿实现, UI 复刻, 视觉走查, 像素对照, 对齐原型, 高保真实现, 高保真审判, 高保真验收, 高保真复审]
 
   diagram:
     artifacts: [flowchart, architecture_diagram, uml, er_diagram, drawio]
@@ -88,11 +88,15 @@ conflict_rules:
   hifi_authoring_and_frontend:
     when: 同时需要高保真源稿与生产前端实现
     primary_skill: hifi-prototype-authoring
-    exception: 最终交付物是生产代码时回 frontend-design；已有权威原型需要实现时改 hifi-prototype-implementation
+    handoff: 交接源稿成为实施基准后转 hifi-prototype-implementation
   hifi_and_general_implementation:
     when: 同时命中高保真对齐与一般前端实现
     primary_skill: hifi-prototype-implementation
     exception: 无明确原型或设计稿作为权威视觉答案时回 frontend-design
+  hifi_acceptance_and_review_project:
+    when: 对照已确认的高保真验收实现，且同时提到 review 工程或已有台账
+    primary_skill: hifi-prototype-implementation
+    exception: 明确要求生成独立 review 工程时交 independent-tools
   system_problem_and_visual_artifact:
     when: 同时包含系统问题定义与视觉产物
     route_to: method-router

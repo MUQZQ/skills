@@ -48,6 +48,9 @@ class RepositoryDomainRoutingContractTest(unittest.TestCase):
         self.assertIn("keywords: [像素级对齐", content)
         self.assertNotIn("keywords: [高保真,", content)
         self.assertIn("hifi_authoring_and_frontend:", content)
+        self.assertIn("交接源稿成为实施基准后转 hifi-prototype-implementation", content)
+        self.assertIn("hifi_acceptance_review", content)
+        self.assertIn("明确要求生成独立 review 工程时交 independent-tools", content)
 
     def test_design_router_loads_mapping_before_selecting_leaf(self) -> None:
         content = DESIGN_SKILL.read_text(encoding="utf-8")

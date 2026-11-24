@@ -22,8 +22,8 @@ class DesignSkillContractTest(unittest.TestCase):
         expected_routes = (
             "| `ui-ux-pro-max` | UI/UX 知识检索、评审、设计系统建议与实现指导；不直接负责项目文件修改 |",
             "| `frontend-design` | 创建或修改实际前端界面、页面与组件 |",
-            "| `hifi-prototype-authoring` | 产出可审看/可交接的高保真源稿，声明四维保真、档位、数据量、状态与锚点；不负责生产实现 |",
-            "| `hifi-prototype-implementation` | 已有高保真原型/设计稿作权威视觉答案时的像素级实现与对照收敛（翻译纪律+三档验证+裁定同步） |",
+            "| `hifi-prototype-authoring` | 产出和评审高保真源稿，准备同节点截图、状态和开发交接 |",
+            "| `hifi-prototype-implementation` | 依据已确认的原型或设计稿实施，以及对现有界面做逐页独立验收与复审 |",
             "| `drawio-skill` | 流程图、架构图、UML、ER 与 Draw.io 产物 |",
             "| `visualize:visualize` | 对话内交互式可视化、图表、模拟器与解释工具 |",
             "| `presentations:Presentations` / `documents:documents` / `pdf:pdf` | 对应办公文档产物 |",
