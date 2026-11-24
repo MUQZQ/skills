@@ -54,6 +54,68 @@ heartbeat 仅在用户显式创建或启用后按绑定范围执行预览巡检�
 - 用户确认写入后，使用 `mcp__dida365__create_task`、`mcp__dida365__update_task` 或 `mcp__dida365__batch_update_tasks`，始终带上 `projectId`、稳定 `taskId` 和最新 `etag`（若工具返回）。
 - 不调用 `delete_task`、`move_task`、`complete_task` 或项目结构写入工具，除非用户在当前请求中明确授权该具体动作。
 - Dida 工具不可见时，提示可能需要重新加载 Codex/ZCode 会话；不要把“工具未加载”误判为“清单为空”。
+- 三闸门的工具落点（2026-11-24 实查）：完成凭证用 `get_comment` / `add_comment` + `completedTime`；
+  产能反推用 `create_focus` / `get_focuses_by_time`（type 0 番茄、1 计时，可挂 taskId）；
+  外部硬期限用 `countdown`；周期值守用 `habit/checkins` 或 `repeatFlag`；分域用 `project group`。
+  `create_task` 的 TaskInput 不支持直接带 `parentId`，层级须经 `update_task` 建立（`parentId=''` 解除）。
+
+## 管理面三闸门
+
+滴答是「人这台串行执行器的收件箱 + 今日执行面」，不是第二个 Gitea、不是真相源：
+Gitea 管事的权威状态，OpenSpec 管设计论证，滴答只回答「我现在做什么、凭什么说做完了」。
+以下三闸门约束自动化与人工写入，防止把二手推断伪装成事实。
+
+### 闸门一：完成凭证
+
+- 自动同步只写 `content` / `comment` 提示，**永不改 `status` / `completedTime`**。
+  「关联 PR 已合入」是待核信号而非完成事实；发现类 issue（PR 报告的 bug）与
+  修复类 issue（PR 修好的 bug）同步时必须区分，不得压成同一句进度。
+- 滴答任务的「完成」只能由核过权威源的人/agent 触发。关闭 Gitea issue 前先读
+  **issue 正文的完成条件**逐项核对并持有验证证据；不凭自动刷新的进度或单个 PR
+  合并就关闭整个 issue。已授权关闭走项目 `qeda-close-issue` 流程。
+- 完成证据写入 `comment`（含来源与核对结论）；`completedTime` 由实际完成动作产生，
+  不手工回填「追认」。
+
+### 闸门二：重要度推导
+
+- 优先级以客观判据自动推导：卡关键路径（阻塞别人）、超期、属责任田、外部硬期限。
+  手标只保留机器看不到的覆盖权（如「我承诺了某人」）。
+- 不为每条卡填「重要理由」——主观字段必然过时，且是每次录入的摩擦税；
+  重要性在 GTD「理清」时判定，不固化成字段。
+- 不做任务估时与完成率趋势：AI 任务估时不准，瓶颈在串行复核端，完成率无决策价值。
+
+### 闸门三：产能与依赖投影
+
+- 「我做」列设 WIP 上限（建议 ≤3）；堆积不是优先级问题而是没闸门。
+  用 `focus` / `duration` 反推每日真实容量，不按理想工时排期。
+- 「阻塞」列必须写明**阻塞源与解除条件**，不作停滞任务垃圾桶；无明确前置的
+  长尾任务回「待命」。
+- 依赖关系不在滴答维护（无任务间依赖字段，用 `parentId` / `comment` 近似会失真），
+  由 Gitea/OpenSpec 承担；滴答只投影「现在我能做什么」。
+- 周期性值守（晨报、轮值）用 `habit/checkins` 或 `repeatFlag`，不靠记忆；
+  外部硬期限用 `countdown`，比手标优先级更硬。
+
+## Gitea 晨报取数脚本
+
+[`scripts/gitea-brief.mjs`](scripts/gitea-brief.mjs) 提供晨报所需的 Gitea **只读取数**，替代在自动化提示词里重复描述 API 分页、令牌读取和事件验真。滴答写入仍走 MCP，本脚本不关闭、不修改、不评论任何 issue 或 PR。
+
+```sh
+node gitea-brief.mjs issues   [--out-dir DIR] [--date YYYY-MM-DD] [--all]
+node gitea-brief.mjs assigned [--out-dir DIR] [--date YYYY-MM-DD]
+node gitea-brief.mjs prs      [--out-dir DIR] [--date YYYY-MM-DD]
+node gitea-brief.mjs progress [--out-dir DIR] [--date YYYY-MM-DD] [--numbers 1,2,3]
+node gitea-brief.mjs snapshot --snapshot FILE [--out-dir DIR] [--date YYYY-MM-DD]
+```
+
+- `issues`：分页拉全部开放 issue，落 `issues.json`，输出编号集合与「指派给我 / 我创建的」两组统计。
+- `assigned`：基于 `issues.json` 拉验真 timeline + 末条评论 + 引用 PR 的实际状态，落 `assigned.json`；引用型事件（`issue_ref`/`cross-reference`/`pull_ref`/`comment_ref`）过滤，`change_title` 等实质事件保留，未知类型如实上报。
+- `prs`：分页拉开放 PR，筛本人，附 reviews、CI 车道、末 5 条评论，落 `my-prs.json`。**关注 PR 与关注 issue 同等重要**：交付临门一脚在 PR 上，先按 CI/评审/mergeable 给出可合入判断，再看关联 issue。
+- `progress`：生成「进度一句话」素材（剥 HTML 注释、PR 状态以实际查询为准），落 `progress.json`；content ≤80 字，由调用方写入滴答。每条带 `信号级别: 待核(二手推断)` 与 `完成判定: false`——**它是提示不是完成凭证**，关闭前必须回读 issue 正文完成条件。
+- `snapshot`：读旧快照与 `issues.json`，输出新增/移除/更新/未变四类 diff 并写回当日快照；日期来自 `--date`，不硬编码。
+
+配置顺序：命令行 > 环境变量（`GITEA_SERVER` / `GITEA_REPO` / `GITEA_LOGIN` / `GITEA_BRIEF_OUT`）> 同目录 `gitea-brief.config.json`；默认 server `https://qedai.df2cloud.com:60001`、repo `QEDA/QEDAgent`、login `qinzuoquan`。旧域名 `gitea.df2cloud.com` DNS 已失效，禁用。令牌遵循 branch-manager R7：只读 `~/.gitea-token`（唯一来源）→ `GITEA_TOKEN` → git credential fill 应急，不读仓库内 token 文件、不回显。网络失败重试 3 次（退避 3/6/9 秒）；退出码 1 为配置错误、2 为网络全败。输出目录用 `--out-dir` 指到用户态目录，避免污染 Skill 仓库。
+
+**时间观（AI 并行开发）**：脚本只产出事实与依赖素材，不做日历排期。AI 可异步执行的节点给工作量估算（T-shirt/区间）与写入边界，**不排固定时段**；只有需要本人决策/复核/合入的 A 节点才可能进日历。估算写成标签（如 `估M`），不要写进会被每日刷新的 `content`。排期方法走 `method-router` 的 `manage/parallel_scheduling`，不在本脚本实现。
 
 ## 巡检输出
 
