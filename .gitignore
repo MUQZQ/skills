@@ -12,3 +12,4 @@ independent-tools/branch-manager/tools/pr-watch.state.json
 independent-tools/branch-manager/tools/pr-watch.token
 .zcode/
 .zcodeignore
+.skill-evals/hifi-prototype-implementation-workspace/

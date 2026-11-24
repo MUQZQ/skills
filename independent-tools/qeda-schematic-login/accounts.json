@@ -1,0 +1,357 @@
+{
+  "site": "https://schematic.qyf.df2cloud.com",
+  "rule": "status=available 且密码与池一致才可用于登录/批量改密；密码不在池中（status=assigned）代表账号已被专人使用，一律跳过，不得尝试登录",
+  "initialPassword": "qyf@123456",
+  "accounts": [
+    {
+      "account": "AITest00001",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00002",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00003",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00004",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00005",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00006",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00007",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00008",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00009",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00010",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00011",
+      "password": null,
+      "status": "assigned",
+      "note": "初始密码 qyf@123456 已失效（2026-11-24 实测），被专人使用，批量任务一律跳过",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00012",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00013",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00014",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00015",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00016",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00017",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00018",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00019",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00020",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00021",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00022",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00023",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00024",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00025",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00026",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00027",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00028",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00029",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00030",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00031",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00032",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00033",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00034",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00035",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00036",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00037",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00038",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00039",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00040",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00041",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00042",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00043",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00044",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00045",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00046",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00047",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00048",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00049",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    },
+    {
+      "account": "AITest00050",
+      "password": "QEDAgent@",
+      "status": "available",
+      "note": "2026-11-24 由初始密码批量改为当前密码",
+      "updated": "2026-11-24"
+    }
+  ]
+}

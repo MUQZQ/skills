@@ -1,48 +1,28 @@
 ---
 name: qeda-schematic-login
-description: >
-  自动登录启云方原理图站点（schematic.qyf.df2cloud.com 的 UIAM 单点登录）：填账号密码、取出 base64
-  验证码图片并识别（或交用户读取）、提交、处理 noPermission 跳转，并在浏览器重启丢失会话后快速重登，
-  供实机验收与页面自动化前使用。当用户提到「登录原理图」「启云方登录」「schematic 登录」
-  「实机验收前先登录」「验证码登录」，或给出 schematic.qyf.df2cloud.com 链接要求进入工程、图页时使用。
+description: >-
+  登录启云方原理图站点（方枢、方书、schematic.qyf.df2cloud.com），支持 DeepSeek Harness 内嵌页和独立浏览器。
+  处理 UIAM 登录、证书域名不匹配、授权工程与图页打开，以及与本机 8080 原理图桥的连接核对；
+  另支持测试账号批量初始化密码（初始密码登录时 UIAM 强制弹改密窗，逐号改密或识别已重置账号跳过）。
+  用户说「登录方枢」「登录方书」「登录启云方原理图」「批量改密」「初始化测试账号密码」，或实机验收需要进入该站点的工程或图页时使用。
 ---
 
-# 启云方原理图站点登录
+# 登录启云方原理图站点
 
-把「打开登录页 → 填账号密码 → 读取验证码 → 提交 → 进工程」做成可复用流程。验证码是
-`data:image/jpeg;base64` 内嵌图，**取出后放大即可由 Agent 直接读图识别**，不需要人工转述；
-连续识别失败时再交用户读取。
+使用 [登录脚本](scripts/login.mjs) 连接已有调试目标。用户只要求登录时，方枢首页加载且业务接口确认账号即完成。
+打开工程、打开图页和连接原理图桥各有独立成功条件。
 
-**脚本优先**：登录、提交、进工程、开图页一律运行 `scripts/login.mjs` 的对应子命令
-（见「执行流程」），不要内联手写 CDP JS。脚本只连接已有浏览器的调试端口，**不启动浏览器、
-不注册新的浏览器实例**。只有脚本缺失对应能力或失败分支需要现场诊断时，才按下方 JS 要点手动操作。
+## 选择现有实例
 
-## 前置条件
+1. **DSH 内嵌页**：优先沿用任务指定的 DSH 版本、工作树、隔离档案和调试端口。由客户端的「打开方枢」入口打开页面。
+   本机 PR #1049 的隔离实例使用 DSH `0.2.2-rc.1`、CDP `45929`、原理图桥 `8080`。CDP 只处理同源 `webview`，宿主的 `dsh-app://app` 页留给客户端。
+2. **独立浏览器**：复用已有登录档案和调试端口（通常 `9222`）。Edge 157 及以上启用调试时需显式指定用户数据目录，先核对该目录与用户会话身份。
+3. 使用 `check` 识别目标。IPv6 调试可传 `--cdp http://[::1]:9222`。如有多个同源页签，从 `/json/list` 的标题和 ID 选目标工程页签，传 `--target <ID>`，再核对 `project` 与 `editor: true`；标题为「原理图-编辑器」的目标也可能只是工程首页。同工程已打开时 `enter` 直接返回，不刷新带未保存标记的图页。网页调试端口和原理图桥端口各有用途。
 
-1. **复用现有浏览器实例**：连接已带调试端口的现有浏览器，**不要新建浏览器实例、不要新建
-   user-data-dir profile**（新实例会丢掉站点 localStorage 中的页面身份、证书信任与登录态，
-   导致实机验收页面无法连桥）。确实没有可复用的实例时，才用默认用户数据目录重启，Edge 示例：
-
-   ```powershell
-   Start-Process 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe' -ArgumentList `
-     '--remote-debugging-port=9222','--ignore-certificate-errors',`
-     '--user-data-dir=C:\Users\<用户>\AppData\Local\Microsoft\Edge\User Data',`
-     'https://schematic.qyf.df2cloud.com/uiam/#/login'
-   ```
-
-   - 注意：Edge/Chrome 已运行时再启动带 `--remote-debugging-port` 的命令不会生效（参数被转发给
-     现有实例）；需要调试端口时必须先完全退出浏览器，再用上一条命令重启。
-   - **Edge 157+ 必须显式传 `--user-data-dir`**：未指定时（默认 profile）调试端口会被拒绝，
-     报 "DevTools remote debugging requires a non-default data directory"。传默认 profile 的
-     完整路径（见上面示例）即可——同一 profile、同一登录态，不影响复用既有身份。
-   - `--ignore-certificate-errors` 必须带：站点证书是 `*.df2cloud.com` 单级通配符，
-     `schematic.qyf.df2cloud.com` 是三级子域，严格校验会报 `ERR_CERT_COMMON_NAME_INVALID`。
-   - 调试端口可能只绑 IPv6：先试 `http://127.0.0.1:9222`，连不上改 `http://[::1]:9222`。
-   - **登录态不跨浏览器重启**（内存级会话），每次重启浏览器都要重登一次。
-
-2. **CDP 目标**：`GET /json/list` 取 `type === 'page'` 且 URL 含 `uiam` 的条目。
-
-3. **账号**：默认测试账号见下；生产/他人账号必须显式传入。
+收到 `ERR_CERT_COMMON_NAME_INVALID (-200)` 时，先核对站点及证书公钥。已有用户授权且公钥与已核实记录一致时，重启目标隔离实例，
+使用 `--ignore-certificate-errors-spki-list=<SHA-256 SPKI Base64>` 授予该证书例外。沿用同一档案，并核对监听端口和实际进程。
+公钥变化时重新核验来源。DSH 出现 `web boot` 或 `waiting for service: qedaBrowser` 时，先读当前档案 `userdata/logs/` 的最新崩溃日志，
+核对 `@qedagent/dsh-browser` 和 `@qedagent/dsh-sds-connector` 加载来源。恢复后从可见入口重新打开方枢，运行 `check` 确认目标。
 
 ## 默认测试账号（仅测试环境）
 
@@ -51,148 +31,75 @@ description: >
 | 账号 | `qinzuoquan` |
 | 密码 | `qin123$%` |
 
-> 用户提供的测试账号，仅用于验证登录流程。实测认证通过，但该账号在 UIAM 门户无权限，
-> 登录后落到 `#/noPermission`——**这不代表登录失败**；导航到工程 URL 后编辑器可正常加载。
-> 生产或真实数据操作必须换有权限账号。凭据不得写入 URL、cookie、日志或提交到仓库。
+> 默认账号只用于授权测试站点。使用生产或他人账号时由用户提供访问凭据。密码优先用当前进程环境变量
+> `QEDA_SCHEMATIC_PASSWORD`，避免出现在命令行与日志中。读取凭据及验证码时避免回显。
 
-## 执行流程（脚本优先）
+## 登录与进工程
 
-脚本位置：`scripts/login.mjs`（本 skill 目录下）。所有子命令只连接已有 CDP 端口，
-不启动浏览器；`--cdp http://[::1]:9222` 可切换到 IPv6。
+| 步骤 | 命令（各步均可传 `--cdp <地址>`） | 通过条件 |
+| --- | --- | --- |
+| 1. 检查 | `node login.mjs check` | 输出目标类型、登录状态、工程与编辑器状态。若 `authenticated: true`，直接使用现有会话。 |
+| 2. 准备验证码 | `node login.mjs captcha --account <账号> --out <临时图.png>` | 输入框已填写，输出最近的验证码图。读取放大的 4 位数字。 |
+| 3. 提交 | `node login.mjs submit --captcha <4位数字>` | `LOGIN_OK` 表示跳转结束，业务接口已确认账号。 |
+| 4. 打开工程 | `node login.mjs enter --project <工程ID>` | `ENTER_OK` 表示工程 ID 匹配且编辑器已挂载。 |
+| 5. 打开图页 | `node login.mjs open --sheet <图页标题>` | 核对活动图页 `ACTIVE` 的标题与 `tabid`。 |
 
-| 步骤 | 命令 | 说明 |
-|---|---|---|
-| 0. 状态检查 | `node login.mjs check` | 输出原理图页面 `{url, tabs, editor, text}` |
-| 1. 填账号密码+取验证码 | `node login.mjs captcha --account <账号> --password <密码> --out <路径.png>` | 页面内 canvas NEAREST ×12 放大后保存；Agent 读图识别 4 位数字 |
-| 2. 提交 | `node login.mjs submit --captcha <4位数字>` | 轮询至离开登录页/报错；`LOGIN_OK` 为认证通过，`noPermission` 也是通过信号 |
-| 3. 进工程 | `node login.mjs enter --project <projectId>` | navigate 工程 URL → 硬刷新 → 等 `tabs>=1 && editor===true` |
-| 4. 开图页 | `node login.mjs open --sheet <图页标题>` | 在工程树中**双击**标题打开图页（单击只选中）；树面板折叠时自动展开；输出含活动页签 `ACTIVE={text,tabid}` |
+- 验证码失败后重新取图，旧码不能复用。连续读数不确定时交用户读取。账号、验证码、SSO code 和 Cookie 均避免写入日志或提交。
+- 登录提交后等待站点完成正常跳转。带 `code` 的页面、`versionSelect.html` 和 `#/noPermission` 仍需等待或核对业务权限。
+  若结果为 `LOGIN_PORTAL_DENIED` 或 `LOGIN_TIMEOUT`，先 `check`，按授权测试账号的实际权限处理。
+  DSH 内嵌页由宿主跟随跳转，避免在登录回调、特性版本选择或进入工程期间强制刷新。
+- 只有用户任务需要工程时才执行 `enter`。独立浏览器可沿用进工程后的刷新步骤。编辑器恢复到上次工程时，
+  经正常工程入口打开指定工程，再核对工程树根节点及图页 `tabid`。设计树可能需要 30–60 秒加载，双击标题才打开图页。
+- 若验收需要调用原理图工具，从本机查 `http://127.0.0.1:8080/api/bridge/status?projectId=<工程ID>`，
+  回读指定工程的 `active` 连接。页面加载与工具桥就绪分别核对。由网页向本机回环发 `fetch` 不能用作桥状态判据。
 
-典型串行执行：`captcha` → Agent 读图 → `submit` →（noPermission 时立即）`enter` → `open`。
+## 故障处理
 
-### 设计树与图页打开（实测要点）
+| 现象 | 操作 |
+| --- | --- |
+| 登录后白屏、内嵌页消失或报 `qedaBrowser` 等待 | 查看宿主窗口及崩溃日志，记录是否发生了强制刷新或目标关闭。重启同一隔离实例后先复验登录，只在业务会话确认后进入待验工程。 |
+| 找不到目标、WebSocket 超时 | 核对调试端口和已打开的方枢页签。重新查询目标 ID，区分页面替换、关闭和宿主退出。 |
+| 项目路径出现但未打开编辑器 | 核对路由中的工程 ID、工程权限及实际页签。在 DSH 中通过工程入口重开当前页签，等待设计树加载。 |
+| 已登录，8080 返回空连接 | 打开目标工程和业务图页，再查桥侧连接和当前工作树的端口配置。 |
 
-- **树懒加载**：编辑器加载后设计树可能 30–60 秒后才填充；`open` 找不到标题时先
-  `check`/轮询 `.easyui-tree .tree-title` 数量（`ul.easyui-tree` 内），不要立即判定失败。
-- **左面板折叠**：树容器链宽度为 0 且存在 `.layout-toggler.left.close`（6px 把手）时，
-  `open` 会自动点把手展开（CDP 真实鼠标事件；合成 MouseEvent 对 tianshu 控件无效）。
-- **easyui 树交互**：单击仅选中（`.tree-node-selected`），**双击才开图页**；脚本已内置
-  单击+双击序列，手动操作时注意点击用 CDP `Input.dispatchMouseEvent`，不要用页面内合成事件。
-- **工程恢复陷阱**：直接 navigate `#/,id=<projectId>` 可能被页面恢复到上次打开的工程
-  （环境里存在多个同名工程，如多个 `HI3516_demo`）。进入后必须核对：活动图页签
-  `#tabbar .tabbar-tab.sheet.active` 的 `tabid`（= documentId）与工程树根节点名称是否与
-  目标一致。不一致时先从其他页面（如 `/account/`）完整导航回编辑器 URL（跨页导航会真正
-  按 URL 参数加载）。
-- **图页身份核对**：`#tabbar .tabbar-tab.sheet.active` 的 `tabid` 属性就是当前打开图页的
-  documentId。目标文档的图页名/ID 可从页面 IndexedDB 核对：以 projectId 命名的库中
-  `schSheetData` 存储的 `uuid` = documentId，`display_title` = 图页名（如 SHEET_06）。
+## 测试账号批量改密（resetpw.mjs）与账号池
 
-### 回退：手动 JS 要点（脚本缺失能力时）
+**账号池**：本 skill 目录下 [accounts.json](accounts.json) 是 AITest 测试账号的唯一状态权威。规则：
 
-### 1. 填账号与密码（Element Plus）
+- `status=available` 且密码与池中登记一致 → 可用于登录/批量改密。
+- **密码不在池中（`status=assigned`）= 账号已被专人使用，一律跳过，不得尝试登录**（防锁定、防打扰他人）。
+- 登录时发现「账号或密码验证失败」且账号池中该账号仍是 `available` → 该账号已被他人重置，**立即标记为 `assigned`**（`password: null`，note 记实测日期），本次及以后跳过。
+- 批量改密成功后逐号回写池中 `password` 与 `updated`；任何账号取用/改密后都先更新池再继续。
 
-`v-model` 需要原生 value setter + `input` 事件，直接赋 `.value` 不生效：
+适用于批量初始化测试账号密码：UIAM 对「初始密码账号」的登录提交**不跳转**，而是在登录页弹出「修改密码」弹窗（账号、旧密码自动带入），改密全程不进入系统。已重置过密码的账号在同一提交下直接报错，可据此跳过。
 
-```js
-const set = (el, v) => {
-  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(el, v)
-  el.dispatchEvent(new Event('input', { bubbles: true }))
-  el.dispatchEvent(new Event('change', { bubbles: true }))
-}
-const ins = Array.from(document.querySelectorAll('input.el-input__inner'))
-// ins[0] 账号、ins[1] 密码（type=password）、ins[2] 验证码
-set(ins[0], account)
-set(ins[1], password)
-```
+站点约束（2026-11-24 实测）：
 
-### 2. 取验证码并识别
+- 密码策略：**至少 8 位，且包含大写、小写、数字、特殊字符中至少三类**（如 `QEDAgent@`）。
+- 账号密码有**错误锁定**：文案「账号或密码验证失败，再输错 N 次将锁定」。判定为密码错误后**立即停止该账号**，不重试密码；验证码错误不占密码错误计数，可安全重取。
+- 证书：`schematic.qyf.df2cloud.com` 为三级子域，超出 `*.df2cloud.com` 通配单层覆盖，独立浏览器需带
+  `--ignore-certificate-errors-spki-list=<SHA-256 SPKI>`（证书为 vTrus 签发给深圳启云方，先核验再授例外）。
 
-```js
-const img = Array.from(document.querySelectorAll('img'))
-  .find(i => (i.src || '').startsWith('data:image'))
-img.src // data:image/jpeg;base64,...
-```
+单账号循环（验证码由使用者读图，逐号执行；**只处理池中 `available` 的账号**）：
 
-识别要点（实测有效）：
+| 步骤 | 命令 | 通过条件 |
+| --- | --- | --- |
+| 1. 填表取码 | `node login.mjs captcha --account <账号> --out <图>` | 验证码图已保存，读 4 位彩色数字 |
+| 2. 提交+改密 | `node resetpw.mjs run --captcha <4位> --password <新密码>` | 输出 `RESULT=` 见下表 |
 
-1. 解码保存原图（约 95×35 px），用 **NEAREST 放大 10–12 倍**——双线性/LANCZOS 会把彩色笔画糊掉；
-2. 验证码为 **4 位数字**，每位一种颜色（黑/橄榄绿/蓝/暗红），图上叠加斜线噪声；
-3. 逐位读，不猜；一次读数最多用 30 秒（验证码 45 秒内不变，实测稳定）；
-4. 提交失败后验证码会自动刷新，**必须重新取图**，不要拿旧图重试。
+`RESULT=` 判定：
 
-### 3. 提交并捕获登录成功信号
+| 输出 | 含义 | 处置 |
+| --- | --- | --- |
+| `RESET_OK` | 弹窗改密成功（「用户修改密码成功」） | 记成功并**回写账号池密码**，下一账号 |
+| `SKIP_ALREADY_RESET` | 「账号或密码验证失败」——初始密码已失效 | **池中标记 `assigned`**，不重试（防锁定），下一账号 |
+| `CAPTCHA_RETRY` | 验证码错误 | 重新 `captcha` 取图再提交 |
+| `LOGGED_IN_UNEXPECTED` | 未弹改密窗直接登录成功（强制改密被管理端关闭） | 人工处理 |
+| `LOCK_RISK` / `TIMEOUT` | 锁定风险 / 无终态 | 截图核对页面后人工决策 |
 
-```js
-set(ins[2], captcha)
-document.querySelector('button.el-button--primary').click()
-```
+注意事项：
 
-登录按钮文字是「登 录」（含空格），按文字匹配容易失败，**按 class 定位**。
-
-轮询 `location.href`（每 0.7s，最多约 14s），以下任一即为认证成功：
-
-- URL 变成 `https://schematic.qyf.df2cloud.com/?code=<SSO code>`（本次实测形态）；
-- URL 进入 `#/noPermission`（门户无权限，但认证已通过）；
-- URL 进入 `#/,id=<projectId>`。
-
-仍在 `#/login` 且出现「验证码错误/密码错误」= 失败，重新取验证码重试（最多 3 次）。
-
-> `#/noPermission` 页面会在约 6 秒后自动跳回登录页。识别到该 URL 后**立即**导航到工程 URL，
-> 不要等待。
-
-### 4. 进入工程（必须硬刷新）
-
-```js
-Page.navigate({ url: 'https://schematic.qyf.df2cloud.com/#/,id=<projectId>' })
-// 2 秒后
-Page.reload({ ignoreCache: true })
-```
-
-成功判据（比标题可靠）：
-
-```js
-({ url: location.href, tabs: document.querySelectorAll('#tabbar .tabbar-tab').length,
-   editor: !!document.querySelector('#tabbar_bodies iframe') })
-// 期望 tabs >= 1 且 editor === true
-```
-
-只 navigate 不 reload 时，路由可能停在工程列表；**硬刷新才稳定进入编辑器**。
-
-## 登录后连接核对（重要）
-
-**不要用页面内 `fetch('http://127.0.0.1:8080/...')` 判断桥是否可达**：Edge/Chrome 对
-「公网 https 页面访问本机回环」有限制，页面内会得到 `Failed to fetch` 或超时，但站点的
-QEDA MCP 客户端本身仍能建立 WebSocket。实测同一页面：页面内 fetch 报错，桥侧显示
-`active` 连接（294 个 handler）。
-
-正确核对方式是从本机查桥：
-
-```bash
-curl -s 'http://127.0.0.1:8080/api/bridge/status?projectId=<projectId>'
-# 期望 connections 中 status=active、projectId 匹配、handlers 数量可观
-```
-
-若确需页面侧证据，读页面底部 QEDA MCP 面板文案（「已连接」/「未连接」），不要自己造 fetch 探针。
-
-## 失败分支
-
-| 现象 | 原因 | 处置 |
-|---|---|---|
-| `ERR_CERT_COMMON_NAME_INVALID` | 缺 `--ignore-certificate-errors` | 带该参数重启浏览器 |
-| CDP 9222 连不上 | 未带调试端口/端口被占 | `netstat -ano \| findstr 9222`，换端口 |
-| `fetch failed` 但端口在听 | 调试端口绑 IPv6 | 改 `http://[::1]:9222` |
-| 表单填了值但提交无效 | 直接赋 `.value` 未触发框架事件 | 原生 setter + `input`/`change` |
-| 验证码错误 | 识别错/用了刷新前的图 | 重新取图，NEAREST 放大再读 |
-| 登录后回登录页 | 未在 6 秒内离开 noPermission，或验证码/密码错 | 识别到 noPermission 立即导航工程 URL |
-| 工程页停在项目列表 | 只 navigate 未 reload | `Page.reload({ ignoreCache: true })` |
-| 树为空/找不到图页 | 树懒加载未完成，或左面板折叠 | 等 30–60s 轮询 `.tree-title`；面板折叠由 `open` 自动展开 |
-| 点击树节点无效 | 合成事件无效/单击只选中 | CDP `Input.dispatchMouseEvent` 真实点击，**双击**开图页 |
-| 进入的工程不对 | 页面恢复了上次工程（有同名工程） | 从 `/account/` 等页面完整导航回工程 URL；核对活动页签 `tabid` |
-| 页面内 fetch 127.0.0.1 失败 | 浏览器本地网络限制 | 用桥状态接口核对，不要据此判断桥挂了 |
-
-## 安全边界
-
-- 凭据只在内存与本文件默认值中使用；**不写入** URL、cookie、localStorage、日志或提交。
-- 只对测试环境使用默认测试账号；生产账号必须由用户当场提供。
-- 识别只用当前 Agent 的图像读取能力，不接第三方打码服务；失败交用户读取。
-- 不修改站点权限、不调用管理接口；`noPermission` 不绕过，只按工程 URL 继续业务页面。
+- 改密成功后弹窗自动关闭回到登录表单，无需登出，直接进入下一账号。
+- `resetpw.mjs` 要求浏览器恰好 1 个方枢页签（多个时先关闭多余页签）。
+- 新密码经 `--password` 传入仅用于页面注入，不写入日志；初始密码用 `QEDA_SCHEMATIC_PASSWORD` 环境变量传给 `captcha`（池中 `initialPassword` 字段仅作记录）。
+- 大批量执行时逐号保留结果行，收尾汇总成功/跳过/异常清单；池的回写与结果汇总同步完成，不留悬空状态。
