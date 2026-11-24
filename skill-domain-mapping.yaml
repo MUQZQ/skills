@@ -122,12 +122,12 @@
         },
         "hifi-prototype-authoring": {
           "skill_name": "hifi-prototype-authoring",
-          "description": "产出可审看、可交接的高保真原型源稿：四维保真与档位、数据量口径、屏/状态清单、data-* 锚点合同、交互接线、生成防漂移、独立评审与验收阻断；不负责生产代码实现",
+          "description": "产出、完善和独立评审高保真原型源稿，交接同节点截图、设计结构、状态、四维保真范围、测试清单与证据",
           "path": "design/hifi-prototype-authoring/SKILL.md"
         },
         "hifi-prototype-implementation": {
           "skill_name": "hifi-prototype-implementation",
-          "description": "从高保真原型生成实际前端代码并做到像素级对齐：翻译纪律（原型精确值优先、颜色走项目令牌）、三档验证（静态 token 对账、真机计算样式、并排视觉审查）、审查结论甄别与用户裁定同步退役清单",
+          "description": "按已确认的高保真原型或设计稿实现、逐页逐图框独立验收与复审，复用规格测试清单，双向核对源码与运行画面",
           "path": "design/hifi-prototype-implementation/SKILL.md"
         },
         "ui-ux-pro-max": {
@@ -201,7 +201,7 @@
         },
         "project-reviewer": {
           "skill_name": "project-reviewer",
-          "description": "为任意软件项目构建设计验收 review 工程：把设计图/规格/契约等基准真相拆解为逐项可执行、可判定、留证据的检查清单，生成本地 review 工程目录供逐项检查并循环到问题清零。当用户提到\"设计验收\"、\"review 工程\"、\"design-qa\"、\"对照设计稿检查\"、\"构建评审项目\"、\"逐项验收检查\"时使用。",
+          "description": "构建或移植独立设计验收 review 工程，将设计稿、规格或契约拆解为可复查的检查项。仅当明确交付独立验收工程时使用；在现有项目验收高保真界面由 hifi-prototype-implementation 负责。",
           "path": "independent-tools/project-reviewer/SKILL.md"
         },
         "qeda-schematic-login": {
@@ -543,6 +543,11 @@
           "skill_name": "double-loop",
           "description": "双环学习：改行为+改规则假设，防重复犯错",
           "path": "method-router/double-loop/SKILL.md"
+        },
+        "acceptance-upfront": {
+          "skill_name": "acceptance-upfront",
+          "description": "跨领域交付的验收前置方法。用户要求实施或制作产物，并希望先定验收标准、交付前自己验一遍、减少反复返工，或指定 ATDD 时使用；适用于软件、文档、数据和设计。沿用现有验收流程，按同一组通过条件实际验证。",
+          "path": "method-router/acceptance-upfront/SKILL.md"
         },
         "evidence-driven-dev": {
           "skill_name": "evidence-driven-dev",

@@ -136,6 +136,57 @@ class MethodRouterContractTest(unittest.TestCase):
         self.assertIn("tie_breaker: ask_user_with_top_3", self.mapping)
         self.assertIn("no_match: type_fallback", self.mapping)
 
+    def test_acceptance_upfront_routes_across_delivery_domains(self) -> None:
+        for domain in ("general", "data", "process", "code"):
+            with self.subTest(domain=domain):
+                route = _resolve(
+                    self.routes,
+                    {
+                        "type": "improve",
+                        "domain": domain,
+                        "sub_type": "acceptance_upfront",
+                        "scope": "delivery",
+                    },
+                    500,
+                )
+                self.assertEqual(["acceptance-upfront"], route["chain"])
+
+    def test_acceptance_upfront_reserves_consultation_and_specialist_routes(self) -> None:
+        with self.assertRaises(LookupError):
+            _resolve(
+                self.routes,
+                {
+                    "type": "improve",
+                    "domain": "general",
+                    "sub_type": "acceptance_upfront",
+                    "scope": "unknown",
+                },
+                500,
+            )
+        route = _resolve(
+            self.routes,
+            {
+                "type": "improve",
+                "domain": "code",
+                "sub_type": "evidence-driven-full-loop",
+                "scope": "delivery",
+            },
+            500,
+        )
+        self.assertEqual(["evidence-driven-dev"], route["chain"])
+
+    def test_auto_code_generator_uses_the_same_acceptance_criteria_for_delivery(
+        self,
+    ) -> None:
+        workflow_path = ROOT / "orchestration" / "auto-code-generator" / "SKILL.md"
+        workflow = workflow_path.read_text(encoding="utf-8")
+        planning = workflow.split("## Stage 2", 1)[1].split("## Stage 3", 1)[0]
+        verification = workflow.split("### 4.2 ", 1)[1].split("## Stage 5", 1)[0]
+        reference = "../../method-router/acceptance-upfront/SKILL.md"
+        self.assertIn(f"[验收前置]({reference})", planning)
+        self.assertTrue((workflow_path.parent / reference).resolve().is_file())
+        self.assertIn("同一组通过条件", verification)
+
     def test_every_classified_type_has_a_fallback(self) -> None:
         classification = self.mapping.split("\nclassification:\n", 1)[1].split(
             "\nurgency:\n", 1
@@ -383,8 +434,8 @@ class MethodRouterContractTest(unittest.TestCase):
     def test_eight_leaf_routes_are_narrow_unique_and_learning_does_not_hit(
         self,
     ) -> None:
-        self.assertIn("version: '3.10'", self.mapping)
-        self.assertIn("last_updated: '2026-11-19'", self.mapping)
+        self.assertIn("version: '3.11'", self.mapping)
+        self.assertIn("last_updated: '2026-11-23'", self.mapping)
         decide_block = self.mapping.split("\n  decide:\n", 1)[1].split(
             "\n  design:\n", 1
         )[0]
@@ -411,7 +462,7 @@ class MethodRouterContractTest(unittest.TestCase):
             leaf_sub_types,
             {route["condition"]["sub_type"] for route in leaf_routes},
         )
-        self.assertEqual(55, len(self.routes))
+        self.assertEqual(56, len(self.routes))
 
         with self.assertRaises(LookupError):
             _resolve(
@@ -447,12 +498,12 @@ class MethodRouterContractTest(unittest.TestCase):
 
     def test_readme_and_method_router_counts_include_eight_leaf_skills(self) -> None:
         readme = README_PATH.read_text(encoding="utf-8")
-        self.assertIn("88 个注册 Skill", readme)
-        self.assertIn("51 个方法论 Skill", readme)
+        self.assertIn("89 个注册 Skill", readme)
+        self.assertIn("52 个方法论 Skill", readme)
         self.assertIn("10 个功能块", readme)
         self.assertIn("8 个独立叶子 Skill", readme)
         self.assertIn("不是第九个综合 Skill", readme)
-        self.assertIn("51 个框架", self.method)
+        self.assertIn("52 个框架", self.method)
         self.assertIn("10 个功能块", self.method)
         self.assertIn("munger_full", self.method)
         self.assertNotIn(OLD_COMPOSITE_NAME, self.method)
@@ -488,8 +539,8 @@ class MethodRouterContractTest(unittest.TestCase):
             "Discovery Sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "88 个",
-            "51 个",
+            "89 个",
+            "52 个",
         ):
             with self.subTest(document="README", text=text):
                 self.assertIn(text, readme)
@@ -499,8 +550,8 @@ class MethodRouterContractTest(unittest.TestCase):
             "discovery-sprint",
             "highest_priority_then_specificity",
             "route_context",
-            "88 个",
-            "51 个",
+            "89 个",
+            "52 个",
             *LEAF_NAMES,
         ):
             with self.subTest(document="Draw.io", text=text):

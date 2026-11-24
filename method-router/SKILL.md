@@ -6,7 +6,7 @@ description: >
   统一入口，自动分类问题类型并路由到最合适的框架（5W2H/5Whys/SCQA/Pre-mortem 等）。
   触发关键词：从零、没思路、先调研、网上实践、头脑风暴、为什么、分析、排查、定位、选哪个、优先级、风险、管理、协作、分工、委派、责任、
   子 Agent、卡槽、DAG、有向无环图、依赖图、拓扑、关键路径、时间、截止、超时、排期、复盘、用什么框架。
-  也适用于复杂任务中的方法选择、跨阶段保持与证据反馈后重选。新的简单查询或边界清楚的单步编码不强制触发；已采用的方法在进入专业执行阶段后按其适用范围继续生效。
+  也适用于复杂任务中的方法选择、跨阶段保持与证据反馈后重选，以及要求先定验收条件、交付前自验的产物交付。新的简单查询或边界清楚的单步编码不强制触发；已采用的方法在进入专业执行阶段后按其适用范围继续生效。
 ---
 
 # method-router 方法论路由器
@@ -163,6 +163,10 @@ route_context:
 
 推导约定：`type` 由关键词与语义意图确定；`urgency` 命中 critical 关键词才为 `critical`，否则为 `normal`；`domain` 由项目上下文和请求对象确定；`has_data` 仅在出现报告、指标、日志或其他可分析数据时为 `true`，明确没有时为 `false`，其余为 `unknown`；`complexity=high` 仅在多因素交织或因果难以拆分时成立；`sub_type` 与 `scope` 只填写有直接证据的 YAML 条件值；`cynefin_pre=true` 表示先执行 `meta` 预处理链。无法确定 `type` 或多个候选同样成立时，进入 Top 3 降级。
 
+用户要求制作或实施，并表达先定验收条件、交付前自验或降低返工的意图时，按权威映射识别
+验收前置。只询问方法或只验收既有产物时保持对应的咨询或专项流程。已有专业验收合同覆盖同等职责时复用，
+只在缺少通用方法时补充。软件实施的专业编排可从其规划阶段引用该方法，回到原流程执行和验证。
+
 当目标是制定或调整模型用量、额度或预算策略时，使用 `type=manage`、`sub_type=token_management`。仅统计历史用量、配置指定网关或管理认证令牌时，交给对应专业工具。
 
 ### 降级输出格式（type 未确定或选择平局时）
@@ -214,6 +218,7 @@ route_context:
 | **design** | `scope=user_insight` | JTBD → Design Thinking（可选） |
 | **design** | `scope=enhance_existing` | SCAMPER → Impact/Effort（可选） |
 | **design** | `scope=requirement_classify` | Kano |
+| **improve** | `sub_type=acceptance_upfront` 且 `scope=delivery` | 验收前置 |
 | **improve** | `sub_type=evidence-driven-full-loop` | evidence-driven-dev（实机验收/全面测试/系统审计的完整证据闭环） |
 | **improve** | `domain=process` | PDCA → A3（可选） |
 | **improve** | `domain=data` | DMAIC → A3（可选） |
@@ -420,7 +425,7 @@ route_log:
 
 ## 方法论块总览（按功能块分组，英文（中文名））
 
-> 51 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
+> 52 个框架按 10 个功能块组织；映射权威仍以 `references/method-mapping.yaml` 为准
 
 | 块 | 框架 |
 |---|---|
@@ -428,7 +433,7 @@ route_log:
 | **目标管理** goal | okr（目标与关键结果）· smart（SMART 目标校验）· backward-planning（逆向规划） |
 | **决策评估** decide | eisenhower（艾森豪威尔矩阵）· rice（RICE 评分）· impact-effort（影响×努力矩阵）· pugh（普氏决策矩阵）· adl（ADL 生命周期矩阵）· second-order（二阶思考）· adr（架构决策记录）· multidisciplinary-models（多元思维模型）· mental-model-lattice（思维模型格栅）· inversion-thinking（逆向思考）· circle-of-competence（能力圈）· margin-of-safety（安全边际）· incentive-analysis（激励机制分析）· psychological-misjudgment（心理误判检查）· checklist-patience（检查清单与耐心等待） |
 | **设计创新** design | discovery-sprint（探索冲刺）· design-thinking（设计思维）· first-principles（第一性原理）· jtbd（用户任务洞察）· scamper（SCAMPER 改造法）· kano（KANO 需求分类） |
-| **流程改进** improve | pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
+| **流程改进** improve | 验收前置 · pdca（戴明环）· dmaic（六西格玛）· pareto（帕累托 80/20）· sipoc（SIPOC 流程边界）· benchmarking（对标分析） |
 | **风险管理** risk | pre-mortem（事前验尸）· fmea（失效模式分析）· fta（故障树分析）· scenario-planning（情景规划） |
 | **汇报与反馈** report | scqa（金字塔叙事）· star（STAR 叙事）· kpt（KPT 复盘）· a3（一页纸报告）· sbi（SBI 反馈）· double-loop（双环学习） |
 | **协作管理** manage | management-collaboration（管理与协作）· six-hats（六顶思考帽）· gtd（GTD 任务管理）· token-management（Token 管理） |
@@ -453,6 +458,7 @@ route_log:
 | `dmaic/SKILL.md` | DMAIC 六西格玛改进 |
 | `fmea/SKILL.md` | FMEA 失效模式分析 |
 | `star/SKILL.md` | STAR 结构化叙事 |
+| `acceptance-upfront/SKILL.md` | 开工前定标准与交付前自验 |
 | `pdca-tuning/SKILL.md` | PDCA 流程改进 |
 | `management-collaboration/SKILL.md` | RACI、委派任务卡、Kanban/WIP、时间盒和 Sol-Luna 协作 |
 | `multidisciplinary-models/SKILL.md` | 多元思维模型叶子检查 |

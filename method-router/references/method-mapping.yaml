@@ -1,4 +1,5 @@
-# 方法论路由映射表 v3.10
+# 方法论路由映射表 v3.11
+# v3.11: +验收前置，供通用交付路由和专业实施流程复用
 # v3.10: +token-management 模型用量与额度管理(manage/token_management)
 # v3.9: +evidence-driven-dev 证据驱动开发全流程(improve/evidence-driven-full-loop)
 # 新增 Skill 先更新根注册表；仅意图路由变化时在此添加记录
@@ -7,11 +8,11 @@
 # v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
 # v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.10'
+version: '3.11'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
-last_updated: '2026-11-19'
+last_updated: '2026-11-23'
 route_context:
   fields:
     type: required; classify to one of diagnose/decide/design/improve/risk/report/manage/goal/learning
@@ -88,7 +89,19 @@ classification:
     - 设计一个消息推送系统
     - 这个模块需要重构
   improve:
+    sub_types:
+      acceptance_upfront:
+        scope: delivery
+        when: 用户要求制作或实施，并明确希望先确定验收条件、交付前自验或减少反复返工
+        exclusions: 纯咨询、只验收现成产物、已有专业验收流程且无需补充通用方法
+        examples:
+        - 把这份月度报表整理好，先定对账标准，交付前自己核对一遍
+        - 按 ATDD 做完导入功能，先把通过条件写清楚
     keywords:
+    - 验收前置
+    - 先定验收标准
+    - 交付前自己验一遍
+    - ATDD
     - 全面测试
     - 证据驱动
     - 独立复核
@@ -225,6 +238,16 @@ fallbacks:
   learning:
     action: ask_user_with_top_3
 routes:
+- type: improve
+  priority: 900
+  condition:
+    sub_type: acceptance_upfront
+    scope: delivery
+  chain:
+  - skill_name: acceptance-upfront
+    order: 1
+    mandatory: true
+  rationale: 因为当前任务要按已定条件完成一次交付，选择验收前置而非用于持续流程改进的 PDCA
 - type: improve
   priority: 950
   condition:
@@ -801,6 +824,8 @@ routes:
   rationale: 因为要追问反复问题背后的规则与假设，选择 Double-Loop Learning 而非只记录事件经过
 skill_registry:
   available:
+  - skill_name: acceptance-upfront
+    category: improve
   - skill_name: evidence-driven-dev
     category: improve
   - skill_name: backward-planning
