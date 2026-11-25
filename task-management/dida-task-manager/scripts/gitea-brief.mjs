@@ -140,6 +140,13 @@ function prRefs(text) {
   return [...out];
 }
 
+// PR 与 issue 的语义：PR 报告/发现的问题(finding) ≠ 修复的问题(fixed)。
+// 检测到发现类措辞时标记 finding:true，禁止据此判定完成。
+const FINDING_HINT = /(发现于|发现[^，。；\s]{0,4}问题|发现该|复现|仍可复现|待确认|待处理|等待.{0,12}确认|另行推进|未合入|等待检视)/;
+function findingHint(text) {
+  return FINDING_HINT.test(text || '');
+}
+
 const MEANINGFUL = new Set(['comment', 'close', 'reopen', 'label', 'assignees', 'title', 'milestone', 'reviewed', 'approved', 'unlabeled', 'change_title']);
 const REF_ONLY = new Set(['issue_ref', 'cross-reference', 'pull_ref', 'comment_ref']);
 
@@ -224,14 +231,22 @@ try {
           const s = prState[p] || {};
           return `PR #${p} ${s.state || '?'}${s.merged ? '已合' : ''}${s.merged_at ? '(' + s.merged_at + ')' : ''}`;
         });
+        // 结构化证据块：写进滴答 comment，供人/agent 机读地拒绝二手信号。
+        // 注意：这些只是提示，完成判定必须回读 issue 正文完成条件 + 验证证据。
+        const last = d.last_comment || '(无评论)';
         progress[n] = {
           title: d.title, days: d.days_update,
-          last_comment: d.last_comment || '(无评论)',
+          last_comment: last,
           pr_status: prs,
-          // 二手推断信号，仅供提示；完成判定必须回读 issue 正文完成条件 + 验证证据
+          来源URL: `${SERVER}/${REPO}/issues/${n}`,
+          核实时间: new Date().toISOString(),
+          PR明细: d.pr_refs.map(p => ({ number: p, ...(prState[p] || { state: '查询失败' }) })),
+          // finding=true 表示末评含「发现/复现/待确认/另行推进」等线索——
+          // 该 issue 很可能是这个 PR 报告的问题，而非修复的问题，禁止据此关闭。
+          finding线索: findingHint(last),
           信号级别: '待核(二手推断)',
           完成判定: false,
-          关闭前必读: 'issue 正文完成条件；PR 仅作提示，发现类 PR 不代表修复',
+          关闭前必读: 'issue 正文完成条件；finding线索=true 时尤其不得据 PR 已合判定完成',
         };
       }
       const pf = save('progress.json', progress);

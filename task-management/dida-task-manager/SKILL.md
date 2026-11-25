@@ -95,27 +95,46 @@ Gitea 管事的权威状态，OpenSpec 管设计论证，滴答只回答「我�
 - 周期性值守（晨报、轮值）用 `habit/checkins` 或 `repeatFlag`，不靠记忆；
   外部硬期限用 `countdown`，比手标优先级更硬。
 
-## Gitea 晨报取数脚本
+### 同步方向：不对称双向（正向自动、反向提议）
 
-[`scripts/gitea-brief.mjs`](scripts/gitea-brief.mjs) 提供晨报所需的 Gitea **只读取数**，替代在自动化提示词里重复描述 API 分页、令牌读取和事件验真。滴答写入仍走 MCP，本脚本不关闭、不修改、不评论任何 issue 或 PR。
+滴答与外部权威源（Gitea 等）之间**不是对称双向同步**：
+- **正向（权威源 → 滴答）自动**：事实状态流入执行面，刷新 content、建任务、分类；
+  issue 关闭 → 滴答任务完成是确定性动作。同步只写客观事实与结构化证据，
+  二手推断写 comment 并标 `待核`，不伪装成事实。
+- **反向（滴答 → 权威源）只读提议**：滴答勾掉但权威源仍 open 的任务只列候选，
+  附证据档次交人工确认；**绝不自动写回权威源、绝不自动关闭**。
+  这是防误关的护城河——对称双向会把「勾卡即关 issue」自动化，制造回环放大二手信号。
+- 后台定时同步保持低频（每日一次足够）、静默、无变化不制造假动态；
+  它服务的是「决策时证据可信且新鲜」，不是「永远最新的镜像」。
 
-```sh
-node gitea-brief.mjs issues   [--out-dir DIR] [--date YYYY-MM-DD] [--all]
-node gitea-brief.mjs assigned [--out-dir DIR] [--date YYYY-MM-DD]
-node gitea-brief.mjs prs      [--out-dir DIR] [--date YYYY-MM-DD]
-node gitea-brief.mjs progress [--out-dir DIR] [--date YYYY-MM-DD] [--numbers 1,2,3]
-node gitea-brief.mjs snapshot --snapshot FILE [--out-dir DIR] [--date YYYY-MM-DD]
-```
+权威源侧的状态读取、PR 核查、issue 关闭属于 git/Gitea 操作，由 `branch-manager` 承载；
+本 Skill 只消费其结果并决定「这张卡现在该怎么摆」，不在这里重写 API、令牌或关闭流程。
 
-- `issues`：分页拉全部开放 issue，落 `issues.json`，输出编号集合与「指派给我 / 我创建的」两组统计。
-- `assigned`：基于 `issues.json` 拉验真 timeline + 末条评论 + 引用 PR 的实际状态，落 `assigned.json`；引用型事件（`issue_ref`/`cross-reference`/`pull_ref`/`comment_ref`）过滤，`change_title` 等实质事件保留，未知类型如实上报。
-- `prs`：分页拉开放 PR，筛本人，附 reviews、CI 车道、末 5 条评论，落 `my-prs.json`。**关注 PR 与关注 issue 同等重要**：交付临门一脚在 PR 上，先按 CI/评审/mergeable 给出可合入判断，再看关联 issue。
-- `progress`：生成「进度一句话」素材（剥 HTML 注释、PR 状态以实际查询为准），落 `progress.json`；content ≤80 字，由调用方写入滴答。每条带 `信号级别: 待核(二手推断)` 与 `完成判定: false`——**它是提示不是完成凭证**，关闭前必须回读 issue 正文完成条件。
-- `snapshot`：读旧快照与 `issues.json`，输出新增/移除/更新/未变四类 diff 并写回当日快照；日期来自 `--date`，不硬编码。
+## Gitea 晨报取数：调用契约
 
-配置顺序：命令行 > 环境变量（`GITEA_SERVER` / `GITEA_REPO` / `GITEA_LOGIN` / `GITEA_BRIEF_OUT`）> 同目录 `gitea-brief.config.json`；默认 server `https://qedai.df2cloud.com:60001`、repo `QEDA/QEDAgent`、login `qinzuoquan`。旧域名 `gitea.df2cloud.com` DNS 已失效，禁用。令牌遵循 branch-manager R7：只读 `~/.gitea-token`（唯一来源）→ `GITEA_TOKEN` → git credential fill 应急，不读仓库内 token 文件、不回显。网络失败重试 3 次（退避 3/6/9 秒）；退出码 1 为配置错误、2 为网络全败。输出目录用 `--out-dir` 指到用户态目录，避免污染 Skill 仓库。
+本 Skill 承载 Gitea 晨报取数脚本，调用方只需知道何时调用、产出什么、如何消费结果。数据由
+[`scripts/gitea-brief.mjs`](scripts/gitea-brief.mjs) 提供；脚本参数、配置优先级、令牌来源、
+网络重试和退出码等实现细节以该脚本为准，不在本 Skill 复述。Gitea 令牌、网络访问与主线核查
+等通用约定归 `branch-manager` 承载，本 Skill 只引用、不复制。
 
-**时间观（AI 并行开发）**：脚本只产出事实与依赖素材，不做日历排期。AI 可异步执行的节点给工作量估算（T-shirt/区间）与写入边界，**不排固定时段**；只有需要本人决策/复核/合入的 A 节点才可能进日历。估算写成标签（如 `估M`），不要写进会被每日刷新的 `content`。排期方法走 `method-router` 的 `manage/parallel_scheduling`，不在本脚本实现。
+调用方只需知道：
+
+- **何时调用**：晨报/巡检按所需素材选子命令——`issues`（开放 issue 全量）、`assigned`
+  （指派给我的验真详情）、`prs`（本人 PR 状态）、`progress`（进度一句话）、
+  `snapshot`（issue diff）。需要指派 issue、本人 PR、进度或 diff 时调用，不无脑全跑。
+- **产出什么**：只读事实素材（issue 状态、PR 的 CI/评审/mergeable、进度结构化证据块），
+  不关闭、不修改、不评论任何 issue 或 PR；滴答写入仍走 MCP。
+- **进度证据的档次**：`progress.json` 每条带 `来源URL` / `核实时间` / `PR明细` /
+  `finding线索` / `信号级别: 待核(二手推断)` / `完成判定: false`。它是提示不是完成凭证：
+  写进滴答 `comment` 而非 `content`；`finding线索=true`（末评含「发现于/复现/待确认/
+  另行推进」等）说明该 issue 很可能是 PR 报告的问题而非修复的问题，禁止据 PR 已合判定完成。
+- **如何投影到滴答**：按三闸门决定列与优先级；关注 PR 与关注 issue 同等重要——交付
+  临门一脚在 PR 上，先看 CI/评审/mergeable，再看关联 issue。
+
+**时间观（AI 并行开发）**：取数只产出事实与依赖素材，不做日历排期。AI 可异步执行的
+节点给工作量估算（T-shirt/区间）与写入边界，**不排固定时段**；只有需要本人决策/复核/
+合入的 A 节点才可能进日历。估算写成标签（如 `估M`），不要写进会被每日刷新的 `content`。
+排期方法走 `method-router` 的 `manage/parallel_scheduling`。
 
 ## 巡检输出
 

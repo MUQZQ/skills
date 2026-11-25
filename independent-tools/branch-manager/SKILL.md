@@ -40,6 +40,7 @@ description: >
 | 发布、编辑、回复 PR 评论或处理评审线程 | 检查最新状态 → 判断同步需要 → 刷新内容 → 写入前复核 | PR 评论与评审线程操作前检查 |
 | 跟踪 PR 评审或 CI | 核对当前候选 → 按变化处置 → 判定收敛和可合入 | [PR 值守与收敛](references/pr-records.md#pr-值守与收敛) |
 | fork/upstream 双仓操作 | 特性 PR → fork main（项目评审门禁）→ 批量交付 upstream，或按项目选择集成分支和逐特性模式 | references/fork-workflow.md |
+| 核查需求/issue 是否已在 main 实现 | fetch 主线 → 只认 origin/main 已提交内容 → 核对代码/归档/验收 | 主分支实现核查 |
 
 ## 铁律速查
 
@@ -55,6 +56,7 @@ description: >
 | R7 | API 令牌只存用户级固定位置（`~/.gitea-token`，ACL 仅本人），不进任何 git 仓库、脚注或会话输出 | 令牌泄漏进仓库历史或日志；轮换时找不到全部副本 |
 | R8 | 按当前候选的评审、必需 CI、基线和冲突状态结束值守，按平台正式审批等门禁确认合入资格。**agent 不得自动合入 PR**：禁止 `gh pr merge`、平台合并接口、开启自动合并；合入必须由用户当场人工确认，此前授权推送或值守不构成合入授权 | 越权合入他人仓库；不可逆合并 |
 | R9 | **创建闸门**：创建分支、PR、工作树前必须先与用户确认（分支名与基线 / PR 目标分支与提交范围 / 工作树路径与分支），确认后再执行，不得自行创建 | 擅自产生多余分支、PR 与工作树，污染远端与磁盘 |
+| R10 | 判断"是否在 main 实现"必须先 fetch，再以 `origin/main` 的已提交内容为证据；本地 HEAD 和工作区改动不算主线事实 | 拿过期快照核查，把已交付判成未交付（见「主分支实现核查」） |
 
 ## 分支命名与创建
 
@@ -205,6 +207,38 @@ icacls "$env:USERPROFILE\.gitea-token" /inheritance:r /grant:r "$env:COMPUTERNAM
 const token = readFileSync(join(process.env.USERPROFILE, '.gitea-token'), 'utf8').trim();
 fetch(url, { headers: { Authorization: `token ${token}` } });
 ```
+
+所有需要 Gitea 令牌的脚本（包括任务管理域的 `gitea-brief.mjs`）统一遵循本节约定：
+令牌只从 `~/.gitea-token` → `GITEA_TOKEN` → GCM 应急读取，仓库内不放副本、不回显。
+
+---
+
+## 主分支实现核查
+
+判断「某需求/issue 是否已在 main 实现」时，证据必须是**真实主线的已提交内容**，不是本地快照或工作区草稿。本地 `main` 分支可能长期未 fetch（实测落后 `origin/main` 上千提交），拿它当"main"会系统性地把已实现的判成未实现。
+
+### 铁律
+
+1. **先 fetch 再判断**：`git fetch origin main`；以 `origin/main`（或项目实际主线远端跟踪分支）为基准。
+2. **只认已提交内容**：`git show origin/main:<path>` / `git grep <pattern> origin/main --` /
+   `git ls-tree -r --name-only origin/main`。工作区未提交改动、本地 HEAD、暂存区都不算主线事实。
+3. **事实链完整**：代码/归档/主规格/测试结果分别核对，不拿评论、PR 正文点名或 issue checkbox
+   当充分证据；这些都可能是二手信号，真正实现要看主线文件。
+4. **交付落点确认**：merge commit 必须在主线历史中
+   （`git merge-base --is-ancestor <merge-sha> origin/main`），而不是只存在于某个特性分支。
+
+### 实战反例
+
+| Agent 可能产生的想法 | 实际现实 | 违反规则 | 实际后果 |
+|---------------------|---------|:------:|---------|
+| "本地 main 就是 main，直接 git grep HEAD" | 本地 HEAD 可能数月未 fetch，落后主线上千提交 | 铁律 1、2 | 已交付的需求被判"未实现"，误留 issue 开放、误导排期 |
+| "工作区文件里有这段代码，说明 main 有了" | 工作区是未提交草稿，主线可能完全没有 | 铁律 2 | 把未交付内容当交付证据 |
+| "PR 正文写了包含本 issue，合了就能关" | PR 标题/正文点名不等于完成条件逐条落地；一个 PR 可能是发现来源而非修复 | 铁律 3 | 误关 issue |
+| "分支上有这个 merge commit，就算合了" | merge commit 只在特性分支，主线未包含 | 铁律 4 | 把未合入主线的内容当已交付 |
+
+> 来源经验：2026-11-25 关闭 Datasheet 一期/I6 三个 issue 时，最初用本地 HEAD（落后
+> `origin/main` 2591 提交）核查，全部误判为"main 未实现"；fetch 后按 `origin/main` 重查，
+> 开放归档与验收证据齐全，三条均按流程关闭。
 
 ---
 

@@ -48,6 +48,23 @@ test('进度一句话剥 HTML 注释，PR 状态以实际查询为准', () => {
   // 完成凭证闸门：progress 必须显式标为待核二手信号，不得当完成依据
   assert.match(source, /信号级别:\s*'待核\(二手推断\)'/);
   assert.match(source, /完成判定:\s*false/);
+  // 结构化证据块 + finding 线索：让消费端机读地区分「发现的问题」与「修复的问题」
+  assert.match(source, /来源URL:/);
+  assert.match(source, /核实时间:\s*new Date\(\)/);
+  assert.match(source, /finding线索:\s*findingHint\(last\)/);
+  assert.match(source, /FINDING_HINT\s*=\s*\//);
+});
+
+test('finding 线索正则覆盖文档承诺的发现/待确认措辞', () => {
+  const m = source.match(/const FINDING_HINT = \/(.+)\/;/);
+  assert.ok(m, '未找到 FINDING_HINT 正则');
+  const re = new RegExp(m[1]);
+  for (const text of ['发现于 #1234', '发现一个问题', '此项待确认', '仍可复现', '另行推进', '等待本人确认']) {
+    assert.match(text, re, `finding 正则应命中：${text}`);
+  }
+  for (const text of ['已完成修复并合入', 'PR 已合并，验证通过']) {
+    assert.doesNotMatch(text, re, `finding 正则不应命中：${text}`);
+  }
 });
 
 test('snapshot diff 输出新增/移除/更新/未变四类', () => {
@@ -70,4 +87,15 @@ test('子命令清单完整且与 SKILL.md 文档同步', () => {
     assert.match(source, new RegExp(`cmd === '${cmd}'`), `脚本缺 ${cmd}`);
     assert.match(skill, new RegExp(`\\b${cmd}\\b`), `SKILL.md 缺 ${cmd} 文档`);
   }
+});
+
+test('SKILL.md 固化不对称双向原则与三闸门', () => {
+  const skill = readFileSync(join(HERE, '..', 'SKILL.md'), 'utf8');
+  assert.match(skill, /不对称双向/);
+  assert.match(skill, /正向.*自动/);
+  assert.match(skill, /反向.*提议/);
+  assert.match(skill, /绝不自动关闭/);
+  assert.match(skill, /### 闸门一：完成凭证/);
+  assert.match(skill, /### 闸门二：重要度推导/);
+  assert.match(skill, /### 闸门三：产能与依赖投影/);
 });
