@@ -1,6 +1,6 @@
 ---
 name: independent-tools
-description: 独立工具域统一入口。用于识别并路由边界清晰的专业工具任务，包括媒体转换、Git 分支、浏览器端到端测试、U 盘 Git 同步、环境管理、QEDAI 报销登记、Magpie 模型路由和 ZCode 套餐切换。只选择一个主工具，不承担跨域编排。
+description: 独立工具域统一入口。用于识别并路由边界清晰的专业工具任务，包括媒体转换、Git 分支、浏览器端到端测试、U 盘 Git 同步、环境管理、QEDAgent 桌面打包、Excel 发布测试报告、QEDAI 报销登记与本地台账、Magpie 模型路由和 ZCode 套餐切换。只选择一个主工具，不承担跨域编排。
 ---
 
 # 独立工具域

@@ -157,13 +157,16 @@
     },
     "independent-tools": {
       "display_name": "独立工具",
-      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记、Magpie 模型路由）、ZCode 套餐切换",
+      "responsibility": "边界清晰的专业工具能力路由（媒体转换、Git 分支、浏览器测试、U 盘同步、环境管理、QEDAI 报销登记与本地台账、Magpie 模型路由、QEDAgent 桌面打包）、ZCode 套餐切换",
       "intents": [
         "专业单用途工具",
         "媒体转换",
         "环境管理",
         "QEDAI 订阅费用报销登记",
+        "本地报销台账与图片哈希查重",
         "Magpie 模型路由与分组",
+        "QEDAgent 桌面安装包构建与交付",
+        "Excel 发布测试报告与正式包冒烟",
         "ZCode 套餐与定时任务模型切换"
       ],
       "entry_path": "independent-tools/SKILL.md",
@@ -204,6 +207,11 @@
           "description": "构建或移植独立设计验收 review 工程，将设计稿、规格或契约拆解为可复查的检查项。仅当明确交付独立验收工程时使用；在现有项目验收高保真界面由 hifi-prototype-implementation 负责。",
           "path": "independent-tools/project-reviewer/SKILL.md"
         },
+        "qeda-desktop-packaging": {
+          "skill_name": "qeda-desktop-packaging",
+          "description": "QEDAgent 旧桌面架构（1030 交付线）Windows 安装包构建、版本号调整与交付核验：desktop:build、目录包、真机验收、VC++/PCB 客户工具暂存、NSIS，以及 asar/模型/帮助/端口/版本号/载荷的逐字节核验。当用户提到打包、出包、重新打包、安装包、NSIS、electron-builder、发行包、交付包、版本号调整、客户工具随包时使用。",
+          "path": "independent-tools/qeda-desktop-packaging/SKILL.md"
+        },
         "qeda-schematic-login": {
           "skill_name": "qeda-schematic-login",
           "description": "自动登录启云方原理图站点（UIAM 单点登录）：填账号密码、读取 base64 验证码、提交并处理 noPermission 跳转与工程页硬刷新；登录态不跨浏览器重启。当用户提到「登录原理图」「启云方登录」「schematic 登录」「实机验收前先登录」或给出 schematic.qyf.df2cloud.com 链接要求进入工程、图页时使用。",
@@ -211,8 +219,13 @@
         },
         "qedai-submit-reimbursement": {
           "skill_name": "qedai-submit-reimbursement",
-          "description": "在已登录的 QEDAI 外部 AI 资源管理页面登记一笔订阅报销费用、上传凭证并核对保存结果；也可按用户明确要求操作已有记录的报销提交状态。用于 outer-ai-usage 的报销录入，不用于审批、转账或应用开发。",
+          "description": "在已登录的 QEDAI 外部 AI 资源管理页面登记订阅报销费用、上传或补传凭证、按 ID 修改未审批记录的实付金额并核对保存结果；可下载已有附件，也可按用户明确要求操作已有记录的报销提交状态。登记前后维护本地报销台账：按图片哈希查重、归档材料并同步报销状态 JSON。用于 outer-ai-usage 的报销录入，不用于审批、转账或应用开发。",
           "path": "independent-tools/qedai-submit-reimbursement/SKILL.md"
+        },
+        "release-test-report": {
+          "skill_name": "release-test-report",
+          "description": "从发布范围、代码、PR Helper 评审证据和正式包冒烟结果制作、更新或独立复核 Excel 发布测试报告。适用于发布测试阶段汇报、逐模块核对 PR 和截图、把历史受阻或未通过场景补入冒烟并按代码责任田分工，以及回填正式包结果后判定整体测试通过。",
+          "path": "independent-tools/release-test-report/SKILL.md"
         },
         "screenrecord-short-voiceover": {
           "skill_name": "screenrecord-short-voiceover",

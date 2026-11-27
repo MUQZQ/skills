@@ -49,6 +49,14 @@
       ],
       "skill_name": "prhelp-review-to-guide"
     },
+    "qeda-desktop-packaging": {
+      "intent": [
+        "QEDAgent 桌面安装包构建与交付",
+        "重新打包与版本号调整",
+        "electron-builder/NSIS 打包故障排查"
+      ],
+      "skill_name": "qeda-desktop-packaging"
+    },
     "qeda-schematic-login": {
       "intent": [
         "登录启云方原理图站点",
@@ -60,9 +68,20 @@
       "intent": [
         "QEDAI 订阅费用报销登记",
         "outer-ai-usage 费用录入与凭证上传",
-        "按用户明确要求标记已有记录的报销提交状态"
+        "补传凭证、下载附件或按 ID 修改实付金额",
+        "按用户明确要求标记已有记录的报销提交状态",
+        "本地报销台账维护与图片哈希查重",
+        "按哈希查找历史发票或付款截图"
       ],
       "skill_name": "qedai-submit-reimbursement"
+    },
+    "release-test-report": {
+      "intent": [
+        "Excel 发布测试报告与阶段汇报",
+        "PR Helper 证据、截图和发布冒烟闭环",
+        "正式包冒烟结果回填与整体测试判定"
+      ],
+      "skill_name": "release-test-report"
     },
     "screenrecord-short-voiceover": {
       "intent": [

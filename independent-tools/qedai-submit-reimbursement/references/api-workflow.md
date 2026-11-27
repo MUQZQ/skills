@@ -7,6 +7,8 @@
 
 使用已登录目标页面的同源 fetch，浏览器自然携带当前会话。本次通过 cua_repl 的 `tab.capabilities.get("cdp")`，读取其 documentation 后，使用 `Runtime.evaluate` 执行 fetch，设置 `awaitPromise: true, returnByValue: true`。遵守当前工具实际支持范围；不要用仅允许 DOM 只读的 evaluate 接口发送请求。若当前环境不允许此方式，改用已授权的连接器或页面操作，不规避工具限制。
 
+ZCode In-App Browser（2026-11-27 已验证）：目标页在 IAB 中已登录时，用 `tab.playwright.evaluate` 执行同源 fetch 即可携带会话，效果与 cua_repl CDP 相同；IAB 不支持 filechooser，但可在 evaluate 中把本地文件转 base64 传入页面，构造 File + FormData 完成上传。
+
 JSON 请求为 POST，`Content-Type: application/json`。查询和普通 mutation 使用 `{params: {...}}`；事务使用 `{mutations: [...]}`。检查 HTTP 为 2xx 且响应 `success === true`，读取 `data`。不要仅凭请求没有抛错认定成功。
 
 ## 查重和选项
@@ -25,6 +27,12 @@ JSON 请求为 POST，`Content-Type: application/json`。查询和普通 mutatio
 `POST /content/upload`，使用 FormData 的 `file` 字段，保留原文件名和正确 MIME（PDF、PNG、JPEG）。本次可在 cua_repl 中读取用户已授权的本地文件，以 base64 携带到同源执行环境，构造 Uint8Array → File → FormData；不要将文件内容、base64 或会话信息打印出来。不要手写 multipart 的 Content-Type，交给 fetch 生成 boundary。
 
 成功响应可能是 **HTTP 201**：`{success:true,data:{key,url}}`。保存每份返回值与原文件名、分类的对应关系。三类值为 `invoice`、`payment_proof`、`expiry_proof`。发票及配套收据可放在 invoice；人民币代购转账和手续费说明放 payment_proof；对应订阅期间的账单截图放 expiry_proof。用户明确指定的无到期 API 用量截图也可放 expiry_proof。
+
+## 补传附件到已有记录
+
+单份附件不要求事务：先 `POST /content/upload` 拿到 key/url，再直接提交
+`{"mutations":[{"name":"$subscription_attachments.create","params":{"subscriptionId":<id>,"attachmentType":"payment_proof","fileName":"...","fileUrl":"...","fileKey":"...","mimeType":"image/png"}}]}`。
+响应 `changes:1` 与附件 ID 即成功。补传后重新查询 `forSubscription` 与费用详情的对应计数，并刷新页面确认“缺少××截图”变化。2026-11-27 已验证（记录 216 补传付款截图，附件 883）。
 
 ## 一笔费用及附件一起保存
 
@@ -76,5 +84,17 @@ JSON 请求为 POST，`Content-Type: application/json`。查询和普通 mutatio
 4. 读取 `is_approved`、`reimbursement_status`；新建后本次观察为 `0` 和 `not_submitted`。如实报告待审批，不能自行推进审批或转账。
 5. 刷新页面，用新 ID 核对可见列表并保存截图。若曾打开未保存表单，关闭并放弃该旧草稿，避免稍后再次保存造成重复。
 6. 给用户表格：ID、费用、人民币金额、附件数量和真实状态，并说明跳过的重复项。
+
+## 修改已有记录（实付金额等）
+
+未审批记录行内“编辑订阅”可用。UI 路径：按“报销 ID：<id>”定位行 → “编辑订阅” → 在对话框中修改目标字段（如“实付款”）→ “保存订阅”。保存后按 ID 回读详情，确认 `paid_amount_minor` 已更新且未触碰的字段保持原值（2026-11-27 记录 216：实付 500.00 → 499.80，`expires_on` 仍为 null）。修改只解决金额/字段本身，不等于审批或报销提交。
+
+## 读取或下载已有附件
+
+`forSubscription` 返回 `file_name`、`attachment_type`、`file_url`、`mime_type`。`file_url` 是会话内相对地址，同源 GET 即可取得二进制并保存到本地；已用它取回历史 GPT 付款截图核对（2026-11-27）。不要打印 Cookie、令牌或会话信息。
+
+## 本地台账联动
+
+登记、补传或下载附件后，按 SKILL.md「本地台账（图片哈希与状态镜像）」维护 `%USERPROFILE%\Documents\报销记录`：上传前先 `lookup` 哈希，避免同一发票重复上传；下载附件后用 `add` 归档、`identify` 写入识别结果；回读 QEDAI 后同步 `qedaiCounts`、`missing` 和状态并运行 `verify`。台账只是本地镜像，不改变审批、报销提交或转账状态。
 
 页面备用流程只在接口不可用时采用。文件 input 可能是 `sr-only`，应点击对应可见 label 触发文件选择器；不要反复强制点击隐藏 input。日期控件需在操作后核对实际值，本次普通 fill 曾未改变日期，而 cua `setValue` 有效。
