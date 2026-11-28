@@ -303,24 +303,35 @@ class MethodRouterContractTest(unittest.TestCase):
         )
         self.assertEqual(["fishbone", "5whys", "scqa"], fishbone_route["chain"])
 
-    def test_data_driven_diagnosis_is_domain_gated(self) -> None:
-        deep_routes = [
-            route for route in self.routes if route["chain"][0] == "deep-analysis"
-        ]
-        self.assertEqual(1, len(deep_routes))
-        self.assertEqual("data", deep_routes[0]["condition"].get("domain"))
-        with self.assertRaises(LookupError):
-            _resolve(
-                self.routes,
-                {
-                    "type": "diagnose",
-                    "urgency": "normal",
-                    "has_data": True,
-                    "domain": "code",
-                    "complexity": "normal",
-                },
-                500,
-            )
+    def test_technical_fault_routes_to_deep_analysis_with_running_evidence(self) -> None:
+        technical_fault = {
+            "type": "diagnose",
+            "urgency": "normal",
+            "has_data": True,
+            "domain": "general",
+            "complexity": "normal",
+            "scope": "technical_fault",
+        }
+        cases = (
+            ({}, ["deep-analysis"]),
+            ({"domain": "code", "complexity": "high"}, ["deep-analysis"]),
+            ({"complexity": "high", "urgency": "critical"}, ["ooda-loop", "scqa"]),
+            (
+                {"complexity": "high", "sub_type": "multi_factor"},
+                ["fishbone", "5whys", "scqa"],
+            ),
+            ({"has_data": False}, ["5whys", "scqa"]),
+            ({"complexity": "high", "scope": "unknown"}, ["mece", "5whys", "scqa"]),
+            ({"domain": "data", "scope": "unknown"}, ["deep-analysis", "scqa"]),
+        )
+        for overrides, expected_chain in cases:
+            with self.subTest(overrides=overrides):
+                route = _resolve(self.routes, technical_fault | overrides, 500)
+                self.assertEqual(expected_chain, route["chain"])
+
+        for overrides in ({"has_data": "unknown"}, {"scope": "unknown"}):
+            with self.subTest(overrides=overrides), self.assertRaises(LookupError):
+                _resolve(self.routes, technical_fault | overrides, 500)
 
     def test_each_route_explains_choice_and_rejected_alternative(self) -> None:
         self.assertGreaterEqual(len(self.routes), 40)
@@ -434,8 +445,8 @@ class MethodRouterContractTest(unittest.TestCase):
     def test_eight_leaf_routes_are_narrow_unique_and_learning_does_not_hit(
         self,
     ) -> None:
-        self.assertIn("version: '3.11'", self.mapping)
-        self.assertIn("last_updated: '2026-11-23'", self.mapping)
+        self.assertIn("version: '3.12'", self.mapping)
+        self.assertIn("last_updated: '2026-11-28'", self.mapping)
         decide_block = self.mapping.split("\n  decide:\n", 1)[1].split(
             "\n  design:\n", 1
         )[0]
@@ -462,7 +473,7 @@ class MethodRouterContractTest(unittest.TestCase):
             leaf_sub_types,
             {route["condition"]["sub_type"] for route in leaf_routes},
         )
-        self.assertEqual(56, len(self.routes))
+        self.assertEqual(57, len(self.routes))
 
         with self.assertRaises(LookupError):
             _resolve(
@@ -526,6 +537,10 @@ class MethodRouterContractTest(unittest.TestCase):
         self.assertIn("highest_priority_then_specificity", self.method)
         self.assertIn("同一目的的替代 Skill", self.method)
         self.assertIn("`has_data=true` 且 `domain=data`", self.method)
+        self.assertIn(
+            "`urgency=normal`、`has_data=true` 且 `scope=technical_fault`",
+            self.method,
+        )
         self.assertIn("fishbone → 5whys → SCQA", self.method)
         self.assertIn("特异度等于匹配的条件字段数量", self.method)
         self.assertNotIn("confidence", self.method)

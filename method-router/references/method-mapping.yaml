@@ -1,4 +1,5 @@
-# 方法论路由映射表 v3.11
+# 方法论路由映射表 v3.12
+# v3.12: +有运行证据的非紧急技术故障诊断
 # v3.11: +验收前置，供通用交付路由和专业实施流程复用
 # v3.10: +token-management 模型用量与额度管理(manage/token_management)
 # v3.9: +evidence-driven-dev 证据驱动开发全流程(improve/evidence-driven-full-loop)
@@ -8,16 +9,16 @@
 # v3.6: +确定性路由契约、显式上下文字段、类型兜底和可审计 rationale
 # v3.5: +Discovery Sprint，覆盖空白任务的联网调研、头脑风暴和首个实验
 # v3.4: +18 新框架（鱼骨图/二阶思考/Impact-Effort/六顶帽/帕累托/SMART/OKR/SBI/JTBD/SCAMPER/情景规划/Kano/SIPOC/费曼/对标/FTA/GTD/双环学习）+ goal/learning 分类
-version: '3.11'
+version: '3.12'
 authority_scope: domain_intent_routing
 source_of_truth: true
 registry_source: ../../skill-domain-mapping.yaml
-last_updated: '2026-11-23'
+last_updated: '2026-11-28'
 route_context:
   fields:
     type: required; classify to one of diagnose/decide/design/improve/risk/report/manage/goal/learning
     urgency: required; critical or normal; default normal
-    domain: required; code/data/architecture/process/general; default general; data includes logs and metrics
+    domain: required; code/data/architecture/process/general; default general; classify by the subject of the issue, not the format of its evidence
     has_data: required; true/false/unknown; default unknown
     complexity: required; high/normal/unknown; default unknown
     sub_type: required; route-specific value or unknown
@@ -35,6 +36,12 @@ resolution:
   explicit_user_skill: overrides_route_recommendation
 classification:
   diagnose:
+    scopes:
+      technical_fault:
+        when: 要求定位系统、应用、设备或集成中的运行故障，且需要用运行证据区分可能原因
+        exclusions: 数据指标和报表口径异常、单纯查询状态、已指定操作且无需诊断
+        examples:
+        - 外接屏反复黑屏，已经对过虚拟机启动时间和系统事件，帮我判断原因和怎么验证
     keywords:
     - 为什么
     - 报错
@@ -279,6 +286,17 @@ routes:
     order: 2
     mandatory: true
   rationale: 因为已有量化数据且领域为数据分析，选择 Deep Analysis 而非无数据的 5 Whys
+- type: diagnose
+  priority: 750
+  condition:
+    urgency: normal
+    has_data: true
+    scope: technical_fault
+  chain:
+  - skill_name: deep-analysis
+    order: 1
+    mandatory: true
+  rationale: 因为已有可关联的运行证据且需要区分技术故障的候选原因，选择 Deep Analysis 而非仅沿现象追问
 - type: diagnose
   priority: 300
   condition:

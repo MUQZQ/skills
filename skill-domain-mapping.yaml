@@ -339,7 +339,7 @@
         },
         "deep-analysis": {
           "skill_name": "deep-analysis",
-          "description": "5W2H 深度根因分析：对数据/指标/匹配异常进行系统性根因分析，通过 WHAT-WHY-WHERE-WHEN-WHO-HOW-HOWMUCH 七维度定位代码级根因，输出结构化分析报告和可执行修复方案（含成本/资源/ROI 量化）",
+          "description": "5W2H 深度根因分析：适用于有运行证据的技术故障及数据、指标异常，例如启动卡住、超时、间歇性故障或反复失败。核对证据对象与时序，区分事实和候选原因，设计可证伪实验，给出修复与验证方案。",
           "path": "method-router/deep-analysis/SKILL.md"
         },
         "design-thinking": {

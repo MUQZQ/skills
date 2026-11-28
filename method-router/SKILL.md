@@ -124,7 +124,7 @@ Phase 1: 意图分类 ──▶ route_context（type / urgency / domain / has_da
 |------|------|---------|
 | **类型** | `diagnose` / `decide` / `design` / `improve` / `risk` / `manage` / `report` / `goal` / `learning` | 关键词 + 语义；`meta` 是路由前预处理，不是业务类型 |
 | **紧急度** | `critical` / `normal` | 时间词 + 情绪词 + 上下文；未知时为 `normal` |
-| **领域** | `code` / `data` / `architecture` / `process` / `general` | 项目上下文 + 用户输入 |
+| **领域** | `code` / `data` / `architecture` / `process` / `general` | 按问题对象及项目上下文判断 |
 | **数据可用性** | `true` / `false` / `unknown` | 用户是否提供报告/指标/日志；作为 `has_data` 字段值 |
 | **复杂度** | `high` / `normal` / `unknown` | 因素是否交织、因果是否可直接分析 |
 | **子类型** | 映射声明的 `sub_type` 或 `unknown` | 更细粒度意图条件 |
@@ -163,6 +163,8 @@ route_context:
 
 推导约定：`type` 由关键词与语义意图确定；`urgency` 命中 critical 关键词才为 `critical`，否则为 `normal`；`domain` 由项目上下文和请求对象确定；`has_data` 仅在出现报告、指标、日志或其他可分析数据时为 `true`，明确没有时为 `false`，其余为 `unknown`；`complexity=high` 仅在多因素交织或因果难以拆分时成立；`sub_type` 与 `scope` 只填写有直接证据的 YAML 条件值；`cynefin_pre=true` 表示先执行 `meta` 预处理链。无法确定 `type` 或多个候选同样成立时，进入 Top 3 降级。
 
+诊断时按权威映射识别 `scope=technical_fault`。故障时段内可关联的运行日志、状态、时序或对照记录可作为 `has_data=true` 的证据。日志和指标的存在本身不决定问题领域。只有故障现象且未交代证据可用性时，`has_data` 仍为 `unknown`。
+
 用户要求制作或实施，并表达先定验收条件、交付前自验或降低返工的意图时，按权威映射识别
 验收前置。只询问方法或只验收既有产物时保持对应的咨询或专项流程。已有专业验收合同覆盖同等职责时复用，
 只在缺少通用方法时补充。软件实施的专业编排可从其规划阶段引用该方法，回到原流程执行和验证。
@@ -192,6 +194,7 @@ route_context:
 | 类型 | 条件 | 实际执行链（按 order） |
 |------|------|------------------------|
 | **meta**（预处理） | `cynefin_pre=true` | Cynefin |
+| **diagnose** | `urgency=normal`、`has_data=true` 且 `scope=technical_fault` | deep-analysis |
 | **diagnose** | `has_data=true` 且 `domain=data` | deep-analysis → SCQA |
 | **diagnose** | `has_data=false` | 5whys → SCQA |
 | **diagnose** | `complexity=high` | MECE → 5whys → SCQA |
